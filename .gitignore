@@ -1,0 +1,53 @@
+# === GENERAL FILES ===
+.DS_Store                # macOS system file
+Thumbs.db                # Windows system file
+*.log                    # Log files
+logs/                    # Log directory
+*.pid                    # Process ID files
+*.seed                   # Seed files
+*.swp                    # Swap files (Vim/other editors)
+*.swo                    # Swap files (Vim/other editors)
+*.bak                    # Backup files
+
+# === NODE.JS & REACTJS ===
+node_modules/            # Dependencies
+npm-debug.log*           # npm debug log files
+yarn-error.log           # Yarn errors
+yarn.lock                # Yarn lockfile (if using npm, ignore Yarn)
+package-lock.json        # NPM lockfile (if using Yarn, ignore this)
+build/                   # React build directory
+dist/                    # Distribution files
+.cache/                  # Webpack/Babel/Parcel cache
+.parcel-cache/           # Parcel cache
+
+# === ENVIRONMENT & SECRETS ===
+.env                     # General environment variables
+.env.local               # Local environment variables
+.env.development         # Development environment variables
+.env.production          # Production environment variables
+.env.test                # Test environment variables
+.env.*                   # Any custom env files
+
+# === POSTGRESQL ===
+pgdata/                  # PostgreSQL database data (if using local storage)
+postgres-data/           # Alternative PostgreSQL data directory
+*.sql                    # Ignore generated SQL dump files (optional)
+
+# === DOCKER ===
+docker-compose.override.yml   # Docker Compose override file
+docker-compose.dev.yml        # Docker Compose development file
+docker-compose.test.yml       # Docker Compose test file
+.dockerignore                 # Docker ignore file
+*.pid                          # Docker process ID files
+docker-data/                   # Ignore Docker data storage (if used)
+
+# === IDE & EDITOR FILES ===
+.vscode/                 # VS Code settings
+.idea/                   # JetBrains IDE settings (IntelliJ, WebStorm, etc.)
+*.iml                    # IntelliJ IDEA module files
+*.classpath              # Eclipse classpath file
+*.project                # Eclipse project file
+*.settings/              # Eclipse settings directory
+
+# === GIT ===
+.gitignore               # Ignore itself (just in case)
