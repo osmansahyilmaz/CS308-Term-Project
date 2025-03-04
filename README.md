@@ -28,6 +28,6 @@ This project is an **online store web application** developed for **CS308 Softwa
 
 ## Tech Stack  
 **Frontend:** ReactJS  
-**Backend:** Spring Boot  
-**Database:** PostgreSQL, MongoDB  
+**Backend:** NodeJS  
+**Database:** PostgreSQL  
 **Deployment:** Docker & Docker Compose  
