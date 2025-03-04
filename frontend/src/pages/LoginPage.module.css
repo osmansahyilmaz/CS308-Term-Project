@@ -1,0 +1,97 @@
+/* src/pages/LoginPage.module.css */
+.loginContainer {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Left panel for branding */
+.leftPanel {
+    flex: 1;
+    background-color: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Right panel for the form */
+.formPanel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    background-color: #ffffff;
+}
+
+.formGroup {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.input {
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.input:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.submitButton {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+.submitButton:hover {
+    background-color: #005fcc;
+}
+
+.error {
+    color: #d00;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.extraOptions {
+    margin-top: 0.5rem;
+    text-align: right;
+}
+
+.forgotLink {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.forgotLink:hover {
+    text-decoration: underline;
+}
+
+.switchPageText {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.switchPageText a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.switchPageText a:hover {
+    text-decoration: underline;
+}
