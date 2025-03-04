@@ -27,7 +27,7 @@ This project is an **online store web application** developed for **CS308 Softwa
 ✅ Security & role-based access control  
 
 ## Tech Stack  
-**Frontend:** ReactJS  
+**Frontend:** ReactJS
 **Backend:** NodeJS  
 **Database:** PostgreSQL  
 **Deployment:** Docker & Docker Compose  
