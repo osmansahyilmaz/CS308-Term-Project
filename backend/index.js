@@ -1,7 +1,10 @@
-require('dotenv').config(); // Load environment variables from .env
+require('dotenv').config();
+const express = require('express');
 const { Pool } = require('pg');
 
-// Create a new PostgreSQL connection pool
+const app = express();
+const port = 5000;
+
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -10,12 +13,16 @@ const pool = new Pool({
     port: process.env.DB_PORT,
 });
 
-// Test the database connection
 pool.connect()
-    .then(client => {
-        console.log('Connected to PostgreSQL');
-        client.release(); // Release the client back to the pool
-    })
+    .then(() => console.log('Connected to PostgreSQL'))
     .catch(err => console.error('Database connection error:', err));
 
-module.exports = pool; // Export pool to be used in other files
+app.use(express.json());
+
+app.post('/login', (req, res) => {
+    res.json({ message: "Login successful" });
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
