@@ -1,21 +1,18 @@
-// src/pages/LoginPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import styles from './LoginPage.module.css';  // CSS Module for styling
+import styles from './LoginPage.module.css';
+import LeftPanel from '../components/LeftPanel';
 
 function LoginPage() {
     const navigate = useNavigate();
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errors, setErrors] = useState({});
 
-    // Validate form fields
     const validate = () => {
         const newErrors = {};
-        if (!email.trim()) {
-            newErrors.email = 'Email is required.';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            newErrors.email = 'Please enter a valid email address.';
+        if (!username.trim()) {
+            newErrors.username = 'Username is required.';
         }
         if (!password) {
             newErrors.password = 'Password is required.';
@@ -28,62 +25,55 @@ function LoginPage() {
         const validationErrors = validate();
         setErrors(validationErrors);
         if (Object.keys(validationErrors).length === 0) {
-            // Simulate a successful login (later replace with real auth endpoint)
-            console.log('Logging in with:', email, password);
-            navigate('/');  // Redirect to home page on successful login
+            console.log('Logging in with:', username, password);
+            navigate('/');
         }
     };
 
     return (
         <div className={styles.loginContainer}>
-            <div className={styles.leftPanel}>
-                {/* Branding or promotional content can go here */}
-                <h1>Your Brand</h1>
+            <div className={styles.leftWrapper}>
+                <LeftPanel
+                    bottomLinkText="Back to website"
+                    bottomLinkRoute="/"
+                    quote="Your style, your way – login and explore."
+                    subQuote="Welcome back to unbeatable trends."
+                />
             </div>
-            <div className={styles.formPanel}>
-                <h2>Login</h2>
-                <form onSubmit={handleSubmit} noValidate>
-                    {/* Email Field */}
-                    <div className={styles.formGroup}>
-                        <label htmlFor="login-email" className={styles.label}>Email:</label>
-                        <input
-                            id="login-email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className={styles.input}
-                            placeholder="you@example.com"
-                            required
-                        />
-                        {errors.email && <div className={styles.error}>{errors.email}</div>}
-                    </div>
-
-                    {/* Password Field */}
-                    <div className={styles.formGroup}>
-                        <label htmlFor="login-password" className={styles.label}>Password:</label>
-                        <input
-                            id="login-password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className={styles.input}
-                            placeholder="Enter your password"
-                            required
-                        />
-                        {errors.password && <div className={styles.error}>{errors.password}</div>}
-                    </div>
-
-                    {/* Submit Button */}
-                    <button type="submit" className={styles.submitButton}>Login</button>
-                </form>
-
-                {/* Forgot Password and Sign-up links */}
-                <div className={styles.extraOptions}>
-                    <Link to="/forgot-password" className={styles.forgotLink}>Forgot Password?</Link>
+            <div className={styles.rightPanel}>
+                <div className={styles.formWrapper}>
+                    <h2 className={styles.formTitle}>Sign In</h2>
+                    <form onSubmit={handleSubmit} className={styles.form}>
+                        <div className={styles.inputGroup}>
+                            <label htmlFor="username">Username</label>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                required
+                            />
+                            {errors.username && <div className={styles.error}>{errors.username}</div>}
+                        </div>
+                        <div className={styles.inputGroup}>
+                            <label htmlFor="password">Password</label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            {errors.password && <div className={styles.error}>{errors.password}</div>}
+                        </div>
+                        <button type="submit" className={styles.submitButton}>Login</button>
+                    </form>
+                    <p className={styles.switchText}>
+                        Don’t have an account? <Link to="/register" className={styles.link}>Sign Up</Link>
+                    </p>
                 </div>
-                <p className={styles.switchPageText}>
-                    Don’t have an account? <Link to="/register">Sign up</Link>
-                </p>
             </div>
         </div>
     );
