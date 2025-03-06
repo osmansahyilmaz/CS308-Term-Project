@@ -6,13 +6,13 @@ WORKDIR /app
 
 # Copy package files first and install dependencies
 COPY package.json package-lock.json ./
-RUN npm install --only=production  # ✅ Install only production dependencies
+RUN npm install --only=production  
 
-# Copy the entire backend folder
-COPY . .
+# Copy only necessary files (excluding node_modules and unnecessary folders)
+COPY src/ src/  
 
 # Expose the port
 EXPOSE 5000
 
 # Start the application
-CMD ["node", "index.js"]
+CMD ["node", "/app/src/server.js"]

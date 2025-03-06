@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # 🔹 Backend Service (Node.js)
   backend:
     build: ./backend
     container_name: node_backend
@@ -8,17 +9,16 @@ services:
     ports:
       - "5000:5000"
     depends_on:
-      - db
-    environment:
-      DB_USER: ${DB_USER}
-      DB_HOST: ${DB_HOST}
-      DB_NAME: ${DB_NAME}
-      DB_PASS: ${DB_PASS}
-      DB_PORT: ${DB_PORT}
+      db:
+        condition: service_healthy  # ✅ Ensures DB is ready before backend starts
+    env_file:
+      - ./.env  # ✅ Pass environment variables securely
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend/src:/app/src  # ✅ Mount the src folder for live updates
+      - ./backend/tests:/app/tests  # ✅ Mount test files if needed
+      - /app/node_modules  # ✅ Prevent overwriting node_modules
 
+  # 🔹 PostgreSQL Database Service
   db:
     image: postgres:17
     container_name: postgres_db
@@ -29,8 +29,12 @@ services:
       POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
+    healthcheck:  # ✅ Ensure database is ready before backend starts
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      retries: 5
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data  # ✅ Persist database data
 
 volumes:
-  pg_data:
+  pg_data:  # ✅ Named volume for PostgreSQL persistence
