@@ -7,9 +7,10 @@ function RegisterPage() {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
-        username: '',  // Changed from email to username
+        username: '',
         password: '',
         agreed: false,
+        role: '',  // <-- Add a "role" or "registrationType" field
     });
 
     const handleChange = (e) => {
@@ -23,6 +24,7 @@ function RegisterPage() {
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Form submitted:', formData);
+        // Here you can handle the form submission, e.g., send data to your server
     };
 
     return (
@@ -69,6 +71,7 @@ function RegisterPage() {
                                 />
                             </div>
                         </div>
+
                         <div className={styles.inputGroup}>
                             <label htmlFor="username">Username</label>
                             <input
@@ -80,6 +83,7 @@ function RegisterPage() {
                                 required
                             />
                         </div>
+
                         <div className={styles.inputGroup}>
                             <label htmlFor="password">Enter your password</label>
                             <input
@@ -91,6 +95,24 @@ function RegisterPage() {
                                 required
                             />
                         </div>
+
+                        {/* New Registration Type field */}
+                        <div className={styles.inputGroup}>
+                            <label htmlFor="role">Registration type</label>
+                            <select
+                                id="role"
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="" disabled>Select an option</option>
+                                <option value="customer">Customer</option>
+                                <option value="productManager">Product Manager</option>
+                                <option value="salesManager">Sales Manager</option>
+                            </select>
+                        </div>
+
                         <div className={styles.termsGroup}>
                             <input
                                 type="checkbox"
@@ -104,6 +126,7 @@ function RegisterPage() {
                                 I agree to the <Link to="/terms">Terms &amp; Conditions</Link>
                             </label>
                         </div>
+
                         <button type="submit" className={styles.submitButton}>
                             Create account
                         </button>
@@ -115,3 +138,7 @@ function RegisterPage() {
 }
 
 export default RegisterPage;
+
+
+
+
