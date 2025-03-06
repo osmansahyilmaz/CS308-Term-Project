@@ -10,7 +10,13 @@
 }
 
 .logoContainer {
-    margin-top: 1rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Possibly some padding or height as needed */
+    width: 100%;
+    overflow: visible; 
 }
 
 .contentWrapper {
