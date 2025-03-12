@@ -14,14 +14,20 @@ const register = async (req, res) => {
         // Hash password with Argon2
         const hashedPassword = await argon2.hash(password);
 
+        // Create user in DB
         const result = await usersDb.createUser(username, email, hashedPassword);
+        const newUser = result.rows[0];
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: 'User registered successfully', 
-            user: result.rows[0]
+            user: {
+                username: newUser.username,
+                email: newUser.email,
+                created_at: newUser.created_at
+            }
         });
     } catch (err) {
-        res.status(500).json({ error: 'Registration failed', details: err });
+        res.status(500).json({ error: 'Registration failed', details: err.message });
     }
 };
 
@@ -29,37 +35,74 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
+        // Check if user exists
         const result = await usersDb.getUserByEmail(email);
-
         if (result.rows.length === 0) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         const user = result.rows[0];
-        const isMatch = await argon2.verify(user.hashed_password, password);
 
+        // Verify password
+        const isMatch = await argon2.verify(user.hashed_password, password);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        res.json({ message: "Login successful" });
+        // Store user info in session
+        req.session.user = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role_id: user.role_id
+        };
+
+        res.status(200).json({
+            message: 'Login successful',
+            user: {
+                username: user.username,
+                email: user.email,
+                role_id: user.role_id
+            }
+        });
     } catch (err) {
-        res.status(500).json({ error: 'Login failed', details: err });
+        res.status(500).json({ error: 'Login failed', details: err.message });
     }
 };
 
 const logout = (req, res) => {
+    // If no user is logged in, return 401
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // Destroy the session
     req.session.destroy((err) => {
         if (err) {
-            return res.status(500).json({ error: "Logout failed" });
+            return res.status(500).json({ error: 'Logout failed' });
         }
-        res.clearCookie('connect.sid');  // Clear the session cookie
-        res.json({ message: "Logout successful" });
+
+        // Clear the session cookie
+        res.clearCookie('connect.sid');
+        res.status(200).json({ message: 'Logout successful' });
+    });
+};
+
+const getProfile = (req, res) => {
+    // Check if user is logged in
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    // Return user data from session
+    res.status(200).json({
+        user: req.session.user
     });
 };
 
 module.exports = {
     register,
     login,
-    logout,  // ✅ Export the new logout function
+    logout,
+    getProfile
 };
