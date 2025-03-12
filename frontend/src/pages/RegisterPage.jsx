@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './RegisterPage.module.css';
 import LeftPanel from '../components/LeftPanel';
 
 function RegisterPage() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -25,6 +26,7 @@ function RegisterPage() {
         e.preventDefault();
         console.log('Form submitted:', formData);
         // Here you can handle the form submission, e.g., send data to your server
+        navigate('/login'); // Redirect to login page after successful registration
     };
 
     return (
