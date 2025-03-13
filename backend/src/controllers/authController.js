@@ -15,7 +15,15 @@ const register = async (req, res) => {
         return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // 3. Validate password strength (at least 8 characters, one uppercase, one lowercase, and one number)
+    // 3. Validate username length
+    if (username.length < 3) {
+        return res.status(400).json({ error: 'Username must be at least 3 characters long' });
+    }
+    if (username.length > 50) {
+        return res.status(400).json({ error: 'Username must be less than 50 characters long' });
+    }
+
+    // 4. Validate password strength
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(password)) {
         return res.status(400).json({ 
@@ -23,17 +31,22 @@ const register = async (req, res) => {
         });
     }
 
+    // 5. Check if password contains a special character
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        return res.status(400).json({ error: 'Password must contain at least one special character' });
+    }
+
     try {
-        // 4. Check if username or email already exists
+        // 6. Check if username or email already exists
         const checkResult = await usersDb.checkUserExists(email, username);
         if (checkResult.rows.length > 0) {
             return res.status(400).json({ error: 'Username or email already exists' });
         }
 
-        // 5. Hash password using Argon2
+        // 7. Hash password using Argon2
         const hashedPassword = await argon2.hash(password);
 
-        // 6. Insert new user into the database
+        // 8. Insert new user into the database
         const result = await usersDb.createUser(username, email, hashedPassword);
         const newUser = result.rows[0];
 
@@ -79,17 +92,32 @@ const login = async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        res.status(200).json({
-            message: 'Login successful',
-            user: {
-                username: user.username,
-                email: user.email
+        // 5. Store user data in session
+        req.session.user = {
+            id: user.id,
+            username: user.username,
+            email: user.email
+        };
+
+        // 6. Save the session before sending response
+        req.session.save((err) => {
+            if (err) {
+                return res.status(500).json({ error: 'Session save failed' });
             }
+            res.status(200).json({
+                message: 'Login successful',
+                user: {
+                    username: user.username,
+                    email: user.email
+                }
+            });
         });
+
     } catch (err) {
         res.status(500).json({ error: 'Login failed', details: err.message });
     }
 };
+
 
 const logout = (req, res) => {
     // If no user is logged in, return 401
