@@ -2,6 +2,24 @@ const request = require('supertest');
 const app = require('../src/server');
 
 describe('Logout API', () => {
+    const testUser = {
+        username: 'testUser',
+        email: 'test@example.com',
+        password: 'Test@1234'
+    };
+
+    let agent;
+
+    beforeAll(async () => {
+        agent = request.agent(app);
+
+        // 1️⃣ Register the test user
+        await agent
+            .post('/auth/register')
+            .send(testUser)
+            .expect(201);
+    });
+
     // Test: Logout without an active session
     it('should return 401 when logging out without an active session', async () => {
         const res = await request(app).post('/auth/logout');
@@ -11,23 +29,21 @@ describe('Logout API', () => {
 
     // Test: Logout with an active session
     it('should logout successfully and clear the session cookie', async () => {
-        const agent = request.agent(app);
-
-        // Simulate a login. Ensure your login route sets req.session.user upon success.
+        // 2️⃣ Log in with the registered user
         await agent
             .post('/auth/login')
-            .send({ email: 'test@example.com', password: 'Test@1234' })
+            .send({ email: testUser.email, password: testUser.password })
+            .expect(200)
             .then((response) => {
-                expect(response.statusCode).toBe(200);
                 expect(response.body).toHaveProperty('message', 'Login successful');
             });
 
-        // Now logout using the same agent that holds the session data
+        // 3️⃣ Logout using the same agent that holds the session
         const res = await agent.post('/auth/logout');
         expect(res.statusCode).toBe(200);
         expect(res.body).toHaveProperty('message', 'Logout successful');
 
-        // Validate that the session cookie is cleared
+        // 4️⃣ Validate that the session cookie is cleared
         const cookies = res.headers['set-cookie'];
         expect(cookies).toBeDefined();
         const clearedCookie = cookies.find(cookie => cookie.startsWith('connect.sid='));
