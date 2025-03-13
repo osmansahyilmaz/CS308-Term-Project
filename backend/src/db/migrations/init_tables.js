@@ -1,5 +1,6 @@
 require('dotenv').config();
 const pool = require('../pool');  // ✅ Shared DB connection
+const argon2 = require('argon2');
 
 // ✅ Users Table (Adding role_id)
 const createUsersTable = async () => {
@@ -36,10 +37,32 @@ const createSessionTable = async () => {
     }
 };
 
+// ✅ Ensure Admin User Exists
+const createAdminUser = async () => {
+    const adminUsername = "admin";
+    const adminEmail = "admin@admin.com";
+    const adminPassword = "admin"; // Change this to a secure password
+    const hashedPassword = await argon2.hash(adminPassword); // 🔹 Hash password
+
+    const query = `
+        INSERT INTO users (username, email, hashed_password, role_id)
+        VALUES ($1, $2, $3, 0) 
+        ON CONFLICT (email) DO NOTHING;
+    `;
+
+    try {
+        await pool.query(query, [adminUsername, adminEmail, hashedPassword]);
+        console.log('✅ Admin user ensured.');
+    } catch (err) {
+        console.error('❌ Error creating admin user:', err);
+    }
+};
+
 // ✅ Run the Migration
 const createAllTables = async () => {
     await createUsersTable();  // 🔹 Users table (Updated)
     await createSessionTable();  // 🔹 Session table
+    await createAdminUser(); // 🔹 Admin user insertion
 };
 
 module.exports = createAllTables;
