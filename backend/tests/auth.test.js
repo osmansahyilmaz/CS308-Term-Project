@@ -65,4 +65,46 @@ describe('User Registration API', () => {
         expect(res.body).toHaveProperty('error', 'Username or email already exists');
     });
 
+    // ❌ Test: Username too short
+    it('should return an error for username that is too short', async () => {
+        const res = await request(app)
+            .post('/auth/register')
+            .send({ username: "us", email: "test@example.com", password: "Test@1234" });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('error', 'Username must be at least 3 characters long');
+    });
+
+    // ❌ Test: Username too long
+    it('should return an error for username that is too long', async () => {
+        const res = await request(app)
+            .post('/auth/register')
+            .send({ username: "a".repeat(51), email: "test@example.com", password: "Test@1234" });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('error', 'Username must be less than 50 characters long');
+    });
+
+    // ❌ Test: Password missing special character
+    it('should return an error for password missing special character', async () => {
+        const res = await request(app)
+            .post('/auth/register')
+            .send({ username: "testuser", email: "test@example.com", password: "Test1234" });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('error', 'Password must contain at least one special character');
+    });
+
+    // ❌ Test: Email already exists
+    it('should return an error if email already exists', async () => {
+        usersDb.checkUserExists.mockResolvedValue({ rows: [{ id: 1 }] }); // Simulating existing email
+
+        const res = await request(app)
+            .post('/auth/register')
+            .send({ username: "newuser", email: "test@example.com", password: "Test@1234" });
+
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('error', 'Username or email already exists');
+    });
+
 });
