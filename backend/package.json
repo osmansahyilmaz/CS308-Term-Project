@@ -1,8 +1,8 @@
 {
-  "name": "your-backend-app",          
-  "version": "1.0.0",                  
+  "name": "your-backend-app",
+  "version": "1.0.0",
   "scripts": {
-    "start": "node ./src/server.js"       
+    "start": "node ./src/server.js"
   },
   "dependencies": {
     "argon2": "^0.41.1",
@@ -13,6 +13,13 @@
     "express-session": "^1.18.1",
     "pg": "^8.13.3",
     "pg-promise": "^11.10.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "scripts": {
+  "start": "node ./src/server.js",
+  "test": "jest"
   }
 }
-
