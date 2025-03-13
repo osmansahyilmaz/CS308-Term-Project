@@ -2,25 +2,46 @@ const argon2 = require('argon2');
 const usersDb = require('../db/users');
 
 const register = async (req, res) => {
-    const { username, email, password, role_id = 1 } = req.body;
+    const { username, email, password } = req.body;
+
+    // 1. Check if required fields are provided
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // 2. Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // 3. Validate password strength (at least 8 characters, one uppercase, one lowercase, and one number)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+        return res.status(400).json({ 
+            error: 'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, and one number' 
+        });
+    }
 
     try {
+        // 4. Check if username or email already exists
         const checkResult = await usersDb.checkUserExists(email, username);
         if (checkResult.rows.length > 0) {
             return res.status(400).json({ error: 'Username or email already exists' });
         }
 
+        // 5. Hash password using Argon2
         const hashedPassword = await argon2.hash(password);
 
-        const result = await usersDb.createUser(username, email, hashedPassword, role_id);
+        // 6. Insert new user into the database
+        const result = await usersDb.createUser(username, email, hashedPassword);
         const newUser = result.rows[0];
 
         res.status(201).json({
-            message: 'User registered successfully', 
+            message: 'User registered successfully',
             user: {
                 username: newUser.username,
                 email: newUser.email,
-                role_id: newUser.role_id,
                 created_at: newUser.created_at
             }
         });
@@ -32,7 +53,19 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     const { email, password } = req.body;
 
+    // 1. Check if required fields are provided
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    // 2. Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
+
     try {
+        // 3. Check if user exists
         const result = await usersDb.getUserByEmail(email);
         if (result.rows.length === 0) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -40,31 +73,23 @@ const login = async (req, res) => {
 
         const user = result.rows[0];
 
+        // 4. Validate password
         const isMatch = await argon2.verify(user.hashed_password, password);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        req.session.user = {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            role_id: user.role_id
-        };
-
         res.status(200).json({
             message: 'Login successful',
             user: {
                 username: user.username,
-                email: user.email,
-                role_id: user.role_id
+                email: user.email
             }
         });
     } catch (err) {
         res.status(500).json({ error: 'Login failed', details: err.message });
     }
 };
-
 
 const logout = (req, res) => {
     // If no user is logged in, return 401
