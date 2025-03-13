@@ -1,7 +1,7 @@
 require('dotenv').config();
 const pool = require('../pool');  // ✅ Shared DB connection
 
-// Users Table
+// ✅ Users Table (Adding role_id)
 const createUsersTable = async () => {
     const query = `
     CREATE TABLE IF NOT EXISTS users (
@@ -9,64 +9,18 @@ const createUsersTable = async () => {
         username VARCHAR(50) UNIQUE NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         hashed_password VARCHAR(255) NOT NULL,
+        role_id INT NOT NULL DEFAULT 1,  -- admin (0), Default: Customer (1), Product Manager (2), Sales Manager (3).
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );`;
     try {
         await pool.query(query);
-        console.log('✅ Users table created.');
+        console.log('✅ Users table created/updated.');
     } catch (err) {
         console.error('❌ Error creating users table:', err);
     }
 };
 
-// Roles Table
-const createRolesTable = async () => {
-    const query = `
-    CREATE TABLE IF NOT EXISTS roles (
-        id SERIAL PRIMARY KEY,
-        role_name VARCHAR(50) UNIQUE NOT NULL
-    );`;
-    try {
-        await pool.query(query);
-        console.log('✅ Roles table created.');
-    } catch (err) {
-        console.error('❌ Error creating roles table:', err);
-    }
-};
-
-// Ensure Default Roles Exist
-const insertDefaultRoles = async () => {
-    const query = `
-    INSERT INTO roles (role_name) 
-    SELECT unnest($1::text[])
-    WHERE NOT EXISTS (SELECT 1 FROM roles);
-    `;
-    const roles = ['Customer', 'Product Manager', 'Sales Manager'];
-    try {
-        await pool.query(query, [roles]);
-        console.log('✅ Default roles ensured.');
-    } catch (err) {
-        console.error('❌ Error inserting default roles:', err);
-    }
-};
-
-// User Roles Table
-const createUserRolesTable = async () => {
-    const query = `
-    CREATE TABLE IF NOT EXISTS user_roles (
-        user_id INT REFERENCES users(id) ON DELETE CASCADE,
-        role_id INT REFERENCES roles(id) ON DELETE CASCADE,
-        PRIMARY KEY (user_id, role_id)
-    );`;
-    try {
-        await pool.query(query);
-        console.log('✅ User roles table created.');
-    } catch (err) {
-        console.error('❌ Error creating user_roles table:', err);
-    }
-};
-
-// Session Table
+// ✅ Session Table (Remains Unchanged)
 const createSessionTable = async () => {
     const query = `
     CREATE TABLE IF NOT EXISTS session (
@@ -82,13 +36,10 @@ const createSessionTable = async () => {
     }
 };
 
-// Run all table creation scripts
+// ✅ Run the Migration
 const createAllTables = async () => {
-    await createUsersTable();
-    await createRolesTable();
-    await insertDefaultRoles();
-    await createUserRolesTable();
-    await createSessionTable();
+    await createUsersTable();  // 🔹 Users table (Updated)
+    await createSessionTable();  // 🔹 Session table
 };
 
 module.exports = createAllTables;

@@ -2,20 +2,17 @@ const argon2 = require('argon2');
 const usersDb = require('../db/users');
 
 const register = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, role_id = 1 } = req.body;
 
     try {
         const checkResult = await usersDb.checkUserExists(email, username);
-
         if (checkResult.rows.length > 0) {
             return res.status(400).json({ error: 'Username or email already exists' });
         }
 
-        // Hash password with Argon2
         const hashedPassword = await argon2.hash(password);
 
-        // Create user in DB
-        const result = await usersDb.createUser(username, email, hashedPassword);
+        const result = await usersDb.createUser(username, email, hashedPassword, role_id);
         const newUser = result.rows[0];
 
         res.status(201).json({
@@ -23,6 +20,7 @@ const register = async (req, res) => {
             user: {
                 username: newUser.username,
                 email: newUser.email,
+                role_id: newUser.role_id,
                 created_at: newUser.created_at
             }
         });
@@ -35,7 +33,6 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Check if user exists
         const result = await usersDb.getUserByEmail(email);
         if (result.rows.length === 0) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -43,13 +40,11 @@ const login = async (req, res) => {
 
         const user = result.rows[0];
 
-        // Verify password
         const isMatch = await argon2.verify(user.hashed_password, password);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Store user info in session
         req.session.user = {
             id: user.id,
             username: user.username,
@@ -69,6 +64,7 @@ const login = async (req, res) => {
         res.status(500).json({ error: 'Login failed', details: err.message });
     }
 };
+
 
 const logout = (req, res) => {
     // If no user is logged in, return 401

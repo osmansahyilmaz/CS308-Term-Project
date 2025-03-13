@@ -5,9 +5,9 @@ const checkUserExists = async (email, username) => {
     return pool.query(query, [email, username]);
 };
 
-const createUser = async (username, email, hashedPassword) => {
-    const query = `INSERT INTO users (username, email, hashed_password) VALUES ($1, $2, $3) RETURNING id, username, email, created_at`;
-    return pool.query(query, [username, email, hashedPassword]);
+const createUser = async (username, email, hashedPassword, role_id = 1) => {
+    const query = `INSERT INTO users (username, email, hashed_password, role_id) VALUES ($1, $2, $3, $4) RETURNING id, username, email, role_id, created_at`;
+    return pool.query(query, [username, email, hashedPassword, role_id]);
 };
 
 const getUserByEmail = async (email) => {
