@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
+
 import styles from './RegisterPage.module.css';
 import LeftPanel from '../components/LeftPanel';
 
@@ -24,23 +26,21 @@ function RegisterPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
-            const response = await fetch('/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                toast.error(data.error || 'Registration failed');
-            } else {
-                toast.success('Registration successful. Please log in.');
-                navigate('/login');
-            }
+            // Make an axios POST request to your backend
+            const response = await axios.post(
+                'http://localhost:5000/auth/api/register', // <-- Change to your actual endpoint
+                formData
+            );
+
+            // If successful, show success toast and redirect to login
+            toast.success('Registration successful. Please log in.');
+            navigate('/login');
         } catch (error) {
-            toast.error('Something went wrong. Please try again later.');
+            // If there's an error response from the server, show it
+            const errorMessage = error.response?.data?.error || 'Registration failed';
+            toast.error(errorMessage);
         }
     };
 
@@ -130,3 +130,6 @@ function RegisterPage() {
 }
 
 export default RegisterPage;
+
+
+
