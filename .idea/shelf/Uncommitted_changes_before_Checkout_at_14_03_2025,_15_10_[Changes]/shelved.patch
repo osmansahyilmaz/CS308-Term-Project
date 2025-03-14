@@ -1,0 +1,1820 @@
+Index: frontend/src/pages/HomePage.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React from 'react';\nimport { Link } from 'react-router-dom';\nimport styles from './HomePage.module.css';\nimport LeftPanel from '../components/LeftPanel';\n\nfunction HomePage() {\n    return (\n        <div className={styles.homeContainer}>\n            <div className={styles.leftWrapper}>\n                <LeftPanel\n                    bottomLinkText=\"Login\"           /* Left panel now links to Login */\n                    bottomLinkRoute=\"/login\"\n                    quote=\"Discover endless possibilities at your fingertips.\"\n                    subQuote=\"Unbeatable offers and trends every day.\"\n                />\n            </div>\n            <div className={styles.rightPanel}>\n                <div className={styles.heroContent}>\n                    <h1 className={styles.title}>Welcome to ShopEasy</h1>\n                    <p className={styles.subtitle}>\n                        Your one-stop shop for all things trendy and unique.\n                    </p>\n                    <div className={styles.buttons}>\n                        <Link to=\"/shop\" className={styles.buttonLink}>\n                            <button className={styles.primaryButton}>Shop Now</button>\n                        </Link>\n                        <Link to=\"/register\" className={styles.buttonLink}>\n                            <button className={styles.secondaryButton}>Create Account</button>\n                        </Link>\n                    </div>\n                </div>\n            </div>\n        </div>\n    );\n}\n\nexport default HomePage;\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/pages/HomePage.jsx b/frontend/src/pages/HomePage.jsx
+--- a/frontend/src/pages/HomePage.jsx	(revision 685d32dbf149d51440bb4da9ff51e07042327cf9)
++++ b/frontend/src/pages/HomePage.jsx	(date 1741374677903)
+@@ -1,3 +1,4 @@
++// src/pages/HomePage.jsx
+ import React from 'react';
+ import { Link } from 'react-router-dom';
+ import styles from './HomePage.module.css';
+@@ -8,7 +9,7 @@
+         <div className={styles.homeContainer}>
+             <div className={styles.leftWrapper}>
+                 <LeftPanel
+-                    bottomLinkText="Login"           /* Left panel now links to Login */
++                    bottomLinkText="Login"
+                     bottomLinkRoute="/login"
+                     quote="Discover endless possibilities at your fingertips."
+                     subQuote="Unbeatable offers and trends every day."
+@@ -21,7 +22,7 @@
+                         Your one-stop shop for all things trendy and unique.
+                     </p>
+                     <div className={styles.buttons}>
+-                        <Link to="/shop" className={styles.buttonLink}>
++                        <Link to="/product" className={styles.buttonLink}>
+                             <button className={styles.primaryButton}>Shop Now</button>
+                         </Link>
+                         <Link to="/register" className={styles.buttonLink}>
+Index: frontend/src/App.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// src/App.jsx\nimport React from 'react';\nimport { BrowserRouter, Routes, Route } from 'react-router-dom';\nimport HomePage from './pages/HomePage'; // Create a simple HomePage component if needed\nimport LoginPage from './pages/LoginPage';\nimport RegisterPage from './pages/RegisterPage';\n\nfunction App() {\n    return (\n        <BrowserRouter>\n            <Routes>\n                <Route path=\"/\" element={<HomePage />} />\n                <Route path=\"/login\" element={<LoginPage />} />\n                <Route path=\"/register\" element={<RegisterPage />} />\n                {/* You can add more routes (e.g., /forgot-password) as needed */}\n            </Routes>\n        </BrowserRouter>\n    );\n}\n\nexport default App;\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/App.jsx b/frontend/src/App.jsx
+--- a/frontend/src/App.jsx	(revision 685d32dbf149d51440bb4da9ff51e07042327cf9)
++++ b/frontend/src/App.jsx	(date 1741376150960)
+@@ -1,9 +1,10 @@
+ // src/App.jsx
+ import React from 'react';
+ import { BrowserRouter, Routes, Route } from 'react-router-dom';
+-import HomePage from './pages/HomePage'; // Create a simple HomePage component if needed
++import HomePage from './pages/HomePage';
+ import LoginPage from './pages/LoginPage';
+ import RegisterPage from './pages/RegisterPage';
++import ProductPage from './pages/ProductPage';
+ 
+ function App() {
+     return (
+@@ -12,7 +13,7 @@
+                 <Route path="/" element={<HomePage />} />
+                 <Route path="/login" element={<LoginPage />} />
+                 <Route path="/register" element={<RegisterPage />} />
+-                {/* You can add more routes (e.g., /forgot-password) as needed */}
++                <Route path="/product" element={<ProductPage />} />
+             </Routes>
+         </BrowserRouter>
+     );
+Index: frontend/src/pages/LoginPage.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState } from 'react';\nimport { Link, useNavigate } from 'react-router-dom';\nimport styles from './LoginPage.module.css';\nimport LeftPanel from '../components/LeftPanel';\n\nfunction LoginPage() {\n    const navigate = useNavigate();\n    const [username, setUsername] = useState('');\n    const [password, setPassword] = useState('');\n    const [errors, setErrors] = useState({});\n\n    const validate = () => {\n        const newErrors = {};\n        if (!username.trim()) {\n            newErrors.username = 'Username is required.';\n        }\n        if (!password) {\n            newErrors.password = 'Password is required.';\n        }\n        return newErrors;\n    };\n\n    const handleSubmit = (e) => {\n        e.preventDefault();\n        const validationErrors = validate();\n        setErrors(validationErrors);\n        if (Object.keys(validationErrors).length === 0) {\n            console.log('Logging in with:', username, password);\n            navigate('/');\n        }\n    };\n\n    return (\n        <div className={styles.loginContainer}>\n            <div className={styles.leftWrapper}>\n                <LeftPanel\n                    bottomLinkText=\"Back to website\"\n                    bottomLinkRoute=\"/\"\n                    quote=\"Your style, your way – login and explore.\"\n                    subQuote=\"Welcome back to unbeatable trends.\"\n                />\n            </div>\n            <div className={styles.rightPanel}>\n                <div className={styles.formWrapper}>\n                    <h2 className={styles.formTitle}>Sign In</h2>\n                    <form onSubmit={handleSubmit} className={styles.form}>\n                        <div className={styles.inputGroup}>\n                            <label htmlFor=\"username\">Username</label>\n                            <input\n                                type=\"text\"\n                                id=\"username\"\n                                name=\"username\"\n                                value={username}\n                                onChange={(e) => setUsername(e.target.value)}\n                                required\n                            />\n                            {errors.username && <div className={styles.error}>{errors.username}</div>}\n                        </div>\n                        <div className={styles.inputGroup}>\n                            <label htmlFor=\"password\">Password</label>\n                            <input\n                                type=\"password\"\n                                id=\"password\"\n                                name=\"password\"\n                                value={password}\n                                onChange={(e) => setPassword(e.target.value)}\n                                required\n                            />\n                            {errors.password && <div className={styles.error}>{errors.password}</div>}\n                        </div>\n                        <button type=\"submit\" className={styles.submitButton}>Login</button>\n                    </form>\n                    <p className={styles.switchText}>\n                        Don’t have an account? <Link to=\"/register\" className={styles.link}>Sign Up</Link>\n                    </p>\n                </div>\n            </div>\n        </div>\n    );\n}\n\nexport default LoginPage;\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/pages/LoginPage.jsx b/frontend/src/pages/LoginPage.jsx
+--- a/frontend/src/pages/LoginPage.jsx	(revision 685d32dbf149d51440bb4da9ff51e07042327cf9)
++++ b/frontend/src/pages/LoginPage.jsx	(date 1741374686767)
+@@ -1,3 +1,4 @@
++// src/pages/LoginPage.jsx
+ import React, { useState } from 'react';
+ import { Link, useNavigate } from 'react-router-dom';
+ import styles from './LoginPage.module.css';
+@@ -26,7 +27,8 @@
+         setErrors(validationErrors);
+         if (Object.keys(validationErrors).length === 0) {
+             console.log('Logging in with:', username, password);
+-            navigate('/');
++            // Redirect to the product page after a successful login
++            navigate('/product');
+         }
+     };
+ 
+Index: frontend/src/pages/RegisterPage.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState } from 'react';\nimport { Link, useNavigate } from 'react-router-dom';\nimport styles from './RegisterPage.module.css';\nimport LeftPanel from '../components/LeftPanel';\n\nfunction RegisterPage() {\n    const navigate = useNavigate();\n    const [formData, setFormData] = useState({\n        firstName: '',\n        lastName: '',\n        username: '',\n        password: '',\n        agreed: false,\n        role: '',  // <-- Add a \"role\" or \"registrationType\" field\n    });\n\n    const handleChange = (e) => {\n        const { name, value, type, checked } = e.target;\n        setFormData({\n            ...formData,\n            [name]: type === 'checkbox' ? checked : value,\n        });\n    };\n\n    const handleSubmit = (e) => {\n        e.preventDefault();\n        console.log('Form submitted:', formData);\n        // Here you can handle the form submission, e.g., send data to your server\n        navigate('/login'); // Redirect to login page after successful registration\n    };\n\n    return (\n        <div className={styles.registerContainer}>\n            <div className={styles.leftWrapper}>\n                <LeftPanel\n                    bottomLinkText=\"Back to website\"\n                    bottomLinkRoute=\"/\"\n                    quote=\"Shopping is not just a necessity—it's an adventure in style.\"\n                    subQuote=\"Join us and explore amazing deals.\"\n                />\n            </div>\n            <div className={styles.rightPanel}>\n                <div className={styles.formWrapper}>\n                    <h2 className={styles.formTitle}>Create an account</h2>\n                    <p className={styles.subText}>\n                        Already have an account?{' '}\n                        <Link to=\"/login\" className={styles.loginLink}>\n                            Log in\n                        </Link>\n                    </p>\n                    <form onSubmit={handleSubmit} className={styles.form}>\n                        <div className={styles.inputRow}>\n                            <div className={styles.inputGroup}>\n                                <label htmlFor=\"firstName\">First name</label>\n                                <input\n                                    type=\"text\"\n                                    id=\"firstName\"\n                                    name=\"firstName\"\n                                    value={formData.firstName}\n                                    onChange={handleChange}\n                                    required\n                                />\n                            </div>\n                            <div className={styles.inputGroup}>\n                                <label htmlFor=\"lastName\">Last name</label>\n                                <input\n                                    type=\"text\"\n                                    id=\"lastName\"\n                                    name=\"lastName\"\n                                    value={formData.lastName}\n                                    onChange={handleChange}\n                                    required\n                                />\n                            </div>\n                        </div>\n\n                        <div className={styles.inputGroup}>\n                            <label htmlFor=\"username\">Username</label>\n                            <input\n                                type=\"text\"\n                                id=\"username\"\n                                name=\"username\"\n                                value={formData.username}\n                                onChange={handleChange}\n                                required\n                            />\n                        </div>\n\n                        <div className={styles.inputGroup}>\n                            <label htmlFor=\"password\">Enter your password</label>\n                            <input\n                                type=\"password\"\n                                id=\"password\"\n                                name=\"password\"\n                                value={formData.password}\n                                onChange={handleChange}\n                                required\n                            />\n                        </div>\n\n                        {/* New Registration Type field */}\n                        <div className={styles.inputGroup}>\n                            <label htmlFor=\"role\">Registration type</label>\n                            <select\n                                id=\"role\"\n                                name=\"role\"\n                                value={formData.role}\n                                onChange={handleChange}\n                                required\n                            >\n                                <option value=\"\" disabled>Select an option</option>\n                                <option value=\"customer\">Customer</option>\n                                <option value=\"productManager\">Product Manager</option>\n                                <option value=\"salesManager\">Sales Manager</option>\n                            </select>\n                        </div>\n\n                        <div className={styles.termsGroup}>\n                            <input\n                                type=\"checkbox\"\n                                id=\"terms\"\n                                name=\"agreed\"\n                                checked={formData.agreed}\n                                onChange={handleChange}\n                                required\n                            />\n                            <label htmlFor=\"terms\">\n                                I agree to the <Link to=\"/terms\">Terms &amp; Conditions</Link>\n                            </label>\n                        </div>\n\n                        <button type=\"submit\" className={styles.submitButton}>\n                            Create account\n                        </button>\n                    </form>\n                </div>\n            </div>\n        </div>\n    );\n}\n\nexport default RegisterPage;\n\n\n\n\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/pages/RegisterPage.jsx b/frontend/src/pages/RegisterPage.jsx
+--- a/frontend/src/pages/RegisterPage.jsx	(revision 685d32dbf149d51440bb4da9ff51e07042327cf9)
++++ b/frontend/src/pages/RegisterPage.jsx	(date 1741953370964)
+@@ -8,25 +8,46 @@
+     const [formData, setFormData] = useState({
+         firstName: '',
+         lastName: '',
++        email: '',
+         username: '',
+         password: '',
+         agreed: false,
+-        role: '',  // <-- Add a "role" or "registrationType" field
++        role: '',
+     });
++    const [error, setError] = useState('');
+ 
+     const handleChange = (e) => {
+         const { name, value, type, checked } = e.target;
+-        setFormData({
+-            ...formData,
++        setFormData((prev) => ({
++            ...prev,
+             [name]: type === 'checkbox' ? checked : value,
+-        });
++        }));
+     };
+ 
+-    const handleSubmit = (e) => {
++    const handleSubmit = async (e) => {
+         e.preventDefault();
+-        console.log('Form submitted:', formData);
+-        // Here you can handle the form submission, e.g., send data to your server
+-        navigate('/login'); // Redirect to login page after successful registration
++
++        if (!formData.agreed) {
++            setError('You must agree to the Terms & Conditions.');
++            return;
++        }
++
++        try {
++            const response = await fetch('/api/register', {
++                method: 'POST',
++                headers: { 'Content-Type': 'application/json' },
++                body: JSON.stringify(formData),
++            });
++
++            if (!response.ok) {
++                const data = await response.json();
++                setError(data.message || 'Registration failed.');
++            } else {
++                navigate('/login');
++            }
++        } catch (err) {
++            setError('An error occurred during registration.');
++        }
+     };
+ 
+     return (
+@@ -48,6 +69,7 @@
+                             Log in
+                         </Link>
+                     </p>
++                    {error && <div className={styles.error}>{error}</div>}
+                     <form onSubmit={handleSubmit} className={styles.form}>
+                         <div className={styles.inputRow}>
+                             <div className={styles.inputGroup}>
+@@ -74,6 +96,18 @@
+                             </div>
+                         </div>
+ 
++                        <div className={styles.inputGroup}>
++                            <label htmlFor="email">Email</label>
++                            <input
++                                type="email"
++                                id="email"
++                                name="email"
++                                value={formData.email}
++                                onChange={handleChange}
++                                required
++                            />
++                        </div>
++
+                         <div className={styles.inputGroup}>
+                             <label htmlFor="username">Username</label>
+                             <input
+@@ -108,7 +142,9 @@
+                                 onChange={handleChange}
+                                 required
+                             >
+-                                <option value="" disabled>Select an option</option>
++                                <option value="" disabled>
++                                    Select an option
++                                </option>
+                                 <option value="customer">Customer</option>
+                                 <option value="productManager">Product Manager</option>
+                                 <option value="salesManager">Sales Manager</option>
+@@ -140,7 +176,3 @@
+ }
+ 
+ export default RegisterPage;
+-
+-
+-
+-
+Index: frontend/package-lock.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/package-lock.json b/frontend/package-lock.json
+--- a/frontend/package-lock.json	(revision 685d32dbf149d51440bb4da9ff51e07042327cf9)
++++ b/frontend/package-lock.json	(date 1741686095434)
+@@ -15,6 +15,7 @@
+         "react": "^19.0.0",
+         "react-dom": "^19.0.0",
+         "react-hook-form": "^7.54.2",
++        "react-icons": "^5.5.0",
+         "react-router-dom": "^7.2.0",
+         "react-scripts": "5.0.1",
+         "web-vitals": "^2.1.4"
+@@ -13945,6 +13946,15 @@
+         "react": "^16.8.0 || ^17 || ^18 || ^19"
+       }
+     },
++    "node_modules/react-icons": {
++      "version": "5.5.0",
++      "resolved": "https://registry.npmjs.org/react-icons/-/react-icons-5.5.0.tgz",
++      "integrity": "sha512-MEFcXdkP3dLo8uumGI5xN3lDFNsRtrjbOEKDLD7yv76v4wpnEq2Lt2qeHaQOr34I/wPN3s3+N08WkQ+CW37Xiw==",
++      "license": "MIT",
++      "peerDependencies": {
++        "react": "*"
++      }
++    },
+     "node_modules/react-is": {
+       "version": "17.0.2",
+       "resolved": "https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz",
+Index: frontend/src/pages/ProductPage.module.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/pages/ProductPage.module.css b/frontend/src/pages/ProductPage.module.css
+new file mode 100644
+--- /dev/null	(date 1741686597852)
++++ b/frontend/src/pages/ProductPage.module.css	(date 1741686597852)
+@@ -0,0 +1,809 @@
++.pageContainer {
++    display: flex;
++    flex-direction: column;
++    background-color: #f9f9f9;
++    min-height: 100vh;
++    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
++    color: #333;
++}
++
++/* Loading State */
++.loadingContainer {
++    display: flex;
++    flex-direction: column;
++    align-items: center;
++    justify-content: center;
++    height: 60vh;
++}
++
++.loader {
++    width: 50px;
++    height: 50px;
++    border: 5px solid rgba(0, 0, 0, 0.1);
++    border-radius: 50%;
++    border-top-color: #e43d12;
++    animation: spin 1s ease-in-out infinite;
++    margin-bottom: 20px;
++}
++
++@keyframes spin {
++    to {
++        transform: rotate(360deg);
++    }
++}
++
++/* Breadcrumbs */
++.breadcrumbs {
++    display: flex;
++    padding: 12px 24px;
++    color: #777;
++    font-size: 0.85rem;
++    background-color: #fff;
++    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
++}
++
++.breadcrumbs span {
++    margin: 0 4px;
++}
++
++.breadcrumbs .currentPage {
++    color: #e43d12;
++    font-weight: 500;
++}
++
++/* Main layout for the product section */
++.productLayout {
++    display: flex;
++    gap: 2.5rem;
++    padding: 2rem;
++    flex-wrap: wrap;
++    max-width: 1400px;
++    margin: 0 auto;
++    background-color: #fff;
++    border-radius: 8px;
++    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
++    margin-top: 1.5rem;
++}
++
++/* Gallery Section (Left) */
++.gallerySection {
++    flex: 1;
++    min-width: 380px;
++    display: flex;
++    flex-direction: column;
++    gap: 1rem;
++    position: relative;
++}
++
++.largeImageWrapper {
++    width: 100%;
++    text-align: center;
++    position: relative;
++    border-radius: 12px;
++    overflow: hidden;
++    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
++}
++
++.largeImage {
++    width: 100%;
++    height: 480px;
++    object-fit: cover;
++    border-radius: 12px;
++    transition: transform 0.3s ease;
++}
++
++.largeImage:hover {
++    transform: scale(1.03);
++}
++
++.wishlistButton, .shareButton {
++    position: absolute;
++    width: 40px;
++    height: 40px;
++    border-radius: 50%;
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    background-color: rgba(255, 255, 255, 0.9);
++    border: none;
++    cursor: pointer;
++    transition: all 0.2s ease;
++    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
++}
++
++.wishlistButton {
++    top: 15px;
++    right: 15px;
++    color: #aaa;
++}
++
++.shareButton {
++    top: 15px;
++    right: 65px;
++    color: #555;
++}
++
++.wishlisted {
++    color: #e43d12;
++    background-color: #fff;
++}
++
++.wishlistButton:hover, .shareButton:hover {
++    transform: scale(1.1);
++}
++
++.thumbnails {
++    display: flex;
++    gap: 0.75rem;
++    flex-wrap: wrap;
++    justify-content: center;
++    margin-top: 1rem;
++}
++
++.thumbnail {
++    width: 75px;
++    height: 75px;
++    object-fit: cover;
++    cursor: pointer;
++    border: 2px solid transparent;
++    border-radius: 8px;
++    transition: all 0.2s ease;
++    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
++}
++
++.thumbnail:hover {
++    border-color: #ddd;
++    transform: translateY(-2px);
++}
++
++.selectedThumb {
++    border-color: #e43d12;
++    transform: scale(1.05);
++}
++
++/* Info Section (Right) */
++.infoSection {
++    flex: 1;
++    min-width: 380px;
++    display: flex;
++    flex-direction: column;
++    gap: 1.25rem;
++}
++
++.title {
++    font-size: 2rem;
++    color: #222;
++    margin-bottom: 0.5rem;
++    font-weight: 600;
++    line-height: 1.2;
++}
++
++/* Rating & Reviews */
++.ratingReviews {
++    display: flex;
++    align-items: center;
++    gap: 1rem;
++    padding-bottom: 1rem;
++    border-bottom: 1px solid #eee;
++}
++
++.stars {
++    display: flex;
++}
++
++.star {
++    font-size: 1.2rem;
++    color: #ffb74d;
++    margin-right: 2px;
++}
++
++.reviewCount {
++    color: #666;
++    font-size: 0.95rem;
++    text-decoration: underline;
++    cursor: pointer;
++}
++
++.reviewCount:hover {
++    color: #e43d12;
++}
++
++/* Pricing */
++.pricing {
++    display: flex;
++    align-items: baseline;
++    gap: 0.75rem;
++    margin-bottom: 0.5rem;
++}
++
++.currentPrice {
++    font-size: 1.8rem;
++    font-weight: 700;
++    color: #e43d12;
++}
++
++.originalPrice {
++    text-decoration: line-through;
++    color: #999;
++    font-size: 1.2rem;
++}
++
++.discount {
++    font-weight: 600;
++    font-size: 0.95rem;
++    color: #fff;
++    background-color: #e43d12;
++    padding: 3px 8px;
++    border-radius: 20px;
++}
++
++/* Stock / Shipping */
++.stockInfo {
++    display: flex;
++    flex-direction: column;
++    gap: 0.5rem;
++    color: #555;
++    font-size: 0.9rem;
++    margin-bottom: 0.5rem;
++}
++
++.stockStatus {
++    font-weight: 500;
++}
++
++.inStock {
++    color: #4caf50;
++    font-weight: 600;
++}
++
++.outOfStock {
++    color: #f44336;
++    font-weight: 600;
++}
++
++.inCarts {
++    display: inline-flex;
++    align-items: center;
++    color: #e67e22;
++    font-size: 0.85rem;
++}
++
++/* Product Customization */
++.customizationSection {
++    display: flex;
++    flex-direction: column;
++    gap: 1.25rem;
++    margin: 1rem 0;
++    padding: 1.25rem;
++    background-color: #f9f9f9;
++    border-radius: 8px;
++    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) inset;
++}
++
++.selectorContainer {
++    display: flex;
++    flex-direction: column;
++    gap: 0.5rem;
++}
++
++.selectorContainer label {
++    font-size: 0.95rem;
++    color: #555;
++    font-weight: 500;
++}
++
++.selector {
++    padding: 0.75rem;
++    border-radius: 8px;
++    border: 1px solid #ddd;
++    font-size: 1rem;
++    background-color: #fff;
++    transition: all 0.2s;
++}
++
++.selector:focus {
++    border-color: #e43d12;
++    outline: none;
++    box-shadow: 0 0 0 3px rgba(228, 61, 18, 0.15);
++}
++
++/* Quantity Selector */
++.quantitySelector {
++    display: flex;
++    flex-direction: column;
++    gap: 0.5rem;
++}
++
++.quantitySelector label {
++    font-size: 0.95rem;
++    color: #555;
++    font-weight: 500;
++}
++
++.quantityControls {
++    display: flex;
++    align-items: center;
++    background-color: #fff;
++    border: 1px solid #ddd;
++    border-radius: 8px;
++    overflow: hidden;
++    width: fit-content;
++}
++
++.quantityBtn {
++    background: none;
++    border: none;
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    width: 40px;
++    height: 40px;
++    color: #666;
++    cursor: pointer;
++    transition: all 0.2s;
++}
++
++.quantityBtn:disabled {
++    color: #ccc;
++    cursor: not-allowed;
++}
++
++.quantityBtn:not(:disabled):hover {
++    background-color: #f0f0f0;
++    color: #e43d12;
++}
++
++.quantityValue {
++    width: 40px;
++    text-align: center;
++    font-weight: 500;
++    padding: 0 0.5rem;
++}
++
++/* Action Buttons */
++.actionButtons {
++    display: flex;
++    gap: 1rem;
++    margin: 1rem 0;
++}
++
++.addToCartButton {
++    background-color: #e43d12;
++    color: #fff;
++    border: none;
++    padding: 0.9rem 1.5rem;
++    border-radius: 8px;
++    cursor: pointer;
++    transition: all 0.2s;
++    font-size: 1rem;
++    font-weight: 600;
++    flex: 2;
++    box-shadow: 0 4px 12px rgba(228, 61, 18, 0.2);
++}
++
++.addToCartButton:hover {
++    background-color: #d13000;
++    transform: translateY(-2px);
++    box-shadow: 0 6px 14px rgba(228, 61, 18, 0.25);
++}
++
++.buyNowButton {
++    background-color: #fff;
++    color: #e43d12;
++    border: 2px solid #e43d12;
++    padding: 0.9rem 1.5rem;
++    border-radius: 8px;
++    cursor: pointer;
++    transition: all 0.2s;
++    font-size: 1rem;
++    font-weight: 600;
++    flex: 1;
++}
++
++.buyNowButton:hover {
++    background-color: #fcf2ef;
++    transform: translateY(-2px);
++}
++
++/* Shipping Info Card */
++.shippingInfoCard {
++    margin-top: 1rem;
++    padding: 1rem;
++    border-radius: 8px;
++    border: 1px solid #eee;
++    background-color: #fafafa;
++}
++
++.shippingHeader {
++    display: flex;
++    align-items: center;
++    gap: 0.75rem;
++    margin-bottom: 0.75rem;
++}
++
++.shippingIcon {
++    color: #7986cb;
++    font-size: 1.25rem;
++}
++
++.shippingHeader h3 {
++    margin: 0;
++    font-size: 1.1rem;
++    color: #444;
++}
++
++.shippingDetails p {
++    margin: 0.5rem 0;
++    font-size: 0.9rem;
++    color: #666;
++}
++
++/* Tabs */
++.tabsContainer {
++    display: flex;
++    gap: 0;
++    margin: 2rem auto 0;
++    max-width: 1400px;
++    background-color: #fff;
++    border-radius: 8px 8px 0 0;
++    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
++    overflow: hidden;
++}
++
++.tabButton {
++    background: none;
++    border: none;
++    font-size: 1rem;
++    padding: 1.25rem 2rem;
++    cursor: pointer;
++    color: #666;
++    position: relative;
++    border-bottom: 3px solid transparent;
++    transition: all 0.2s;
++    font-weight: 500;
++}
++
++.tabButton:hover {
++    color: #e43d12;
++    background-color: #fdfdfd;
++}
++
++.activeTab {
++    color: #e43d12;
++    font-weight: 600;
++    border-bottom: 3px solid #e43d12;
++    background-color: #fff;
++}
++
++.tabContent {
++    margin: 0 auto 2rem;
++    background-color: #fff;
++    border-radius: 0 0 8px 8px;
++    padding: 2rem;
++    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
++    max-width: 1400px;
++}
++
++/* Description content */
++.descriptionText {
++    color: #555;
++    margin-bottom: 1.5rem;
++    line-height: 1.6;
++    font-size: 1.05rem;
++}
++
++.sectionTitle {
++    font-size: 1.4rem;
++    color: #333;
++    margin: 1.5rem 0 1rem;
++    font-weight: 600;
++}
++
++.highlightList {
++    list-style: disc;
++    margin-left: 1.5rem;
++    color: #444;
++    line-height: 1.6;
++}
++
++.highlightList li {
++    margin-bottom: 0.5rem;
++}
++
++.tagsSection {
++    margin-top: 2rem;
++}
++
++.tagsList {
++    display: flex;
++    flex-wrap: wrap;
++    gap: 0.5rem;
++}
++
++.tag {
++    background-color: #f0f0f0;
++    color: #666;
++    padding: 0.4rem 0.8rem;
++    border-radius: 20px;
++    font-size: 0.9rem;
++    transition: all 0.2s;
++    cursor: pointer;
++}
++
++.tag:hover {
++    background-color: #e9e9e9;
++    color: #e43d12;
++}
++
++/* Shipping Details */
++.shippingDetails {
++    display: flex;
++    flex-direction: column;
++    gap: 2rem;
++}
++
++.shippingSection, .returnSection {
++    display: flex;
++    gap: 1.5rem;
++}
++
++.shippingIcon, .returnIcon {
++    padding: 1rem;
++    border-radius: 50%;
++    background-color: #eef2ff;
++    color: #5c6bc0;
++    height: fit-content;
++}
++
++.returnIcon {
++    background-color: #e8f5e9;
++    color: #4caf50;
++}
++
++/* Reviews */
++.reviewsContainer {
++    display: flex;
++    flex-direction: column;
++    gap: 2rem;
++}
++
++.reviewsSummary {
++    display: flex;
++    gap: 3rem;
++    padding-bottom: 2rem;
++    border-bottom: 1px solid #eee;
++}
++
++.averageRating {
++    display: flex;
++    flex-direction: column;
++    align-items: center;
++    gap: 0.5rem;
++}
++
++.averageRating h2 {
++    font-size: 3rem;
++    color: #333;
++    margin: 0;
++}
++
++.starsLarge {
++    display: flex;
++    gap: 0.25rem;
++    font-size: 1.5rem;
++}
++
++.ratingBars {
++    flex: 1;
++    display: flex;
++    flex-direction: column;
++    gap: 0.75rem;
++}
++
++.ratingBar {
++    display: flex;
++    align-items: center;
++    gap: 1rem;
++}
++
++.ratingBar span {
++    width: 70px;
++    color: #666;
++    font-size: 0.9rem;
++}
++
++.barContainer {
++    flex: 1;
++    height: 8px;
++    background-color: #eee;
++    border-radius: 4px;
++    overflow: hidden;
++}
++
++.barFill {
++    height: 100%;
++    background-color: #ffb74d;
++    border-radius: 4px;
++}
++
++.writeReviewBtn {
++    align-self: flex-start;
++    background-color: #333;
++    color: #fff;
++    border: none;
++    padding: 0.75rem 1.5rem;
++    border-radius: 8px;
++    cursor: pointer;
++    transition: all 0.2s;
++    font-weight: 500;
++}
++
++.writeReviewBtn:hover {
++    background-color: #222;
++}
++
++.placeholder {
++    font-style: italic;
++    color: #888;
++    margin-top: 1rem;
++}
++
++/* Related Products */
++.relatedProductsSection {
++    max-width: 1400px;
++    margin: 2rem auto;
++    padding: 2rem;
++    background-color: #fff;
++    border-radius: 8px;
++    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
++    overflow: hidden;
++}
++
++.relatedProducts {
++    display: flex;
++    gap: 1.5rem;
++    margin-top: 1.5rem;
++    overflow-x: auto;
++    padding: 0.5rem 0.25rem;
++    scroll-behavior: smooth;
++    -webkit-overflow-scrolling: touch;
++    scrollbar-width: none;
++    -ms-overflow-style: none;
++}
++
++.relatedProducts::-webkit-scrollbar {
++    display: none;
++}
++
++.relatedProductCard {
++    flex: 0 0 280px;
++    border-radius: 8px;
++    overflow: hidden;
++    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
++    transition: all 0.3s;
++    background-color: #fff;
++    scroll-snap-align: start;
++}
++
++.relatedProductCard:hover {
++    transform: translateY(-5px);
++    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
++}
++
++.relatedProductImage {
++    height: 200px;
++    overflow: hidden;
++}
++
++.relatedProductImage img {
++    width: 100%;
++    height: 100%;
++    object-fit: cover;
++    transition: transform 0.3s;
++}
++
++.relatedProductCard:hover .relatedProductImage img {
++    transform: scale(1.05);
++}
++
++.relatedProductName {
++    padding: 1rem 1rem 0.5rem;
++    font-size: 1.1rem;
++    font-weight: 600;
++    color: #333;
++    margin: 0;
++}
++
++.relatedProductRating {
++    padding: 0 1rem;
++    display: flex;
++    gap: 0.1rem;
++    font-size: 0.9rem;
++}
++
++.relatedProductPrice {
++    padding: 0.5rem 1rem;
++    font-weight: 600;
++    color: #e43d12;
++    margin: 0;
++}
++
++.viewProductButton {
++    margin: 0.5rem 1rem 1rem;
++    padding: 0.6rem;
++    background-color: transparent;
++    color: #333;
++    border: 1px solid #ddd;
++    border-radius: 6px;
++    cursor: pointer;
++    transition: all 0.2s;
++    font-weight: 500;
++}
++
++.viewProductButton:hover {
++    background-color: #f9f9f9;
++    border-color: #ccc;
++}
++
++/* Media queries for responsiveness */
++@media (max-width: 1200px) {
++    .productLayout {
++        padding: 1.5rem;
++    }
++    
++    .largeImage {
++        height: 420px;
++    }
++}
++
++@media (max-width: 768px) {
++    .productLayout {
++        flex-direction: column;
++        padding: 1rem;
++        gap: 1.5rem;
++    }
++    
++    .gallerySection, .infoSection {
++        min-width: 100%;
++    }
++    
++    .tabButton {
++        padding: 1rem 1.5rem;
++        font-size: 0.95rem;
++    }
++    
++    .tabContent {
++        padding: 1.5rem;
++    }
++    
++    .relatedProductCard {
++        flex: 0 0 240px;
++    }
++    
++    .relatedProducts {
++        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
++    }
++}
++
++@media (max-width: 480px) {
++    .title {
++        font-size: 1.5rem;
++    }
++    
++    .customizationSection {
++        padding: 1rem;
++    }
++    
++    .actionButtons {
++        flex-direction: column;
++    }
++    
++    .relatedProductCard {
++        flex: 0 0 200px;
++    }
++    
++    .reviewsSummary {
++        flex-direction: column;
++        gap: 1.5rem;
++    }
++}
+Index: frontend/src/components/Header.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/components/Header.jsx b/frontend/src/components/Header.jsx
+new file mode 100644
+--- /dev/null	(date 1741376660086)
++++ b/frontend/src/components/Header.jsx	(date 1741376660086)
+@@ -0,0 +1,38 @@
++import React from 'react';
++import { Link } from 'react-router-dom';
++import styles from './Header.module.css';
++
++function Header() {
++    return (
++        <header className={styles.header}>
++            {/* Logo / Brand */}
++            <div className={styles.logo}>
++                <Link to="/" className={styles.brandName}>
++                    ShopEasy
++                </Link>
++            </div>
++
++            {/* Categories (placeholder links) */}
++            <nav className={styles.navCategories}>
++                <Link to="/category/jewelry" className={styles.categoryLink}>Jewelry</Link>
++                <Link to="/category/art" className={styles.categoryLink}>Art & Collectibles</Link>
++                <Link to="/category/home" className={styles.categoryLink}>Home & Living</Link>
++                <Link to="/category/clothing" className={styles.categoryLink}>Clothing</Link>
++            </nav>
++
++            {/* Search Bar */}
++            <div className={styles.searchBar}>
++                <input type="text" placeholder="Search for items or shops" />
++                <button>Search</button>
++            </div>
++
++            {/* Icons / Links for User & Cart */}
++            <div className={styles.headerIcons}>
++                <Link to="/login" className={styles.iconLink}>Sign in</Link>
++                <Link to="/cart" className={styles.iconLink}>Cart</Link>
++            </div>
++        </header>
++    );
++}
++
++export default Header;
+Index: frontend/dcsd.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/dcsd.txt b/frontend/dcsd.txt
+new file mode 100644
+--- /dev/null	(date 1741357805082)
++++ b/frontend/dcsd.txt	(date 1741357805082)
+@@ -0,0 +1,4 @@
++home page
++product page
++comments and ratings
++card
+Index: frontend/package.json
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>{\n  \"name\": \"frontend\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"dependencies\": {\n    \"@testing-library/dom\": \"^10.4.0\",\n    \"@testing-library/jest-dom\": \"^6.6.3\",\n    \"@testing-library/react\": \"^16.2.0\",\n    \"@testing-library/user-event\": \"^13.5.0\",\n    \"react\": \"^19.0.0\",\n    \"react-dom\": \"^19.0.0\",\n    \"react-hook-form\": \"^7.54.2\",\n    \"react-router-dom\": \"^7.2.0\",\n    \"react-scripts\": \"5.0.1\",\n    \"web-vitals\": \"^2.1.4\"\n  },\n  \"scripts\": {\n    \"start\": \"react-scripts start\",\n    \"build\": \"react-scripts build\",\n    \"test\": \"react-scripts test\",\n    \"eject\": \"react-scripts eject\"\n  },\n  \"eslintConfig\": {\n    \"extends\": [\n      \"react-app\",\n      \"react-app/jest\"\n    ]\n  },\n  \"browserslist\": {\n    \"production\": [\n      \">0.2%\",\n      \"not dead\",\n      \"not op_mini all\"\n    ],\n    \"development\": [\n      \"last 1 chrome version\",\n      \"last 1 firefox version\",\n      \"last 1 safari version\"\n    ]\n  }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/package.json b/frontend/package.json
+--- a/frontend/package.json	(revision 685d32dbf149d51440bb4da9ff51e07042327cf9)
++++ b/frontend/package.json	(date 1741686095319)
+@@ -10,6 +10,7 @@
+     "react": "^19.0.0",
+     "react-dom": "^19.0.0",
+     "react-hook-form": "^7.54.2",
++    "react-icons": "^5.5.0",
+     "react-router-dom": "^7.2.0",
+     "react-scripts": "5.0.1",
+     "web-vitals": "^2.1.4"
+Index: frontend/src/pages/ProductPage.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/pages/ProductPage.jsx b/frontend/src/pages/ProductPage.jsx
+new file mode 100644
+--- /dev/null	(date 1741686085700)
++++ b/frontend/src/pages/ProductPage.jsx	(date 1741686085700)
+@@ -0,0 +1,455 @@
++import React, { useState, useEffect } from 'react';
++import Header from '../components/Header';
++import Footer from '../components/Footer';
++import styles from './ProductPage.module.css';
++import { FaHeart, FaShippingFast, FaCheck, FaStar, FaStarHalf, FaRegStar, FaShare } from 'react-icons/fa'; 
++import { IoMdAdd, IoMdRemove } from 'react-icons/io';
++
++// Mock product data - this would be replaced with an API call in the future
++const mockProduct = {
++    id: 1,
++    name: 'Geometric Statement Earrings',
++    rating: 4.7,
++    reviewsCount: 45,
++    images: [
++        'https://images.unsplash.com/photo-1589128777073-263566ae5e4d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
++        'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
++        'https://images.unsplash.com/photo-1599458349289-d9d1a1ae4a46?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
++        'https://images.unsplash.com/photo-1598560917807-1bae44bd2be8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
++    ],
++    price: 93.55,
++    originalPrice: 124.73,
++    discount: 25, // 25% off
++    stock: 3,
++    inCarts: 2,
++    shippingEst: { start: 'Mar 26', end: 'Mar 27' },
++    returnPolicy: 'Returns & exchanges accepted within 21 days',
++    location: 'Ships from Greece',
++    description: `
++    Make a bold statement with these geometric earrings—perfect for any occasion.
++    Combine modern design with timeless elegance. Each piece is meticulously crafted
++    to ensure the highest quality and lasting beauty.
++    
++    Our geometric statement earrings are designed to complement any outfit, from casual
++    daywear to elegant evening attire. The lightweight construction ensures comfortable
++    wearing throughout the day or night.
++  `,
++    highlights: [
++        'Handmade item',
++        'Materials: Silver',
++        'Length: 6.0 cm',
++        'Weight: 14.0 g',
++        'Location: Earlobe',
++        'Closure: Push back',
++    ],
++    finishOptions: ['24K Gold Plated', '925 Silver', 'Rose Gold', 'Platinum'],
++    sizeOptions: ['Small', 'Medium', 'Large'],
++    categories: ['Jewelry', 'Earrings', 'Statement Pieces'],
++    tags: ['boho', 'modern', 'geometric', 'statement', 'elegant'],
++    relatedProducts: [
++        {
++            id: 2,
++            name: 'Minimalist Gold Ring',
++            price: 67.99,
++            image: 'https://images.unsplash.com/photo-1600721391689-2564bb8055de?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
++            rating: 4.5
++        },
++        {
++            id: 3,
++            name: 'Pearl Pendant Necklace',
++            price: 85.00,
++            image: 'https://images.unsplash.com/photo-1611085583191-a3b181a88328?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
++            rating: 4.8
++        },
++        {
++            id: 4,
++            name: 'Silver Chain Bracelet',
++            price: 59.99,
++            image: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
++            rating: 4.3
++        }
++    ]
++};
++
++function ProductPage() {
++    // State for selected image and customization options
++    const [selectedImage, setSelectedImage] = useState(mockProduct.images[0]);
++    const [selectedFinish, setSelectedFinish] = useState(mockProduct.finishOptions[0]);
++    const [selectedSize, setSelectedSize] = useState(mockProduct.sizeOptions[0]);
++    const [quantity, setQuantity] = useState(1);
++    const [isWishlisted, setIsWishlisted] = useState(false);
++    const [activeTab, setActiveTab] = useState('description');
++    const [isLoading, setIsLoading] = useState(true);
++
++    // Simulating data loading from API
++    useEffect(() => {
++        // In a real app, this would be an API call
++        const timer = setTimeout(() => {
++            setIsLoading(false);
++        }, 800);
++        
++        return () => clearTimeout(timer);
++    }, []);
++
++    const handleThumbnailClick = (img) => {
++        setSelectedImage(img);
++    };
++
++    const handleFinishChange = (e) => {
++        setSelectedFinish(e.target.value);
++    };
++    
++    const handleSizeChange = (e) => {
++        setSelectedSize(e.target.value);
++    };
++    
++    const incrementQuantity = () => {
++        if (quantity < mockProduct.stock) {
++            setQuantity(quantity + 1);
++        }
++    };
++    
++    const decrementQuantity = () => {
++        if (quantity > 1) {
++            setQuantity(quantity - 1);
++        }
++    };
++    
++    const toggleWishlist = () => {
++        setIsWishlisted(!isWishlisted);
++    };
++
++    // Render star ratings component
++    const renderStars = (rating) => {
++        const stars = [];
++        const fullStars = Math.floor(rating);
++        const hasHalfStar = rating % 1 >= 0.5;
++        
++        for (let i = 1; i <= 5; i++) {
++            if (i <= fullStars) {
++                stars.push(<FaStar key={i} className={styles.star} />);
++            } else if (i === fullStars + 1 && hasHalfStar) {
++                stars.push(<FaStarHalf key={i} className={styles.star} />);
++            } else {
++                stars.push(<FaRegStar key={i} className={styles.star} />);
++            }
++        }
++        
++        return stars;
++    };
++
++    const renderTabContent = () => {
++        switch (activeTab) {
++            case 'description':
++                return (
++                    <div>
++                        <p className={styles.descriptionText}>{mockProduct.description}</p>
++                        <h3 className={styles.sectionTitle}>Highlights</h3>
++                        <ul className={styles.highlightList}>
++                            {mockProduct.highlights.map((item, idx) => (
++                                <li key={idx}>{item}</li>
++                            ))}
++                        </ul>
++                        
++                        <div className={styles.tagsSection}>
++                            <h3 className={styles.sectionTitle}>Tags</h3>
++                            <div className={styles.tagsList}>
++                                {mockProduct.tags.map((tag, idx) => (
++                                    <span key={idx} className={styles.tag}>#{tag}</span>
++                                ))}
++                            </div>
++                        </div>
++                    </div>
++                );
++            case 'shipping':
++                return (
++                    <div className={styles.shippingDetails}>
++                        <div className={styles.shippingSection}>
++                            <div className={styles.shippingIcon}>
++                                <FaShippingFast size={24} />
++                            </div>
++                            <div>
++                                <h3>Shipping Details</h3>
++                                <p><strong>Estimated arrival:</strong> {mockProduct.shippingEst.start} - {mockProduct.shippingEst.end}</p>
++                                <p><strong>Ships from:</strong> {mockProduct.location}</p>
++                                <p>Shipping costs may vary based on location. Please proceed to checkout for final calculation.</p>
++                            </div>
++                        </div>
++                        
++                        <div className={styles.returnSection}>
++                            <div className={styles.returnIcon}>
++                                <FaCheck size={24} />
++                            </div>
++                            <div>
++                                <h3>Returns & Exchanges</h3>
++                                <p><strong>Return policy:</strong> {mockProduct.returnPolicy}</p>
++                                <p>We want you to be completely satisfied with your purchase. If for any reason you're not happy, we're here to help.</p>
++                            </div>
++                        </div>
++                    </div>
++                );
++            case 'reviews':
++                return (
++                    <div className={styles.reviewsContainer}>
++                        <div className={styles.reviewsSummary}>
++                            <div className={styles.averageRating}>
++                                <h2>{mockProduct.rating}</h2>
++                                <div className={styles.starsLarge}>
++                                    {renderStars(mockProduct.rating)}
++                                </div>
++                                <p>{mockProduct.reviewsCount} reviews</p>
++                            </div>
++                            
++                            <div className={styles.ratingBars}>
++                                {[5, 4, 3, 2, 1].map(rating => (
++                                    <div key={rating} className={styles.ratingBar}>
++                                        <span>{rating} stars</span>
++                                        <div className={styles.barContainer}>
++                                            <div 
++                                                className={styles.barFill} 
++                                                style={{ 
++                                                    width: `${Math.random() * 100}%` 
++                                                }}
++                                            ></div>
++                                        </div>
++                                    </div>
++                                ))}
++                            </div>
++                        </div>
++                        
++                        <button className={styles.writeReviewBtn}>Write a Review</button>
++                        
++                        <p className={styles.placeholder}>
++                            (Placeholder) Here you will see all customer reviews. This section will be connected to the backend review system.
++                        </p>
++                    </div>
++                );
++            default:
++                return null;
++        }
++    };
++
++    if (isLoading) {
++        return (
++            <div className={styles.pageContainer}>
++                <Header />
++                <div className={styles.loadingContainer}>
++                    <div className={styles.loader}></div>
++                    <p>Loading product information...</p>
++                </div>
++                <Footer />
++            </div>
++        );
++    }
++
++    return (
++        <div className={styles.pageContainer}>
++            {/* Top Navigation */}
++            <Header />
++            
++            {/* Breadcrumb Navigation */}
++            <div className={styles.breadcrumbs}>
++                <span>Home</span> &gt; <span>{mockProduct.categories[0]}</span> &gt; <span>{mockProduct.categories[1]}</span> &gt; <span className={styles.currentPage}>{mockProduct.name}</span>
++            </div>
++
++            {/* Main Content */}
++            <div className={styles.productLayout}>
++                {/* Left: Image Gallery */}
++                <div className={styles.gallerySection}>
++                    <div className={styles.largeImageWrapper}>
++                        <img src={selectedImage} alt={mockProduct.name} className={styles.largeImage} />
++                        <button className={`${styles.wishlistButton} ${isWishlisted ? styles.wishlisted : ''}`} onClick={toggleWishlist}>
++                            <FaHeart />
++                        </button>
++                        <button className={styles.shareButton}>
++                            <FaShare />
++                        </button>
++                    </div>
++                    <div className={styles.thumbnails}>
++                        {mockProduct.images.map((img, idx) => (
++                            <img
++                                key={idx}
++                                src={img}
++                                alt={`${mockProduct.name} view ${idx + 1}`}
++                                className={`${styles.thumbnail} ${
++                                    selectedImage === img ? styles.selectedThumb : ''
++                                }`}
++                                onClick={() => handleThumbnailClick(img)}
++                            />
++                        ))}
++                    </div>
++                </div>
++
++                {/* Right: Product Info */}
++                <div className={styles.infoSection}>
++                    <h1 className={styles.title}>{mockProduct.name}</h1>
++
++                    {/* Rating & Reviews */}
++                    <div className={styles.ratingReviews}>
++                        <div className={styles.stars}>
++                            {renderStars(mockProduct.rating)}
++                        </div>
++                        <span className={styles.reviewCount}>
++                            {mockProduct.rating} ({mockProduct.reviewsCount} reviews)
++                        </span>
++                    </div>
++
++                    {/* Pricing */}
++                    <div className={styles.pricing}>
++                        <span className={styles.currentPrice}>${mockProduct.price.toFixed(2)}</span>
++                        <span className={styles.originalPrice}>${mockProduct.originalPrice.toFixed(2)}</span>
++                        <span className={styles.discount}>{mockProduct.discount}% OFF</span>
++                    </div>
++
++                    {/* Stock info */}
++                    <div className={styles.stockInfo}>
++                        <span className={styles.stockStatus}>
++                            {mockProduct.stock > 0 ? (
++                                <>
++                                    <span className={styles.inStock}>In Stock</span> - 
++                                    Only <strong>{mockProduct.stock}</strong> left
++                                </>
++                            ) : (
++                                <span className={styles.outOfStock}>Out of Stock</span>
++                            )}
++                        </span>
++                        {mockProduct.inCarts > 0 && (
++                            <span className={styles.inCarts}>
++                                <strong>{mockProduct.inCarts}</strong> people have this in their cart
++                            </span>
++                        )}
++                    </div>
++
++                    {/* Product Customization */}
++                    <div className={styles.customizationSection}>
++                        {/* Finish Selector */}
++                        <div className={styles.selectorContainer}>
++                            <label htmlFor="finish">Finish: </label>
++                            <select 
++                                id="finish" 
++                                value={selectedFinish} 
++                                onChange={handleFinishChange}
++                                className={styles.selector}
++                            >
++                                {mockProduct.finishOptions.map((option) => (
++                                    <option key={option} value={option}>{option}</option>
++                                ))}
++                            </select>
++                        </div>
++
++                        {/* Size Selector */}
++                        <div className={styles.selectorContainer}>
++                            <label htmlFor="size">Size: </label>
++                            <select 
++                                id="size" 
++                                value={selectedSize} 
++                                onChange={handleSizeChange}
++                                className={styles.selector}
++                            >
++                                {mockProduct.sizeOptions.map((option) => (
++                                    <option key={option} value={option}>{option}</option>
++                                ))}
++                            </select>
++                        </div>
++                        
++                        {/* Quantity Selector */}
++                        <div className={styles.quantitySelector}>
++                            <label>Quantity: </label>
++                            <div className={styles.quantityControls}>
++                                <button 
++                                    className={styles.quantityBtn} 
++                                    onClick={decrementQuantity}
++                                    disabled={quantity <= 1}
++                                >
++                                    <IoMdRemove />
++                                </button>
++                                <span className={styles.quantityValue}>{quantity}</span>
++                                <button 
++                                    className={styles.quantityBtn} 
++                                    onClick={incrementQuantity}
++                                    disabled={quantity >= mockProduct.stock}
++                                >
++                                    <IoMdAdd />
++                                </button>
++                            </div>
++                        </div>
++                    </div>
++
++                    {/* Action Buttons */}
++                    <div className={styles.actionButtons}>
++                        <button className={styles.addToCartButton}>
++                            Add to cart - ${(mockProduct.price * quantity).toFixed(2)}
++                        </button>
++                        <button className={styles.buyNowButton}>
++                            Buy Now
++                        </button>
++                    </div>
++
++                    {/* Shipping Info Card */}
++                    <div className={styles.shippingInfoCard}>
++                        <div className={styles.shippingHeader}>
++                            <FaShippingFast className={styles.shippingIcon} />
++                            <h3>Shipping Information</h3>
++                        </div>
++                        <div className={styles.shippingDetails}>
++                            <p><strong>Estimated arrival:</strong> {mockProduct.shippingEst.start} - {mockProduct.shippingEst.end}</p>
++                            <p><strong>Return policy:</strong> {mockProduct.returnPolicy}</p>
++                            <p><strong>Ships from:</strong> {mockProduct.location}</p>
++                        </div>
++                    </div>
++                </div>
++            </div>
++
++            {/* Tabs for Description, Shipping & Returns, and Reviews */}
++            <div className={styles.tabsContainer}>
++                <button
++                    className={`${styles.tabButton} ${activeTab === 'description' ? styles.activeTab : ''}`}
++                    onClick={() => setActiveTab('description')}
++                >
++                    Description
++                </button>
++                <button
++                    className={`${styles.tabButton} ${activeTab === 'shipping' ? styles.activeTab : ''}`}
++                    onClick={() => setActiveTab('shipping')}
++                >
++                    Shipping & Returns
++                </button>
++                <button
++                    className={`${styles.tabButton} ${activeTab === 'reviews' ? styles.activeTab : ''}`}
++                    onClick={() => setActiveTab('reviews')}
++                >
++                    Reviews ({mockProduct.reviewsCount})
++                </button>
++            </div>
++
++            <div className={styles.tabContent}>
++                {renderTabContent()}
++            </div>
++            
++            {/* Related Products Section */}
++            <div className={styles.relatedProductsSection}>
++                <h2 className={styles.sectionTitle}>You May Also Like</h2>
++                <div className={styles.relatedProducts}>
++                    {mockProduct.relatedProducts.map(product => (
++                        <div key={product.id} className={styles.relatedProductCard}>
++                            <div className={styles.relatedProductImage}>
++                                <img src={product.image} alt={product.name} />
++                            </div>
++                            <h3 className={styles.relatedProductName}>{product.name}</h3>
++                            <div className={styles.relatedProductRating}>
++                                {renderStars(product.rating)}
++                            </div>
++                            <p className={styles.relatedProductPrice}>${product.price.toFixed(2)}</p>
++                            <button className={styles.viewProductButton}>View Product</button>
++                        </div>
++                    ))}
++                </div>
++            </div>
++
++            {/* Footer */}
++            <Footer />
++        </div>
++    );
++}
++
++export default ProductPage;
+Index: frontend/src/components/Footer.module.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/components/Footer.module.css b/frontend/src/components/Footer.module.css
+new file mode 100644
+--- /dev/null	(date 1741686307366)
++++ b/frontend/src/components/Footer.module.css	(date 1741686307366)
+@@ -0,0 +1,69 @@
++.footer {
++    background-color: #fff;
++    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
++    padding: 2rem 0;
++    margin-top: 3rem;
++}
++
++.footerContent {
++    max-width: 1400px;
++    margin: 0 auto;
++    text-align: center;
++    color: #555;
++    font-size: 0.9rem;
++    display: flex;
++    flex-direction: column;
++    gap: 1.5rem;
++}
++
++.footerLinks {
++    display: flex;
++    justify-content: center;
++    gap: 2rem;
++    flex-wrap: wrap;
++}
++
++.footerLinks a {
++    color: #666;
++    text-decoration: none;
++    transition: color 0.2s;
++}
++
++.footerLinks a:hover {
++    color: #e43d12;
++}
++
++.socials {
++    display: flex;
++    justify-content: center;
++    gap: 1.5rem;
++    margin: 1rem 0;
++}
++
++.socialIcon {
++    font-size: 1.5rem;
++    color: #777;
++    transition: all 0.2s;
++}
++
++.socialIcon:hover {
++    color: #e43d12;
++    transform: translateY(-3px);
++}
++
++@media (max-width: 768px) {
++    .footer {
++        padding: 1.5rem 0;
++    }
++    
++    .footerLinks {
++        gap: 1.5rem;
++    }
++}
++
++@media (max-width: 480px) {
++    .footerLinks {
++        flex-direction: column;
++        gap: 1rem;
++    }
++}
+Index: frontend/src/components/Header.module.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/components/Header.module.css b/frontend/src/components/Header.module.css
+new file mode 100644
+--- /dev/null	(date 1741376668295)
++++ b/frontend/src/components/Header.module.css	(date 1741376668295)
+@@ -0,0 +1,83 @@
++.header {
++    width: 100%;
++    background-color: #FF4A00; /* Signature orange */
++    display: flex;
++    align-items: center;
++    padding: 0.5rem 1rem;
++    flex-wrap: wrap;
++}
++
++.logo {
++    margin-right: 1rem;
++}
++
++.brandName {
++    font-size: 1.8rem;
++    font-weight: bold;
++    color: #fff;
++    text-decoration: none;
++}
++
++.navCategories {
++    display: flex;
++    gap: 1rem;
++    margin-right: 1rem;
++    flex-wrap: wrap;
++}
++
++.categoryLink {
++    color: #fff;
++    text-decoration: none;
++    font-weight: 500;
++    transition: color 0.2s;
++}
++
++.categoryLink:hover {
++    color: #FFA2B6; /* Pinkish hover */
++}
++
++.searchBar {
++    display: flex;
++    align-items: center;
++    flex: 1;
++    max-width: 400px;
++    margin-right: 1rem;
++}
++
++.searchBar input {
++    flex: 1;
++    padding: 0.5rem;
++    border: none;
++    border-radius: 4px 0 0 4px;
++    outline: none;
++}
++
++.searchBar button {
++    background-color: #E43D12;
++    color: #fff;
++    border: none;
++    padding: 0.5rem 1rem;
++    border-radius: 0 4px 4px 0;
++    cursor: pointer;
++    transition: background-color 0.2s;
++}
++
++.searchBar button:hover {
++    background-color: #D6536D;
++}
++
++.headerIcons {
++    display: flex;
++    gap: 1rem;
++}
++
++.iconLink {
++    color: #fff;
++    text-decoration: none;
++    font-weight: 500;
++    transition: color 0.2s;
++}
++
++.iconLink:hover {
++    color: #FFA2B6;
++}
+Index: frontend/src/components/Footer.jsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/frontend/src/components/Footer.jsx b/frontend/src/components/Footer.jsx
+new file mode 100644
+--- /dev/null	(date 1741686322725)
++++ b/frontend/src/components/Footer.jsx	(date 1741686322725)
+@@ -0,0 +1,42 @@
++import React from 'react';
++import { Link } from 'react-router-dom';
++import { FaFacebook, FaTwitter, FaInstagram, FaPinterest } from 'react-icons/fa';
++import styles from './Footer.module.css';
++
++function Footer() {
++    return (
++        <footer className={styles.footer}>
++            <div className={styles.footerContent}>
++                <div className={styles.footerLinks}>
++                    <Link to="/about">About Us</Link>
++                    <Link to="/contact">Contact</Link>
++                    <Link to="/shipping">Shipping & Returns</Link>
++                    <Link to="/faq">FAQ</Link>
++                    <Link to="/privacy">Privacy Policy</Link>
++                    <Link to="/terms">Terms of Service</Link>
++                </div>
++                
++                <div className={styles.socials}>
++                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
++                        <FaFacebook className={styles.socialIcon} />
++                    </a>
++                    <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
++                        <FaTwitter className={styles.socialIcon} />
++                    </a>
++                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
++                        <FaInstagram className={styles.socialIcon} />
++                    </a>
++                    <a href="https://pinterest.com" target="_blank" rel="noopener noreferrer">
++                        <FaPinterest className={styles.socialIcon} />
++                    </a>
++                </div>
++                
++                <div>
++                    © {new Date().getFullYear()} ShopEasy. All rights reserved.
++                </div>
++            </div>
++        </footer>
++    );
++}
++
++export default Footer;
