@@ -1,32 +1,47 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
+
 import styles from './RegisterPage.module.css';
 import LeftPanel from '../components/LeftPanel';
 
 function RegisterPage() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
+        email: '',
         username: '',
         password: '',
-        agreed: false,
-        role: '',  // <-- Add a "role" or "registrationType" field
+        role_id: '',
     });
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+        const { name, value } = e.target;
         setFormData({
             ...formData,
-            [name]: type === 'checkbox' ? checked : value,
+            [name]: name === 'role_id' ? Number(value) : value,
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
-        // Here you can handle the form submission, e.g., send data to your server
-        navigate('/login'); // Redirect to login page after successful registration
+
+        try {
+            // Make an axios POST request to your backend
+            const response = await axios.post(
+                'http://localhost:5000/auth/api/register', // <-- Change to your actual endpoint
+                formData
+            );
+
+            // If successful, show success toast and redirect to login
+            toast.success('Registration successful. Please log in.');
+            navigate('/login');
+        } catch (error) {
+            // If there's an error response from the server, show it
+            const errorMessage = error.response?.data?.error || 'Registration failed';
+            toast.error(errorMessage);
+        }
     };
 
     return (
@@ -49,29 +64,16 @@ function RegisterPage() {
                         </Link>
                     </p>
                     <form onSubmit={handleSubmit} className={styles.form}>
-                        <div className={styles.inputRow}>
-                            <div className={styles.inputGroup}>
-                                <label htmlFor="firstName">First name</label>
-                                <input
-                                    type="text"
-                                    id="firstName"
-                                    name="firstName"
-                                    value={formData.firstName}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-                            <div className={styles.inputGroup}>
-                                <label htmlFor="lastName">Last name</label>
-                                <input
-                                    type="text"
-                                    id="lastName"
-                                    name="lastName"
-                                    value={formData.lastName}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
+                        <div className={styles.inputGroup}>
+                            <label htmlFor="email">Email</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                            />
                         </div>
 
                         <div className={styles.inputGroup}>
@@ -98,35 +100,22 @@ function RegisterPage() {
                             />
                         </div>
 
-                        {/* New Registration Type field */}
                         <div className={styles.inputGroup}>
-                            <label htmlFor="role">Registration type</label>
+                            <label htmlFor="role_id">Registration type</label>
                             <select
-                                id="role"
-                                name="role"
-                                value={formData.role}
+                                id="role_id"
+                                name="role_id"
+                                value={formData.role_id}
                                 onChange={handleChange}
                                 required
                             >
-                                <option value="" disabled>Select an option</option>
-                                <option value="customer">Customer</option>
-                                <option value="productManager">Product Manager</option>
-                                <option value="salesManager">Sales Manager</option>
+                                <option value="" disabled>
+                                    Select an option
+                                </option>
+                                <option value="1">Customer</option>
+                                <option value="2">Product Manager</option>
+                                <option value="3">Sales Manager</option>
                             </select>
-                        </div>
-
-                        <div className={styles.termsGroup}>
-                            <input
-                                type="checkbox"
-                                id="terms"
-                                name="agreed"
-                                checked={formData.agreed}
-                                onChange={handleChange}
-                                required
-                            />
-                            <label htmlFor="terms">
-                                I agree to the <Link to="/terms">Terms &amp; Conditions</Link>
-                            </label>
                         </div>
 
                         <button type="submit" className={styles.submitButton}>
@@ -135,12 +124,9 @@ function RegisterPage() {
                     </form>
                 </div>
             </div>
+            <ToastContainer />
         </div>
     );
 }
 
 export default RegisterPage;
-
-
-
-
