@@ -4,15 +4,15 @@ const authController = require('../controllers/authController');
 const router = express.Router();
 
 // Register a new user
-router.post('/register', authController.register);
+router.post('/api/register', authController.register);
 
 // Login and initiate session
-router.post('/login', authController.login);
+router.post('/api/login', authController.login);
 
 // Logout and destroy session
-router.post('/logout', authController.logout);
+router.post('/api/logout', authController.logout);
 
 // Retrieve profile of the currently logged-in user
-router.get('/profile', authController.getProfile);
+router.get('/api/profile', authController.getProfile);
 
 module.exports = router;

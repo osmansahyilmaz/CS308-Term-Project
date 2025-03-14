@@ -2,11 +2,11 @@ const argon2 = require('argon2');
 const usersDb = require('../db/users');
 
 const register = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, role_id } = req.body;
 
     // 1. Check if required fields are provided
-    if (!username || !email || !password) {
-        return res.status(400).json({ error: 'All fields are required' });
+    if (!username || !email || !password || role_id === undefined) {
+        return res.status(400).json({ error: 'All fields are required, including role_id' });
     }
 
     // 2. Validate email format
@@ -47,7 +47,7 @@ const register = async (req, res) => {
         const hashedPassword = await argon2.hash(password);
 
         // 8. Insert new user into the database
-        const result = await usersDb.createUser(username, email, hashedPassword);
+        const result = await usersDb.createUser(username, email, hashedPassword, role_id);
         const newUser = result.rows[0];
 
         res.status(201).json({
@@ -55,6 +55,7 @@ const register = async (req, res) => {
             user: {
                 username: newUser.username,
                 email: newUser.email,
+                role_id: newUser.role_id,  // 🔹 Role ID added
                 created_at: newUser.created_at
             }
         });
@@ -72,7 +73,7 @@ const login = async (req, res) => {
     }
 
     // 2. Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+$/;
     if (!emailRegex.test(email)) {
         return res.status(400).json({ error: 'Invalid email format' });
     }
@@ -96,7 +97,8 @@ const login = async (req, res) => {
         req.session.user = {
             id: user.id,
             username: user.username,
-            email: user.email
+            email: user.email,
+            role_id: user.role_id  // 🔹 Added role_id to session
         };
 
         // 6. Save the session before sending response
@@ -108,7 +110,8 @@ const login = async (req, res) => {
                 message: 'Login successful',
                 user: {
                     username: user.username,
-                    email: user.email
+                    email: user.email,
+                    role_id: user.role_id  // 🔹 Returning role_id
                 }
             });
         });
@@ -117,7 +120,6 @@ const login = async (req, res) => {
         res.status(500).json({ error: 'Login failed', details: err.message });
     }
 };
-
 
 const logout = (req, res) => {
     // If no user is logged in, return 401
@@ -145,7 +147,11 @@ const getProfile = (req, res) => {
 
     // Return user data from session
     res.status(200).json({
-        user: req.session.user
+        user: {
+            username: req.session.user.username,
+            email: req.session.user.email,
+            role_id: req.session.user.role_id  // 🔹 Now returning role_id as well
+        }
     });
 };
 
