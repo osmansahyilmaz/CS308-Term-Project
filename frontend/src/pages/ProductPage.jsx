@@ -7,7 +7,7 @@ import { IoMdAdd, IoMdRemove } from 'react-icons/io';
 
 // Mock product data - this would be replaced with an API call in the future
 const mockProduct = {
-    id: 1,
+    id: 2,
     name: 'Geometric Statement Earrings',
     rating: 4.7,
     reviewsCount: 45,
