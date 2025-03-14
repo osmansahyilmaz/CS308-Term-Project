@@ -29,25 +29,27 @@ function LoginPage() {
         e.preventDefault();
         const validationErrors = validate();
         setErrors(validationErrors);
-
+    
         if (Object.keys(validationErrors).length === 0) {
             try {
                 // Make an axios POST request to your login endpoint
                 const response = await axios.post(
-                    'http://localhost:5000/auth/api/login', // <-- Change to your actual login endpoint
+                    'http://localhost:5000/auth/api/login', // <-- Backend'deki login endpoint
                     { email, password }
                 );
-
-                // If successful, show success toast and redirect
+    
+                // Eğer başarılıysa, başarı mesajını göster ve /logout sayfasına yönlendir
                 toast.success('Login successful!');
-                navigate('/');
+                navigate('/shop'); // ⬅ Kullanıcı giriş yaptıktan sonra /logout sayfasına yönlendirme
+    
             } catch (error) {
-                // Display server error or a generic error
+                // Hata mesajı göster
                 const errorMessage = error.response?.data?.error || 'Login failed';
                 toast.error(errorMessage);
             }
         }
     };
+    
 
     return (
         <div className={styles.loginContainer}>
