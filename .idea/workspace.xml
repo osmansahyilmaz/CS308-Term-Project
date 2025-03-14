@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2d684bb8-34d1-4f6b-90a3-20aa49a04ba9" name="Changes" comment="Product page" />
+    <list default="true" id="2d684bb8-34d1-4f6b-90a3-20aa49a04ba9" name="Changes" comment="Scrum 77">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -54,6 +56,9 @@
     }
   ]
 }</component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="a42aa80f-5aad-46b6-ba35-d4ddd4cf11d5" />
+  </component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/osmansahyilmaz/CS308-Term-Project.git&quot;,
@@ -80,6 +85,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
     "ts.external.directory.path": "/Applications/WebStorm.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external",
     "vue.rearranger.settings.migration": "true"
   }
@@ -114,7 +120,8 @@
       <workItem from="1741858135810" duration="15000" />
       <workItem from="1741949040908" duration="3899000" />
       <workItem from="1741953250073" duration="907000" />
-      <workItem from="1741954180136" duration="1823000" />
+      <workItem from="1741954180136" duration="2250000" />
+      <workItem from="1741957234147" duration="178000" />
     </task>
     <task id="LOCAL-00001" summary="Add homepage, login and registration pages with routing">
       <option name="closed" value="true" />
@@ -166,6 +173,7 @@
     <MESSAGE value="Add homepage, login and registration pages with routing" />
     <MESSAGE value="Redirecting to login page after successfull registration" />
     <MESSAGE value="Product page" />
-    <option name="LAST_COMMIT_MESSAGE" value="Product page" />
+    <MESSAGE value="Scrum 77" />
+    <option name="LAST_COMMIT_MESSAGE" value="Scrum 77" />
   </component>
 </project>
