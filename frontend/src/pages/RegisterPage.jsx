@@ -8,25 +8,46 @@ function RegisterPage() {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
+        email: '',
         username: '',
         password: '',
         agreed: false,
-        role: '',  // <-- Add a "role" or "registrationType" field
+        role: '',
     });
+    const [error, setError] = useState('');
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData({
-            ...formData,
+        setFormData((prev) => ({
+            ...prev,
             [name]: type === 'checkbox' ? checked : value,
-        });
+        }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Form submitted:', formData);
-        // Here you can handle the form submission, e.g., send data to your server
-        navigate('/login'); // Redirect to login page after successful registration
+
+        if (!formData.agreed) {
+            setError('You must agree to the Terms & Conditions.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                setError(data.message || 'Registration failed.');
+            } else {
+                navigate('/login');
+            }
+        } catch (err) {
+            setError('An error occurred during registration.');
+        }
     };
 
     return (
@@ -48,6 +69,7 @@ function RegisterPage() {
                             Log in
                         </Link>
                     </p>
+                    {error && <div className={styles.error}>{error}</div>}
                     <form onSubmit={handleSubmit} className={styles.form}>
                         <div className={styles.inputRow}>
                             <div className={styles.inputGroup}>
@@ -72,6 +94,18 @@ function RegisterPage() {
                                     required
                                 />
                             </div>
+                        </div>
+
+                        <div className={styles.inputGroup}>
+                            <label htmlFor="email">Email</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                            />
                         </div>
 
                         <div className={styles.inputGroup}>
@@ -108,7 +142,9 @@ function RegisterPage() {
                                 onChange={handleChange}
                                 required
                             >
-                                <option value="" disabled>Select an option</option>
+                                <option value="" disabled>
+                                    Select an option
+                                </option>
                                 <option value="customer">Customer</option>
                                 <option value="productManager">Product Manager</option>
                                 <option value="salesManager">Sales Manager</option>
@@ -140,7 +176,3 @@ function RegisterPage() {
 }
 
 export default RegisterPage;
-
-
-
-

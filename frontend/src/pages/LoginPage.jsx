@@ -1,3 +1,4 @@
+// src/pages/LoginPage.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './LoginPage.module.css';
@@ -26,7 +27,8 @@ function LoginPage() {
         setErrors(validationErrors);
         if (Object.keys(validationErrors).length === 0) {
             console.log('Logging in with:', username, password);
-            navigate('/');
+            // Redirect to the product page after a successful login
+            navigate('/product');
         }
     };
 

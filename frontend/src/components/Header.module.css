@@ -1,0 +1,83 @@
+.header {
+    width: 100%;
+    background-color: #FF4A00; /* Signature orange */
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    flex-wrap: wrap;
+}
+
+.logo {
+    margin-right: 1rem;
+}
+
+.brandName {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #fff;
+    text-decoration: none;
+}
+
+.navCategories {
+    display: flex;
+    gap: 1rem;
+    margin-right: 1rem;
+    flex-wrap: wrap;
+}
+
+.categoryLink {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.categoryLink:hover {
+    color: #FFA2B6; /* Pinkish hover */
+}
+
+.searchBar {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 400px;
+    margin-right: 1rem;
+}
+
+.searchBar input {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.searchBar button {
+    background-color: #E43D12;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.searchBar button:hover {
+    background-color: #D6536D;
+}
+
+.headerIcons {
+    display: flex;
+    gap: 1rem;
+}
+
+.iconLink {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.iconLink:hover {
+    color: #FFA2B6;
+}

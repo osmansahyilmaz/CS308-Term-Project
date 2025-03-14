@@ -1,9 +1,10 @@
 // src/App.jsx
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage'; // Create a simple HomePage component if needed
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProductPage from './pages/ProductPage';
 
 function App() {
     return (
@@ -12,7 +13,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                {/* You can add more routes (e.g., /forgot-password) as needed */}
+                <Route path="/product" element={<ProductPage />} />
             </Routes>
         </BrowserRouter>
     );

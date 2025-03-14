@@ -1,3 +1,4 @@
+// src/pages/HomePage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from './HomePage.module.css';
@@ -8,7 +9,7 @@ function HomePage() {
         <div className={styles.homeContainer}>
             <div className={styles.leftWrapper}>
                 <LeftPanel
-                    bottomLinkText="Login"           /* Left panel now links to Login */
+                    bottomLinkText="Login"
                     bottomLinkRoute="/login"
                     quote="Discover endless possibilities at your fingertips."
                     subQuote="Unbeatable offers and trends every day."
@@ -21,7 +22,7 @@ function HomePage() {
                         Your one-stop shop for all things trendy and unique.
                     </p>
                     <div className={styles.buttons}>
-                        <Link to="/shop" className={styles.buttonLink}>
+                        <Link to="/product" className={styles.buttonLink}>
                             <button className={styles.primaryButton}>Shop Now</button>
                         </Link>
                         <Link to="/register" className={styles.buttonLink}>
