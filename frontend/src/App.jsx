@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage'; // Create a simple HomePage component i
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ShopPage from './pages/ShopPage';
+import ProductPage from './pages/ProductPage';
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 {/* You can add more routes (e.g., /forgot-password) as needed */}
                 <Route path="/shop" element={<ShopPage />} />
+                <Route path="/product/:productId" element={<ProductPage />} />
             </Routes>
         </BrowserRouter>
     );
