@@ -34,7 +34,7 @@ function LoginPage() {
             try {
                 // Make an axios POST request to your login endpoint
                 const response = await axios.post(
-                    'http://localhost:5000/auth/api/login', // <-- Backend'deki login endpoint
+                    'http://localhost:5000/api/auth/login', // <-- Backend'deki login endpoint
                     { email, password },
                     {withCredentials: true}
                 );

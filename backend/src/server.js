@@ -30,7 +30,7 @@ app.use(session({
 }));
 
 // 🔹 Routes
-app.use('/auth', authRoutes);
+app.use('/api', authRoutes);
 
 // ✅ Export app for testing (IMPORTANT!)
 module.exports = app;

@@ -30,7 +30,7 @@ function RegisterPage() {
         try {
             // Make an axios POST request to your backend
             const response = await axios.post(
-                'http://localhost:5000/auth/api/register', // <-- Change to your actual endpoint
+                'http://localhost:5000/api/auth/register', // <-- Change to your actual endpoint
                 formData
             );
 
