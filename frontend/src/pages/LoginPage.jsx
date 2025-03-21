@@ -35,7 +35,8 @@ function LoginPage() {
                 // Make an axios POST request to your login endpoint
                 const response = await axios.post(
                     'http://localhost:5000/auth/api/login', // <-- Backend'deki login endpoint
-                    { email, password }
+                    { email, password },
+                    {withCredentials: true}
                 );
     
                 // Eğer başarılıysa, başarı mesajını göster ve /logout sayfasına yönlendir
