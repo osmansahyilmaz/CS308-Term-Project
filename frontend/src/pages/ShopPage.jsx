@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // <-- import useNavigate here
 import styles from "./ShopPage.module.css";
 import LeftPanel from "../components/LeftPanel";
 import { getAllProducts } from "../mockData/products";
@@ -12,6 +12,9 @@ function ShopPage() {
     const [error, setError] = useState(null);
     const [categories, setCategories] = useState(["All"]);
 
+    // For navigating programmatically
+    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -19,7 +22,7 @@ function ShopPage() {
                 setTimeout(() => {
                     const data = getAllProducts();
                     setProducts(data);
-                    const uniqueCategories = [...new Set(data.map(p => p.category))];
+                    const uniqueCategories = [...new Set(data.map((p) => p.category))];
                     setCategories(["All", ...uniqueCategories]);
                     setLoading(false);
                 }, 800);
@@ -32,29 +35,51 @@ function ShopPage() {
         fetchProducts();
     }, []);
 
-    const filteredProducts = products.filter(product => {
-        const matchesCategory = activeCategory === "All" || product.category === activeCategory;
-        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                              product.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const filteredProducts = products.filter((product) => {
+        const matchesCategory =
+            activeCategory === "All" || product.category === activeCategory;
+        const matchesSearch =
+            product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.description.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });
 
-    const handleCategoryChange = category => {
+    const handleCategoryChange = (category) => {
         setActiveCategory(category);
     };
 
-    const handleSearchChange = e => {
+    const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
     };
 
     const handleAddToCart = async (e, product) => {
         e.preventDefault();
         try {
-            console.log('Added to cart:', product.id);
+            console.log("Added to cart:", product.id);
             alert(`Added ${product.name} to cart!`);
         } catch (err) {
             console.error("Error adding to cart:", err);
-            alert('Could not add product to cart. Please try again.');
+            alert("Could not add product to cart. Please try again.");
+        }
+    };
+
+    // **** LOGOUT HANDLER ****
+    const handleLogout = async () => {
+        try {
+            const response = await fetch("/api/logout", {
+                method: "POST",
+                credentials: "include", // ensure cookies/sessions get sent
+            });
+
+            if (!response.ok) {
+                throw new Error("Logout failed");
+            }
+
+            // If successful, navigate to homepage
+            navigate("/");
+        } catch (error) {
+            console.error("Error during logout:", error);
+            alert("Logout failed. Please try again.");
         }
     };
 
@@ -73,10 +98,6 @@ function ShopPage() {
                 <div className={styles.headerSection}>
                     <h1 className={styles.shopTitle}>Shop Products</h1>
 
-                    {/* 
-                      Wrap the search bar and cart icon together in a flex container 
-                      so they're side-by-side. 
-                    */}
                     <div style={{ display: "flex", alignItems: "center" }}>
                         <div className={styles.searchBar}>
                             <input
@@ -88,32 +109,51 @@ function ShopPage() {
                             />
                             {/* Search icon could go here */}
                         </div>
-                        
+
                         {/* Cart icon link */}
-                        <Link 
-                            to="/cart" 
-                            style={{ 
-                                marginLeft: "1rem", 
-                                fontSize: "1.5rem", 
-                                textDecoration: "none" 
+                        <Link
+                            to="/cart"
+                            style={{
+                                marginLeft: "1rem",
+                                fontSize: "1.5rem",
+                                textDecoration: "none",
                             }}
                             aria-label="View cart"
                         >
                             🛒
                         </Link>
+
+                        {/* Logout Button */}
+                        <button
+                            onClick={handleLogout}
+                            style={{
+                                marginLeft: "1rem",
+                                padding: "0.5rem 1rem",
+                                borderRadius: "4px",
+                                border: "none",
+                                cursor: "pointer",
+                                backgroundColor: "#FF4A00",
+                                color: "#fff",
+                            }}
+                        >
+                            Logout
+                        </button>
                     </div>
                 </div>
 
+                {/* Filter Section */}
                 <div className={styles.filterSection}>
                     <div className={styles.filterHeader}>
                         <h2 className={styles.filterTitle}>Categories</h2>
                     </div>
                     <div className={styles.filterTags}>
-                        {categories.map(category => (
+                        {categories.map((category) => (
                             <div
                                 key={category}
                                 className={`${styles.filterTag} ${
-                                    activeCategory === category ? styles.filterTagActive : ""
+                                    activeCategory === category
+                                        ? styles.filterTagActive
+                                        : ""
                                 }`}
                                 onClick={() => handleCategoryChange(category)}
                             >
@@ -123,9 +163,12 @@ function ShopPage() {
                     </div>
                 </div>
 
+                {/* Products Grid */}
                 <div className={styles.productsGrid}>
                     {loading ? (
-                        <div className={styles.loadingMessage}>Loading products...</div>
+                        <div className={styles.loadingMessage}>
+                            Loading products...
+                        </div>
                     ) : error ? (
                         <div className={styles.errorMessage}>
                             <p>Error loading products: {error}</p>
@@ -137,7 +180,7 @@ function ShopPage() {
                             </button>
                         </div>
                     ) : filteredProducts.length > 0 ? (
-                        filteredProducts.map(product => (
+                        filteredProducts.map((product) => (
                             <Link
                                 to={`/product/${product.id}`}
                                 key={product.id}
@@ -157,7 +200,9 @@ function ShopPage() {
                                         />
                                     )}
                                     <div className={styles.productDetails}>
-                                        <h3 className={styles.productName}>{product.name}</h3>
+                                        <h3 className={styles.productName}>
+                                            {product.name}
+                                        </h3>
                                         <p className={styles.productDescription}>
                                             {product.description}
                                         </p>
@@ -167,7 +212,9 @@ function ShopPage() {
                                             </span>
                                             <button
                                                 className={styles.addToCartButton}
-                                                onClick={e => handleAddToCart(e, product)}
+                                                onClick={(e) =>
+                                                    handleAddToCart(e, product)
+                                                }
                                             >
                                                 Add to Cart
                                             </button>
@@ -181,6 +228,7 @@ function ShopPage() {
                     )}
                 </div>
 
+                {/* Pagination Section */}
                 {!loading && !error && products.length > 0 && (
                     <div className={styles.paginationSection}>
                         <button
