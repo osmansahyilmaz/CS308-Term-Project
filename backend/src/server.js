@@ -5,6 +5,7 @@ const pool = require('./db/pool');
 const authRoutes = require('./routes/authRoutes');
 const runMigrations = require('./db/migrate');  // ✅ Import migrate.js
 const cors = require('cors'); // ✅ Import CORS (if needed)
+const cartRoutes = require('./routes/cartRoutes'); // Import cartRoutes
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(session({
 
 // 🔹 Routes
 app.use('/api', authRoutes);
+app.use('/api', cartRoutes); // Add cart routes
 
 // ✅ Export app for testing (IMPORTANT!)
 module.exports = app;

@@ -37,6 +37,27 @@ const createSessionTable = async () => {
     }
 };
 
+// ✅ Cart Table (Newly Added)
+const createCartTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS cart (
+        cart_id SERIAL PRIMARY KEY, -- Unique identifier for each cart entry
+        user_id INT REFERENCES users(id) ON DELETE CASCADE, -- Links to users table, deletes cart if user is deleted
+        session_id VARCHAR REFERENCES session(sid) ON DELETE CASCADE, -- Links to session table, deletes cart if session is deleted
+        product_id INT REFERENCES products(product_id) ON DELETE CASCADE, -- Links to products table, deletes cart if product is deleted
+        quantity INT NOT NULL DEFAULT 1, -- Quantity of the product in the cart
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_cart UNIQUE (user_id, session_id, product_id) -- Prevents duplicate entries for the same product
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ Cart table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating cart table:', err);
+    }
+};
+
 // ✅ Ensure Admin User Exists
 const createAdminUser = async () => {
     const adminUsername = "admin";
@@ -60,8 +81,9 @@ const createAdminUser = async () => {
 
 // ✅ Run the Migration
 const createAllTables = async () => {
-    await createUsersTable();  // 🔹 Users table (Updated)
+    await createUsersTable();  // 🔹 Users table
     await createSessionTable();  // 🔹 Session table
+    await createCartTable();  // 🔹 Cart table (Newly added)
     await createAdminUser(); // 🔹 Admin user insertion
 };
 
