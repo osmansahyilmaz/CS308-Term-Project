@@ -71,6 +71,79 @@ const createRatingsTable = async () => {
     }
 };
 
+// ✅ Cart Table (Newly Added)
+const createCartTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS cart (
+        cart_id SERIAL PRIMARY KEY, -- Unique identifier for each cart entry
+        user_id INT REFERENCES users(id) ON DELETE CASCADE, -- Links to users table, deletes cart if user is deleted
+        session_id VARCHAR REFERENCES session(sid) ON DELETE CASCADE, -- Links to session table, deletes cart if session is deleted
+        product_id INT REFERENCES products(product_id) ON DELETE CASCADE, -- Links to products table, deletes cart if product is deleted
+        quantity INT NOT NULL DEFAULT 1, -- Quantity of the product in the cart
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_cart UNIQUE (user_id, session_id, product_id) -- Prevents duplicate entries for the same product
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ Cart table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating cart table:', err);
+    }
+};
+
+// ✅ Products Table
+const createProductsTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS products (
+        product_id SERIAL PRIMARY KEY, -- Unique identifier for each product
+        name VARCHAR(100) NOT NULL, -- Name of the product
+        description TEXT, -- Description of the product
+        price DECIMAL(10, 2) NOT NULL, -- Original price of the product
+        category VARCHAR(50), -- Category of the product (e.g., Electronics, Wearables)
+        in_stock BOOLEAN DEFAULT TRUE, -- True if the product is available
+        discount INT DEFAULT 0, -- Discount percentage (e.g., 15 for 15% off)
+        rating DECIMAL(2, 1) DEFAULT 0 CHECK (rating >= 0 AND rating <= 5), -- Average rating (0.0 to 5.0)
+        review_count INT DEFAULT 0, -- Total number of reviews
+        image VARCHAR(255), -- Main featured image URL
+        images TEXT[], -- Array of additional image URLs
+        colors TEXT[], -- Array of available colors (e.g., ['Black', 'White'])
+        features TEXT[], -- Array of features (e.g., ['Noise Cancellation', 'Bluetooth 5.0'])
+        specifications JSONB, -- JSON object for specifications (e.g., {"Driver Size": "40mm"})
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Timestamp when the product was created
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp when the product was last updated
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ Products table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating products table:', err);
+    }
+};
+
+// ✅ Reviews Table (Corrected)
+const createReviewsTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS reviews (
+        review_id SERIAL PRIMARY KEY, -- Unique identifier for each review
+        product_id INT NOT NULL, -- Links to the product being reviewed
+        user_id INT NOT NULL, -- Links to the user who wrote the review
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Date of the review
+        rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5), -- Rating (1 to 5)
+        title VARCHAR(100), -- Title of the review
+        comment TEXT, -- Main content of the review
+        FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE, -- Links to products table
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE -- Links to users table
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ Reviews table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating reviews table:', err);
+    }
+};
+
+// ✅ Ensure Admin User Exists
 const createAdminUser = async () => {
     const adminUsername = "admin";
     const adminEmail = "admin@admin.com";
@@ -92,11 +165,12 @@ const createAdminUser = async () => {
 };
 
 const createAllTables = async () => {
-    await createUsersTable();
-    await createSessionTable();
-    await createCommentsTable();
-    await createRatingsTable();
-    await createAdminUser();
+    await createUsersTable();  // 🔹 Users table
+    await createSessionTable();  // 🔹 Session table
+    await createCartTable();  // 🔹 Cart table (Newly added)
+    await createProductsTable(); // 🔹 Products table (Newly added)
+    await createReviewsTable(); // 🔹 Reviews table (Newly added)
+    await createAdminUser(); // 🔹 Admin user insertion
 };
 
 module.exports = createAllTables;

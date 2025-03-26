@@ -8,6 +8,9 @@ const ratingsRoutes = require('./routes/ratingsRoutes');
 
 const runMigrations = require('./db/migrate');
 const cors = require('cors');
+const runMigrations = require('./db/migrate');  // ✅ Import migrate.js
+const cors = require('cors'); // ✅ Import CORS (if needed)
+const cartRoutes = require('./routes/cartRoutes'); // Import cartRoutes
 
 const app = express();
 
@@ -36,6 +39,7 @@ app.use(session({
 app.use('/api', authRoutes);
 app.use('/api', commentsRoutes); // <-- NEW
 app.use('/api', ratingsRoutes);
+app.use('/api', cartRoutes); // Add cart routes
 
 // Export app for testing
 module.exports = app;
