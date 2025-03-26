@@ -11,7 +11,13 @@ router.post('/cart/add', cartController.addToCart);
 // Remove a product from the cart
 router.post('/cart/remove', cartController.removeFromCart);
 
+// Remove all quantities of a product from the cart
+router.post('/cart/remove-all', cartController.removeAllFromCart);
+
 // Clear the cart
 router.delete('/cart/clear', cartController.clearCart);
+
+// Merge session-based cart with user-based cart after login
+router.post('/cart/merge', cartController.mergeCart);
 
 module.exports = router;

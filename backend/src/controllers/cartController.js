@@ -46,14 +46,63 @@ const removeFromCart = async (req, res) => {
     const sessionId = req.sessionID;
 
     try {
+        // Check the current quantity of the product in the cart
+        const checkQuery = `
+            SELECT quantity FROM cart
+            WHERE (user_id = $1 OR session_id = $2) AND product_id = $3
+        `;
+        const result = await pool.query(checkQuery, [userId, sessionId, productId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Product not found in cart' });
+        }
+
+        const currentQuantity = result.rows[0].quantity;
+
+        if (currentQuantity > 1) {
+            // Decrease the quantity by 1
+            const updateQuery = `
+                UPDATE cart
+                SET quantity = quantity - 1
+                WHERE (user_id = $1 OR session_id = $2) AND product_id = $3
+            `;
+            await pool.query(updateQuery, [userId, sessionId, productId]);
+            res.status(200).json({ message: 'Product quantity decreased by 1' });
+        } else {
+            // Remove the product from the cart
+            const deleteQuery = `
+                DELETE FROM cart
+                WHERE (user_id = $1 OR session_id = $2) AND product_id = $3
+            `;
+            await pool.query(deleteQuery, [userId, sessionId, productId]);
+            res.status(200).json({ message: 'Product removed from cart' });
+        }
+    } catch (err) {
+        console.error('Error removing from cart:', err);
+        res.status(500).json({ error: 'Failed to remove product from cart' });
+    }
+};
+
+// Remove all quantities of a product from the cart
+const removeAllFromCart = async (req, res) => {
+    const { productId } = req.body;
+    const userId = req.session.user?.id;
+    const sessionId = req.sessionID;
+
+    try {
         const query = `
             DELETE FROM cart
             WHERE (user_id = $1 OR session_id = $2) AND product_id = $3
         `;
-        await pool.query(query, [userId, sessionId, productId]);
-        res.status(200).json({ message: 'Product removed from cart' });
+        const result = await pool.query(query, [userId, sessionId, productId]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Product not found in cart' });
+        }
+
+        res.status(200).json({ message: 'All quantities of the product removed from cart' });
     } catch (err) {
-        console.error('Error removing from cart:', err);
+        console.error('Error removing all quantities from cart:', err);
         res.status(500).json({ error: 'Failed to remove product from cart' });
     }
 };
@@ -121,6 +170,7 @@ module.exports = {
     getCart,
     addToCart,
     removeFromCart,
+    removeAllFromCart,
     clearCart,
     mergeCart,
 };
