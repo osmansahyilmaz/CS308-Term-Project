@@ -309,10 +309,10 @@ function ProductPage() {
                             <div className={styles.availability}>
                                 <span
                                     className={
-                                        product.inStock ? styles.inStock : styles.outOfStock
+                                        product.in_stock ? styles.inStock : styles.outOfStock
                                     }
                                 >
-                                    {product.inStock ? "In Stock" : "Out of Stock"}
+                                    {product.in_stock ? "In Stock" : "Out of Stock"}
                                 </span>
                             </div>
                         </div>
@@ -392,14 +392,14 @@ function ProductPage() {
                             <button
                                 className={styles.addToCartButton}
                                 onClick={handleAddToCart}
-                                disabled={!product.inStock}
+                                disabled={!product.in_stock}
                             >
                                 Add to Cart
                             </button>
                             <button
                                 className={styles.buyNowButton}
                                 onClick={handleBuyNow}
-                                disabled={!product.inStock}
+                                disabled={!product.in_stock}
                             >
                                 Buy Now
                             </button>
