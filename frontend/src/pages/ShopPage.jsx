@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styles from "./ShopPage.module.css";
 import LeftPanel from "../components/LeftPanel";
-import { getAllProducts } from "../mockData/products";
+//import { getAllProducts } from "../mockData/products";
+import axios from "axios"; // Import axios for API calls
 
 function ShopPage() {
     const [activeCategory, setActiveCategory] = useState("All");
@@ -11,7 +12,7 @@ function ShopPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [categories, setCategories] = useState(["All"]);
-
+    /*
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -31,6 +32,30 @@ function ShopPage() {
         };
         fetchProducts();
     }, []);
+    */
+    useEffect(() => {
+        const fetchProducts = async () => {
+          try {
+            setLoading(true);
+            // Fetch products from your backend endpoint
+            const response = await fetch("http://localhost:5000/api/products");
+            if (!response.ok) {
+              throw new Error("Failed to fetch products");
+            }
+            const data = await response.json();
+            setProducts(data.products);
+            // Build a list of unique categories from the products
+            const uniqueCategories = [...new Set(data.products.map(p => p.category))];
+            setCategories(["All", ...uniqueCategories]);
+            setLoading(false);
+          } catch (err) {
+            console.error("Error fetching products:", err);
+            setError(err.message);
+            setLoading(false);
+          }
+        };
+        fetchProducts();
+      }, []);
 
     const filteredProducts = products.filter(product => {
         const matchesCategory = activeCategory === "All" || product.category === activeCategory;
@@ -38,7 +63,7 @@ function ShopPage() {
                               product.description.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCategory && matchesSearch;
     });
-
+    
     const handleCategoryChange = category => {
         setActiveCategory(category);
     };
@@ -46,7 +71,8 @@ function ShopPage() {
     const handleSearchChange = e => {
         setSearchQuery(e.target.value);
     };
-
+    
+    /*
     const handleAddToCart = async (e, product) => {
         e.preventDefault();
         try {
@@ -55,6 +81,27 @@ function ShopPage() {
         } catch (err) {
             console.error("Error adding to cart:", err);
             alert('Could not add product to cart. Please try again.');
+        }
+    };
+    */
+    const handleAddToCart = async (e, product) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post(
+                "http://localhost:5000/api/cart/add",
+                { productId: product.product_id, quantity: 1 }, // Send product ID and quantity
+                { withCredentials: true } // Include session cookies
+            );
+    
+            if (response.status === 200) {
+                alert(`Added ${product.name} to cart!`);
+            } else {
+                console.error("Failed to add product to cart:", response.data.error);
+                alert("Could not add product to cart. Please try again.");
+            }
+        } catch (err) {
+            console.error("Error adding to cart:", err);
+            alert("Could not add product to cart. Please try again.");
         }
     };
 
@@ -139,8 +186,8 @@ function ShopPage() {
                     ) : filteredProducts.length > 0 ? (
                         filteredProducts.map(product => (
                             <Link
-                                to={`/product/${product.id}`}
-                                key={product.id}
+                                to={`/products/${product.product_id}`}  
+                                key={product.product_id}
                                 className={styles.productLink}
                             >
                                 <div className={styles.productCard}>
@@ -163,7 +210,7 @@ function ShopPage() {
                                         </p>
                                         <div className={styles.productPriceRow}>
                                             <span className={styles.productPrice}>
-                                                ${product.price.toFixed(2)}
+                                                ${Number(product.price).toFixed(2)}
                                             </span>
                                             <button
                                                 className={styles.addToCartButton}

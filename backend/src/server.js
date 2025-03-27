@@ -5,9 +5,8 @@ const pool = require('./db/pool');
 const authRoutes = require('./routes/authRoutes');
 const commentsRoutes = require('./routes/commentsRoutes'); // <-- NEW
 const ratingsRoutes = require('./routes/ratingsRoutes');
+const productsRoutes = require('./routes/productsRoutes');
 
-const runMigrations = require('./db/migrate');
-const cors = require('cors');
 const runMigrations = require('./db/migrate');  // ✅ Import migrate.js
 const cors = require('cors'); // ✅ Import CORS (if needed)
 const cartRoutes = require('./routes/cartRoutes'); // Import cartRoutes
@@ -40,6 +39,7 @@ app.use('/api', authRoutes);
 app.use('/api', commentsRoutes); // <-- NEW
 app.use('/api', ratingsRoutes);
 app.use('/api', cartRoutes); // Add cart routes
+app.use('/api', productsRoutes);
 
 // Export app for testing
 module.exports = app;

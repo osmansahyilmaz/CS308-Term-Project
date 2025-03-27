@@ -167,9 +167,11 @@ const createAdminUser = async () => {
 const createAllTables = async () => {
     await createUsersTable();  // 🔹 Users table
     await createSessionTable();  // 🔹 Session table
-    await createCartTable();  // 🔹 Cart table (Newly added)
     await createProductsTable(); // 🔹 Products table (Newly added)
+    await createCartTable();  // 🔹 Cart table (Newly added)
     await createReviewsTable(); // 🔹 Reviews table (Newly added)
+    await createCommentsTable(); // 🔹 Comments table
+    await createRatingsTable(); // 🔹 Ratings table
     await createAdminUser(); // 🔹 Admin user insertion
 };
 

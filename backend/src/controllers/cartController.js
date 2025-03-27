@@ -7,8 +7,10 @@ const getCart = async (req, res) => {
 
     try {
         const query = `
-            SELECT * FROM cart
-            WHERE user_id = $1 OR session_id = $2
+            SELECT c.product_id, c.quantity, p.name, p.price, p.image
+            FROM cart c
+            JOIN products p ON c.product_id = p.product_id
+            WHERE c.user_id = $1 OR c.session_id = $2
         `;
         const result = await pool.query(query, [userId, sessionId]);
         res.status(200).json(result.rows);
@@ -53,7 +55,7 @@ const removeFromCart = async (req, res) => {
         `;
         const result = await pool.query(checkQuery, [userId, sessionId, productId]);
 
-        if (result.rows.length === 0) {
+        if (result.rows.length === 0) { 
             return res.status(404).json({ error: 'Product not found in cart' });
         }
 
