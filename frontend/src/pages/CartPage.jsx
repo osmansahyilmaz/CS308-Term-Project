@@ -1,20 +1,50 @@
-// src/pages/CartPage.jsx
-
 import React, { useEffect, useState } from "react";
 import styles from "./CartPage.module.css";
 import LeftPanel from "../components/LeftPanel";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 function CartPage() {
   const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Fetch cart items from the backend
   useEffect(() => {
-    // Load cart from localStorage
-    const storedCart = localStorage.getItem("cart");
-    if (storedCart) {
-      setCartItems(JSON.parse(storedCart));
-    }
+    const fetchCart = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get("http://localhost:5000/api/cart", {
+          withCredentials: true,
+        });
+        setCartItems(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching cart:", err);
+        setError("Failed to load cart items.");
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
   }, []);
+
+  // Remove an item from the cart
+  const handleRemoveItem = async (productId) => {
+    try {
+      await axios.post(
+        "http://localhost:5000/api/cart/remove-all",
+        { productId },
+        { withCredentials: true }
+      );
+      setCartItems((prevItems) =>
+        prevItems.filter((item) => item.product_id !== productId)
+      );
+    } catch (err) {
+      console.error("Error removing item from cart:", err);
+      setError("Failed to remove item from cart.");
+    }
+  };
 
   // Calculate total (price * quantity)
   const total = cartItems.reduce(
@@ -22,17 +52,16 @@ function CartPage() {
     0
   );
 
-  // Removes an item from the cart
-  const handleRemoveItem = (index) => {
-    const updatedCart = [...cartItems];
-    updatedCart.splice(index, 1);
-    setCartItems(updatedCart);
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-  };
+  if (loading) {
+    return <p className={styles.loadingMessage}>Loading cart...</p>;
+  }
+
+  if (error) {
+    return <p className={styles.errorMessage}>{error}</p>;
+  }
 
   return (
     <div className={styles.cartContainer}>
-      {/* Left panel (same style as other pages) */}
       <div className={styles.leftWrapper}>
         <LeftPanel
           bottomLinkText="Back to Shop"
@@ -42,7 +71,6 @@ function CartPage() {
         />
       </div>
 
-      {/* Main content area */}
       <div className={styles.mainContent}>
         <h1 className={styles.cartTitle}>Your Cart</h1>
 
@@ -50,14 +78,12 @@ function CartPage() {
           <p className={styles.emptyCartMessage}>No items in your cart.</p>
         ) : (
           <div className={styles.cartTable}>
-            {/* List each cart item */}
-            {cartItems.map((item, idx) => (
-              <div className={styles.cartItem} key={idx}>
-                {/* Product image */}
+            {cartItems.map((item) => (
+              <div className={styles.cartItem} key={item.product_id}>
                 <div className={styles.itemImageWrapper}>
-                  {item.images && item.images.length > 0 ? (
+                  {item.image ? (
                     <img
-                      src={item.images[0]}
+                      src={item.image}
                       alt={item.name}
                       className={styles.itemImage}
                     />
@@ -66,20 +92,18 @@ function CartPage() {
                   )}
                 </div>
 
-                {/* Details (name, price, quantity, etc.) */}
                 <div className={styles.itemDetails}>
                   <h2 className={styles.itemName}>{item.name}</h2>
                   <p className={styles.itemPrice}>
-                    ${item.price.toFixed(2)}
+                    ${Number(item.price).toFixed(2)}
                   </p>
                   <p className={styles.itemQuantity}>
                     Quantity: {item.quantity || 1}
                   </p>
                 </div>
 
-                {/* Remove button */}
                 <button
-                  onClick={() => handleRemoveItem(idx)}
+                  onClick={() => handleRemoveItem(item.product_id)}
                   className={styles.removeButton}
                 >
                   Remove
@@ -87,14 +111,12 @@ function CartPage() {
               </div>
             ))}
 
-            {/* Cart summary with total */}
             <div className={styles.cartSummary}>
               <h2 className={styles.summaryTitle}>Cart Summary</h2>
               <p className={styles.summaryTotal}>
-                Total: <span>${total.toFixed(2)}</span>
+                Total: <span>${Number(total).toFixed(2)}</span>
               </p>
 
-              {/* Link to checkout (or wherever your checkout page is) */}
               <Link to="/checkout" className={styles.checkoutButton}>
                 Proceed to Checkout
               </Link>

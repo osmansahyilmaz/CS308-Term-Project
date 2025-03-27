@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import styles from "./ProductPage.module.css";
 import LeftPanel from "../components/LeftPanel";
-import { getProductById, getRelatedProducts } from "../mockData/products";
+//import { getProductById, getRelatedProducts } from "../mockData/products";
+
 
 function ProductPage() {
     const { productId } = useParams();
@@ -15,7 +16,8 @@ function ProductPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [relatedProducts, setRelatedProducts] = useState([]);
-
+    
+    /*
     useEffect(() => {
         const fetchProductData = async () => {
             try {
@@ -41,6 +43,40 @@ function ProductPage() {
 
         fetchProductData();
     }, [productId]);
+    */
+    useEffect(() => {
+        const fetchProductData = async () => {
+          try {
+            setLoading(true);
+            // Call backend to get product details
+            const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+            if (!response.ok) {
+              throw new Error("Failed to fetch product details");
+            }
+            const data = await response.json();
+            if (!data.product) {
+              throw new Error("Product not found");
+            }
+            setProduct(data.product);
+            setLoading(false);
+    
+            // Optionally, fetch all products to determine related products (based on same category)
+            const resAll = await fetch("http://localhost:5000/api/products");
+            if (resAll.ok) {
+              const dataAll = await resAll.json();
+              const related = dataAll.products.filter(
+                p => p.product_id !== data.product.product_id && p.category === data.product.category
+              );
+              setRelatedProducts(related);
+            }
+          } catch (err) {
+            console.error("Error fetching product:", err);
+            setError(err.message);
+            setLoading(false);
+          }
+        };
+        fetchProductData();
+      }, [productId]);
 
     const discountedPrice = product?.discount
         ? (product.price - (product.price * product.discount) / 100).toFixed(2)
@@ -97,7 +133,7 @@ function ProductPage() {
     const handleAddToCart = async () => {
         try {
             // Simulate an API call (development)
-            console.log("Added to cart:", product.id, "Quantity:", quantity);
+            console.log("Added to cart:", product.product_id, "Quantity:", quantity);
 
             // 1) Read existing cart from localStorage
             const cartString = localStorage.getItem("cart");
@@ -126,7 +162,7 @@ function ProductPage() {
 
     const handleBuyNow = async () => {
         try {
-            console.log("Buy now - added to cart:", product.id, "Quantity:", quantity);
+            console.log("Buy now - added to cart:", product.product_id, "Quantity:", quantity);
             navigate("/checkout");
         } catch (err) {
             console.error("Error processing buy now:", err);
@@ -285,7 +321,7 @@ function ProductPage() {
                             {discountedPrice ? (
                                 <>
                                     <span className={styles.originalPrice}>
-                                        ${product.price.toFixed(2)}
+                                        ${Number(product.price).toFixed(2)}
                                     </span>
                                     <span className={styles.discountedPrice}>
                                         ${discountedPrice}
@@ -296,7 +332,7 @@ function ProductPage() {
                                 </>
                             ) : (
                                 <span className={styles.productPrice}>
-                                    ${product.price.toFixed(2)}
+                                    ${Number(product.price).toFixed(2)}
                                 </span>
                             )}
                         </div>
@@ -501,8 +537,8 @@ function ProductPage() {
                         <div className={styles.relatedProductsGrid}>
                             {relatedProducts.map((relatedProduct) => (
                                 <Link
-                                    to={`/product/${relatedProduct.id}`}
-                                    key={relatedProduct.id}
+                                    to={`/products/${relatedProduct.product_id}`}
+                                    key={relatedProduct.product_id}
                                     className={styles.relatedProductLink}
                                 >
                                     <div className={styles.relatedProductCard}>
@@ -522,13 +558,13 @@ function ProductPage() {
                                                 {relatedProduct.name}
                                             </h3>
                                             <span className={styles.relatedProductPrice}>
-                                                ${relatedProduct.price.toFixed(2)}
+                                                ${Number(relatedProduct.price).toFixed(2)}
                                             </span>
                                         </div>
                                     </div>
                                 </Link>
                             ))}
-                        </div>
+                        </div>  
                     </div>
                 )}
             </div>
@@ -537,6 +573,3 @@ function ProductPage() {
 }
 
 export default ProductPage;
-
-
-

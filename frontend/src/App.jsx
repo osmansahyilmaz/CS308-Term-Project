@@ -18,7 +18,7 @@ function App() {
                 <Route path="/register" element={<RegisterPage />} />
                 {/* You can add more routes (e.g., /forgot-password) as needed */}
                 <Route path="/shop" element={<ShopPage />} />
-                <Route path="/product/:productId" element={<ProductPage />} />
+                <Route path="/products/:productId" element={<ProductPage />} />
                 <Route path="/cart" element={<CartPage />} />
             </Routes>
         </BrowserRouter>
