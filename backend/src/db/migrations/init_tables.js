@@ -101,10 +101,8 @@ const createProductsTable = async () => {
         description TEXT, -- Description of the product
         price DECIMAL(10, 2) NOT NULL, -- Original price of the product
         category VARCHAR(50), -- Category of the product (e.g., Electronics, Wearables)
-        in_stock BOOLEAN DEFAULT TRUE, -- True if the product is available
+        in_stock INT DEFAULT 0, -- Quantity of the product in stock
         discount INT DEFAULT 0, -- Discount percentage (e.g., 15 for 15% off)
-        rating DECIMAL(2, 1) DEFAULT 0 CHECK (rating >= 0 AND rating <= 5), -- Average rating (0.0 to 5.0)
-        review_count INT DEFAULT 0, -- Total number of reviews
         image VARCHAR(255), -- Main featured image URL
         images TEXT[], -- Array of additional image URLs
         colors TEXT[], -- Array of available colors (e.g., ['Black', 'White'])

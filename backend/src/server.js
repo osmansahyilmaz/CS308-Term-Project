@@ -4,7 +4,6 @@ const pgSession = require('connect-pg-simple')(session);
 const pool = require('./db/pool');
 const authRoutes = require('./routes/authRoutes');
 const commentsRoutes = require('./routes/commentsRoutes'); // <-- NEW
-const ratingsRoutes = require('./routes/ratingsRoutes');
 const productsRoutes = require('./routes/productsRoutes');
 
 const runMigrations = require('./db/migrate');  // ✅ Import migrate.js
@@ -37,7 +36,6 @@ app.use(session({
 // Routes
 app.use('/api', authRoutes);
 app.use('/api', commentsRoutes); // <-- NEW
-app.use('/api', ratingsRoutes);
 app.use('/api', cartRoutes); // Add cart routes
 app.use('/api', productsRoutes);
 

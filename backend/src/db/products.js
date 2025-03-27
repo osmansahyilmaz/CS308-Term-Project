@@ -10,8 +10,6 @@ const getAllProducts = async () => {
             category, 
             in_stock, 
             discount, 
-            rating, 
-            review_count,
             image, 
             images, 
             colors, 
@@ -41,8 +39,8 @@ const getProductById = async (productId) => {
             p.category, 
             p.in_stock, 
             p.discount, 
-            p.rating, 
-            p.review_count,
+            COALESCE(AVG(r.rating), 0) AS rating, -- Calculate average rating dynamically
+            COUNT(r.rating) AS review_count, -- Count the number of reviews dynamically
             p.image, 
             p.images, 
             p.colors, 

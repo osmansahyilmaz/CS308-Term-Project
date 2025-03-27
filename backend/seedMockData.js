@@ -52,10 +52,8 @@ const seedProducts = async () => {
       description: "Experience crystal-clear sound with our premium wireless headphones. Perfect for music lovers and professionals alike.",
       price: 199.99,
       category: "Electronics",
-      in_stock: true,
+      in_stock: 13,
       discount: 15,
-      rating: 4.5,
-      review_count: 128,
       image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
       images: [
         "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
@@ -87,10 +85,8 @@ const seedProducts = async () => {
       description: "Track your health and fitness goals with our advanced smart watch. Features heart rate monitoring, sleep tracking, and more.",
       price: 149.99,
       category: "Wearables",
-      in_stock: true,
+      in_stock: 0,
       discount: 0,
-      rating: 4.2,
-      review_count: 95,
       image: "https://images.unsplash.com/photo-1575311373937-040b8e1fd6b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1888&q=80",
       images: [
         "https://images.unsplash.com/photo-1575311373937-040b8e1fd6b0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1888&q=80",
@@ -121,10 +117,8 @@ const seedProducts = async () => {
       description: "Take your music anywhere with this waterproof, portable Bluetooth speaker. Features 24-hour battery life and powerful bass.",
       price: 79.99,
       category: "Electronics",
-      in_stock: true,
+      in_stock: 2,
       discount: 10,
-      rating: 4.7,
-      review_count: 156,
       image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
       images: [
         "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80",
@@ -156,9 +150,9 @@ const seedProducts = async () => {
   for (const product of products) {
     const query = `
       INSERT INTO products 
-        (name, description, price, category, in_stock, discount, rating, review_count, image, images, colors, features, specifications)
+        (name, description, price, category, in_stock, discount, image, images, colors, features, specifications)
       VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING product_id;
     `;
     const values = [
@@ -168,8 +162,6 @@ const seedProducts = async () => {
       product.category,
       product.in_stock,
       product.discount,
-      product.rating,
-      product.review_count,
       product.image,
       product.images,
       product.colors,
