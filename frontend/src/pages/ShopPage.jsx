@@ -12,12 +12,32 @@ function ShopPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [categories, setCategories] = useState(["All"]);
+    const [cart, setCart] = useState([]); // Initialize cart state
+    useEffect(() => {
+        const fetchCart = async () => {
+            try {
+                const response = await axios.get("http://localhost:5000/api/cart", {
+                    withCredentials: true,
+                });
+                setCart(response.data); // Save cart data
+            } catch (err) {
+                console.error("Error fetching cart:", err);
+            }
+        };
+    
+        fetchCart();
+    }, []);
+    const getRemainingStock = (product) => {
+        const cartItem = cart.find((item) => item.product_id === product.product_id);
+        const cartQuantity = cartItem ? cartItem.quantity : 0;
+        return product.in_stock - cartQuantity;
+    };
     /*
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
-                setTimeout(() => {
+                setTimeout(() => {  
                     const data = getAllProducts();
                     setProducts(data);
                     const uniqueCategories = [...new Set(data.map(p => p.category))];
@@ -95,13 +115,10 @@ function ShopPage() {
     
             if (response.status === 200) {
                 alert(`Added ${product.name} to cart!`);
-            } else {
-                console.error("Failed to add product to cart:", response.data.error);
-                alert("Could not add product to cart. Please try again.");
             }
         } catch (err) {
-            console.error("Error adding to cart:", err);
-            alert("Could not add product to cart. Please try again.");
+            console.error("Error adding to cart:", err.response?.data || err.message);
+            alert(err.response?.data?.error || "Could not add product to cart. Please try again.");
         }
     };
 
@@ -214,9 +231,10 @@ function ShopPage() {
                                             </span>
                                             <button
                                                 className={styles.addToCartButton}
-                                                onClick={e => handleAddToCart(e, product)}
+                                                onClick={(e) => handleAddToCart(e, product)}
+                                                disabled={getRemainingStock(product) <= 0} // Disable button if no stock left
                                             >
-                                                Add to Cart
+                                                {getRemainingStock(product) === 0 ? "Out of Stock" : "Add to Cart"}
                                             </button>
                                         </div>
                                     </div>
