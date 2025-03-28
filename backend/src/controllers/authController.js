@@ -72,14 +72,8 @@ const login = async (req, res) => {
         return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // 2. Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        return res.status(400).json({ error: 'Invalid email format' });
-    }
-
     try {
-        // 3. Check if user exists
+        // 2. Check if user exists
         const result = await usersDb.getUserByEmail(email);
         if (result.rows.length === 0) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -87,36 +81,38 @@ const login = async (req, res) => {
 
         const user = result.rows[0];
 
-        // 4. Validate password
+        // 3. Validate password
         const isMatch = await argon2.verify(user.hashed_password, password);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // 5. Store user data in session
+        // 4. Store user data in session
         req.session.user = {
             id: user.id,
             username: user.username,
             email: user.email,
-            role_id: user.role_id  // 🔹 Added role_id to session
+            role_id: user.role_id
         };
 
-        // 6. Save the session before sending response
+        console.log('User logged in successfully:', req.session.user);
+
+        // 5. Save session and respond
         req.session.save((err) => {
             if (err) {
-                return res.status(500).json({ error: 'Session save failed' });
+                return res.status(500).json({ error: 'Failed to save session' });
             }
             res.status(200).json({
                 message: 'Login successful',
                 user: {
                     username: user.username,
                     email: user.email,
-                    role_id: user.role_id  // 🔹 Returning role_id
+                    role_id: user.role_id
                 }
             });
         });
-
     } catch (err) {
+        console.error('Error during login:', err);
         res.status(500).json({ error: 'Login failed', details: err.message });
     }
 };

@@ -33,19 +33,37 @@ function LoginPage() {
         if (Object.keys(validationErrors).length === 0) {
             try {
                 // Make an axios POST request to your login endpoint
+                console.log('Sending login request...');
                 const response = await axios.post(
-                    'http://localhost:5000/api/auth/login', // <-- Backend'deki login endpoint
+                    'http://localhost:5000/api/auth/login',
                     { email, password },
-                    {withCredentials: true}
+                    { withCredentials: true }
                 );
+                console.log('Login response:', response.data);
     
-                // Eğer başarılıysa, başarı mesajını göster ve /logout sayfasına yönlendir
+                // Show success message
                 toast.success('Login successful!');
-                navigate('/shop'); // ⬅ Kullanıcı giriş yaptıktan sonra /logout sayfasına yönlendirme
     
+                // Call merge endpoint to merge anonymous cart with user cart
+                try {
+                    console.log('Sending merge cart request...');
+                    const mergeResponse = await axios.post(
+                        'http://localhost:5000/api/cart/merge',
+                        {},
+                        { withCredentials: true }
+                    );
+                    console.log('Merge cart response:', mergeResponse.data);
+                    toast.success('Cart merged successfully!');
+                } catch (mergeError) {
+                    console.error('Cart merge failed:', mergeError.response?.data || mergeError.message);
+                    toast.error('Failed to merge cart. Please try again.');
+                }
+    
+                navigate('/shop'); // Redirect user after successful login
             } catch (error) {
-                // Hata mesajı göster
+                // Show error message
                 const errorMessage = error.response?.data?.error || 'Login failed';
+                console.error('Login failed:', errorMessage);
                 toast.error(errorMessage);
             }
         }

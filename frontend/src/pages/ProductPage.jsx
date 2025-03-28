@@ -86,6 +86,8 @@ function ProductPage() {
         const value = parseInt(e.target.value);
         if (value > 0) {
             setQuantity(value);
+        } else if (value > product.in_stock) {
+            setQuantity(product.in_stock);
         }
     };
 
@@ -379,6 +381,7 @@ function ProductPage() {
                                     className={styles.quantityInput}
                                 />
                                 <button
+                                    disabled={quantity >= product.in_stock}
                                     className={styles.quantityButton}
                                     onClick={incrementQuantity}
                                 >
@@ -392,7 +395,7 @@ function ProductPage() {
                             <button
                                 className={styles.addToCartButton}
                                 onClick={handleAddToCart}
-                                disabled={!product.in_stock}
+                                disabled={!product.in_stock || quantity > product.in_stock}
                             >
                                 Add to Cart
                             </button>
@@ -481,7 +484,7 @@ function ProductPage() {
                                     <div className={styles.reviewsSummary}>
                                         <div className={styles.averageRating}>
                                             <span className={styles.ratingNumber}>
-                                                {product.rating || 0}
+                                                {Number(product.rating).toFixed(1) || 0}
                                             </span>
                                             <div className={styles.summaryStars}>
                                                 {renderStarRating(product.rating || 0)}

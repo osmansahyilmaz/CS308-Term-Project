@@ -23,10 +23,40 @@ const getCart = async (req, res) => {
 // Add a product to the cart
 const addToCart = async (req, res) => {
     const { productId, quantity } = req.body;
-    const userId = req.session.user?.id;
+    const userId = req.session.user ? req.session.user.id : null;
     const sessionId = req.sessionID;
 
     try {
+        // Step 1: Get the total stock of the product
+        const stockQuery = `
+            SELECT in_stock FROM products WHERE product_id = $1
+        `;
+        const stockResult = await pool.query(stockQuery, [productId]);
+        if (stockResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        const totalStock = stockResult.rows[0].in_stock;
+
+        // Step 2: Get the total quantity of the product already in the cart
+        const cartQuery = `
+            SELECT COALESCE(SUM(quantity), 0) AS total_quantity
+            FROM cart
+            WHERE product_id = $1 AND (user_id = $2 OR session_id = $3)
+        `;
+        const cartResult = await pool.query(cartQuery, [productId, userId, sessionId]);
+        const cartQuantity = cartResult.rows[0].total_quantity;
+
+        // Step 3: Calculate the available stock
+        const availableStock = totalStock - cartQuantity;
+
+        // Step 4: Check if the requested quantity exceeds the available stock
+        if (quantity > availableStock) {
+            return res.status(400).json({
+                error: `Cannot add to cart. Only ${availableStock} items left in stock.`,
+            });
+        }
+
+        // Step 5: Add the product to the cart
         const query = `
             INSERT INTO cart (user_id, session_id, product_id, quantity)
             VALUES ($1, $2, $3, $4)
@@ -40,7 +70,6 @@ const addToCart = async (req, res) => {
         res.status(500).json({ error: 'Failed to add product to cart' });
     }
 };
-
 // Remove a product from the cart
 const removeFromCart = async (req, res) => {
     const { productId } = req.body;
@@ -132,20 +161,26 @@ const mergeCart = async (req, res) => {
     const userId = req.session.user?.id; // Logged-in user's ID
     const sessionId = req.sessionID; // Current session ID
 
+    console.log('mergeCart called');
+    console.log('User ID:', userId);
+    console.log('Session ID:', sessionId);
+
     if (!userId) {
+        console.error('User must be logged in to merge cart');
         return res.status(400).json({ error: 'User must be logged in to merge cart' });
     }
 
     try {
-        // Update session-based cart to associate with the logged-in user
+        // Step 1: Update session-based cart to associate with the logged-in user
         const updateQuery = `
             UPDATE cart
             SET user_id = $1, session_id = NULL
             WHERE session_id = $2
         `;
-        await pool.query(updateQuery, [userId, sessionId]);
+        const updateResult = await pool.query(updateQuery, [userId, sessionId]);
+        console.log(`Updated ${updateResult.rowCount} cart items to associate with user ID ${userId}`);
 
-        // Merge duplicate products (same product_id) by summing their quantities
+        // Step 2: Merge duplicate products (same product_id) by summing their quantities
         const mergeQuery = `
             DELETE FROM cart
             WHERE cart_id IN (
@@ -157,14 +192,15 @@ const mergeCart = async (req, res) => {
                 AND c1.session_id IS NULL
                 AND c2.session_id IS NULL
                 AND c1.cart_id > c2.cart_id
-            );
+            )
         `;
-        await pool.query(mergeQuery);
+        const mergeResult = await pool.query(mergeQuery);
+        console.log(`Deleted ${mergeResult.rowCount} duplicate cart items for user ID ${userId}`);
 
         res.status(200).json({ message: 'Cart merged successfully' });
     } catch (err) {
         console.error('Error merging cart:', err);
-        res.status(500).json({ error: 'Failed to merge cart' });
+        res.status(500).json({ error: 'Failed to merge cart', details: err.message });
     }
 };
 

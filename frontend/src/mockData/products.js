@@ -168,7 +168,7 @@ export const mockProducts = [
         title: "Great sound, could be louder",
         comment: "I love the portability and sound quality of this speaker. My only complaint is that it could be a bit louder for outdoor use, but otherwise it's perfect for my needs."
       },
-      {
+      {x
         id: 303,
         user: "Thomas Brown",
         date: "July 10, 2023",
