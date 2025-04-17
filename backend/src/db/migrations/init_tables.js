@@ -229,6 +229,7 @@ const createAddressesTable = async () => {
     CREATE TABLE IF NOT EXISTS addresses (
         address_id SERIAL PRIMARY KEY,
         user_id INT REFERENCES users(id) ON DELETE CASCADE,
+        address_title VARCHAR(100) NOT NULL,
         address_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         address_city VARCHAR(100) NOT NULL,
         address_district VARCHAR(100) NOT NULL,
