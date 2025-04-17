@@ -173,7 +173,6 @@ const createProductsOfOrderTable = async () => {
         product_of_order_id SERIAL PRIMARY KEY,
         order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
         product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
-        product_count INT NOT NULL,
         price_when_buy INT NOT NULL,
         tax_when_buy INT,
         discount_when_buy INT NOT NULL,
