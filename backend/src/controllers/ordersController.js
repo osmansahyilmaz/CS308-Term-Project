@@ -1,16 +1,18 @@
 const pool = require('../db/pool');
 
-const placeOrder = async (req, res) => {
+// Checkout: Validate cart and prepare order details
+const checkout = async (req, res) => {
     const userId = req.session.user?.id;
 
+    // Enforce login for checkout
     if (!userId) {
-        return res.status(401).json({ error: 'Not authenticated' });
+        return res.status(401).json({ error: 'You must be logged in to checkout' });
     }
 
     try {
-        // Step 1: Fetch the user's cart
+        // Fetch the user's cart
         const cartQuery = `
-            SELECT c.product_id, c.quantity, p.in_stock, p.price
+            SELECT c.product_id, c.quantity, p.in_stock, p.name
             FROM cart c
             JOIN products p ON c.product_id = p.product_id
             WHERE c.user_id = $1
@@ -21,25 +23,46 @@ const placeOrder = async (req, res) => {
             return res.status(400).json({ error: 'Cart is empty' });
         }
 
-        // Step 2: Check stock availability
+        // Validate stock availability
         for (const item of cartResult.rows) {
             if (item.quantity > item.in_stock) {
                 return res.status(400).json({
-                    error: `Insufficient stock for product ID ${item.product_id}. Available: ${item.in_stock}`,
+                    error: `Insufficient stock for product "${item.name}". Available: ${item.in_stock}`,
                 });
             }
         }
 
-        // Step 3: Create a new order
+        // If all products are in stock
+        res.status(200).json({ message: 'All products are in stock' });
+    } catch (err) {
+        console.error('Error during checkout:', err);
+        res.status(500).json({ error: 'Failed to checkout', details: err.message });
+    }
+};
+
+// Place an order: Confirm the order after checkout
+const placeOrder = async (req, res) => {
+    const userId = req.session.user?.id;
+    const { cartItems, totalPrice } = req.body;
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    if (!cartItems || cartItems.length === 0 || !totalPrice) {
+        return res.status(400).json({ error: 'Invalid order details' });
+    }
+
+    try {
+        // Create a new order
         const orderQuery = `
             INSERT INTO orders (user_id, order_total_price, order_status)
             VALUES ($1, $2, 0) RETURNING order_id
         `;
-        const totalPrice = cartResult.rows.reduce((sum, item) => sum + item.price * item.quantity, 0);
         const orderResult = await pool.query(orderQuery, [userId, totalPrice]);
         const orderId = orderResult.rows[0].order_id;
 
-        // Step 4: Add products to the order and reduce stock
+        // Add products to the order and reduce stock
         const orderItemsQuery = `
             INSERT INTO products_of_order (order_id, product_id, price_when_buy, product_order_count)
             VALUES ($1, $2, $3, $4)
@@ -48,12 +71,12 @@ const placeOrder = async (req, res) => {
             UPDATE products SET in_stock = in_stock - $1 WHERE product_id = $2
         `;
 
-        for (const item of cartResult.rows) {
+        for (const item of cartItems) {
             await pool.query(orderItemsQuery, [orderId, item.product_id, item.price, item.quantity]);
             await pool.query(updateStockQuery, [item.quantity, item.product_id]);
         }
 
-        // Step 5: Clear the user's cart
+        // Clear the user's cart
         const clearCartQuery = `DELETE FROM cart WHERE user_id = $1`;
         await pool.query(clearCartQuery, [userId]);
 
@@ -154,6 +177,7 @@ const getOrderHistory = async (req, res) => {
 };
 
 module.exports = {
+    checkout, // New function
     placeOrder,
     cancelOrder,
     getOrderHistory,

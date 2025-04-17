@@ -12,4 +12,7 @@ router.delete('/orders/:orderId/cancel', ordersController.cancelOrder);
 // Fetch order history for a user
 router.get('/orders/history', ordersController.getOrderHistory);
 
+// Add a route for checkout
+router.post('/orders/checkout', ordersController.checkout);
+
 module.exports = router;
