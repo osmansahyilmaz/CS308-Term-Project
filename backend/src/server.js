@@ -5,6 +5,8 @@ const pool = require('./db/pool');
 const authRoutes = require('./routes/authRoutes');
 const commentsRoutes = require('./routes/commentsRoutes'); // <-- NEW
 const productsRoutes = require('./routes/productsRoutes');
+const reviewsRoutes = require('./routes/reviewsRoutes'); // Import reviewsRoutes
+const ordersRoutes = require('./routes/ordersRoutes'); // Import ordersRoutes
 
 const runMigrations = require('./db/migrate');  // ✅ Import migrate.js
 const cors = require('cors'); // ✅ Import CORS (if needed)
@@ -38,6 +40,8 @@ app.use('/api', authRoutes);
 app.use('/api', commentsRoutes); // <-- NEW
 app.use('/api', cartRoutes); // Add cart routes
 app.use('/api', productsRoutes);
+app.use('/api', reviewsRoutes); // Add reviews routes
+app.use('/api', ordersRoutes); // Ensure orders routes are included
 
 // Export app for testing
 module.exports = app;
