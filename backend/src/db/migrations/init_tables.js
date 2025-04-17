@@ -275,6 +275,7 @@ const createAdminUser = async () => {
 
 const createAllTables = async () => {
     await createUsersTable();
+    await createAddressesTable(); // 🔹 Addresses table
     await createSessionTable();
     await createProductsTable();
     await createCartTable();
@@ -285,7 +286,6 @@ const createAllTables = async () => {
     await createProductsOfOrderTable(); // 🔹 ProductsOfOrder table
     await createInvoicesTable(); // 🔹 Invoices table
     await createPaymentsTable(); // 🔹 Payments table
-    await createAddressesTable(); // 🔹 Addresses table
     await createAdminUser();
 };
 
