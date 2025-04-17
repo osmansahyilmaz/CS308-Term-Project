@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import styles from "./CartPage.module.css";
 import LeftPanel from "../components/LeftPanel";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function CartPage() {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   // Fetch cart items from the backend
   useEffect(() => {
@@ -46,7 +47,26 @@ function CartPage() {
     }
   };
 
-  // Calculate total (price * quantity)
+  // Handle checkout redirection with auth check
+  const handleCheckoutClick = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/auth/profile", {
+        withCredentials: true,
+      });
+
+      if (res.data?.error === "Not Authenticated") {
+        alert("Please login to proceed to checkout.");
+        navigate("/login");
+      } else {
+        navigate("/checkout");
+      }
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      alert("Please log in to proceed to checkout.");
+      navigate("/login");
+    }
+  };
+
   const total = cartItems.reduce(
     (acc, item) => acc + item.price * (item.quantity || 1),
     0
@@ -117,9 +137,12 @@ function CartPage() {
                 Total: <span>${Number(total).toFixed(2)}</span>
               </p>
 
-              <Link to="/checkout" className={styles.checkoutButton}>
+              <button
+                onClick={handleCheckoutClick}
+                className={styles.checkoutButton}
+              >
                 Proceed to Checkout
-              </Link>
+              </button>
             </div>
           </div>
         )}

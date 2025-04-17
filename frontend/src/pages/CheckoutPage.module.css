@@ -1,0 +1,198 @@
+.pageBackground {
+    background-color: #FF4A00;
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .checkoutContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    max-width: 1100px;
+    width: 100%;
+    padding: 3rem;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .leftColumn {
+    flex: 2;
+  }
+  
+  .rightColumn {
+    flex: 1;
+    padding: 2rem;
+    background-color: #eeeeee; /* daha koyu gri */
+    border-radius: 10px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.05);
+  }
+  
+  .checkoutTitle {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+    text-align: left;
+  }
+  
+  .checkoutItem {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    gap: 1rem;
+    background-color: white;
+    border-radius: 8px;
+  }
+  
+  .itemImageWrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .itemImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .imagePlaceholder {
+    font-size: 0.8rem;
+    color: #aaa;
+    text-align: center;
+  }
+  
+  .itemInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .itemName {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .itemDetails {
+    font-size: 0.95rem;
+    color: #666;
+  }
+  
+  .totalPrice {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    text-align: right;
+    color: #333;
+  }
+  
+  .totalPrice span {
+    color: #FF4A00;
+    font-weight: bold;
+    margin-left: 0.5rem;
+  }
+  
+  .buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .purchaseButton {
+    padding: 0.8rem 2rem;
+    background-color: #FF4A00;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+  }
+  
+  .purchaseButton:hover {
+    background-color: #E43D12;
+  }
+  
+  .backButton {
+    padding: 0.8rem 2rem;
+    background: none;
+    border: 2px solid #FF4A00;
+    color: #FF4A00;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  
+  .backButton:hover {
+    background-color: #FF4A00;
+    color: white;
+  }
+  
+  .paymentTitle {
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+    color: #333;
+  }
+  
+  .paymentForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .inputGroup label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+  }
+  
+  .inputGroup input,
+  .inputRow input {
+    padding: 0.6rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+  }
+  
+  .inputRow {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .inputRow > div {
+    flex: 1;
+  }
+  
+  @media (max-width: 768px) {
+    .checkoutContainer {
+      flex-direction: column;
+      padding: 1rem;
+    }
+  
+    .buttonGroup {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .purchaseButton,
+    .backButton {
+      width: 100%;
+    }
+  }
+  
+  
+  
