@@ -141,6 +141,117 @@ const createReviewsTable = async () => {
     }
 };
 
+// ✅ Orders Table
+const createOrdersTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS orders (
+        order_id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id) ON DELETE CASCADE,
+        order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        order_total_price INT NOT NULL,
+        order_tax_amount INT,
+        order_status INT NOT NULL DEFAULT 0, -- 0: verifying, 1: processing, 2: in-transit, 3: delivered
+        order_processing_date TIMESTAMP,
+        order_in_transit_date TIMESTAMP,
+        order_delivered_date TIMESTAMP,
+        order_shipping_code VARCHAR(255),
+        order_shipping_price INT,
+        order_shipping_address INT REFERENCES addresses(address_id) ON DELETE SET NULL
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ Orders table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating orders table:', err);
+    }
+};
+
+// ✅ ProductsOfOrder Table
+const createProductsOfOrderTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS products_of_order (
+        product_of_order_id SERIAL PRIMARY KEY,
+        order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
+        product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
+        price_when_buy INT NOT NULL,
+        tax_when_buy INT,
+        discount_when_buy INT NOT NULL,
+        product_order_count INT NOT NULL
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ ProductsOfOrder table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating products_of_order table:', err);
+    }
+};
+
+// ✅ Invoices Table
+const createInvoicesTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS invoices (
+        invoice_id SERIAL PRIMARY KEY,
+        order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
+        generated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        invoice_description TEXT,
+        invoice_pdf_url VARCHAR(255)
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ Invoices table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating invoices table:', err);
+    }
+};
+
+// ✅ Payments Table
+const createPaymentsTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS payments (
+        payment_id SERIAL PRIMARY KEY,
+        order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
+        payment_method VARCHAR(50) NOT NULL,
+        payment_status INT NOT NULL DEFAULT 0, -- 0: pending, 1: success, 2: failed
+        payment_date TIMESTAMP,
+        transaction_code VARCHAR(255)
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ Payments table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating payments table:', err);
+    }
+};
+
+// ✅ Addresses Table
+const createAddressesTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS addresses (
+        address_id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id) ON DELETE CASCADE,
+        address_title VARCHAR(100) NOT NULL,
+        address_created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        address_city VARCHAR(100) NOT NULL,
+        address_district VARCHAR(100) NOT NULL,
+        address_neighbourhood VARCHAR(100) NOT NULL,
+        address_main_street VARCHAR(255),
+        address_street VARCHAR(255),
+        address_building_number VARCHAR(50) NOT NULL,
+        address_floor INT,
+        address_apartment_number VARCHAR(50),
+        address_post_code INT NOT NULL,
+        address_contact_phone VARCHAR(15) NOT NULL,
+        address_contact_name VARCHAR(100) NOT NULL,
+        address_contact_surname VARCHAR(100) NOT NULL
+    );`;
+    try {
+        await pool.query(query);
+        console.log('✅ Addresses table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating addresses table:', err);
+    }
+};
+
 // ✅ Ensure Admin User Exists
 const createAdminUser = async () => {
     const adminUsername = "admin";
@@ -163,14 +274,19 @@ const createAdminUser = async () => {
 };
 
 const createAllTables = async () => {
-    await createUsersTable();  // 🔹 Users table
-    await createSessionTable();  // 🔹 Session table
-    await createProductsTable(); // 🔹 Products table (Newly added)
-    await createCartTable();  // 🔹 Cart table (Newly added)
-    await createReviewsTable(); // 🔹 Reviews table (Newly added)
-    await createCommentsTable(); // 🔹 Comments table
-    await createRatingsTable(); // 🔹 Ratings table
-    await createAdminUser(); // 🔹 Admin user insertion
+    await createUsersTable();
+    await createSessionTable();
+    await createProductsTable();
+    await createCartTable();
+    await createReviewsTable();
+    await createCommentsTable();
+    await createRatingsTable();
+    await createOrdersTable(); // 🔹 Orders table
+    await createProductsOfOrderTable(); // 🔹 ProductsOfOrder table
+    await createInvoicesTable(); // 🔹 Invoices table
+    await createPaymentsTable(); // 🔹 Payments table
+    await createAddressesTable(); // 🔹 Addresses table
+    await createAdminUser();
 };
 
 module.exports = createAllTables;
