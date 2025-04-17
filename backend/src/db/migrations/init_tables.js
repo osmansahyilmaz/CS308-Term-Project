@@ -150,7 +150,7 @@ const createOrdersTable = async () => {
         order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         order_total_price INT NOT NULL,
         order_tax_amount INT,
-        order_status INT NOT NULL DEFAULT 0, -- 0: verifying, 1: processing, 2: in-transit, 3: delivered
+        order_status INT NOT NULL DEFAULT 0, -- 0: verifying, 1: processing, 2: in-transit, 3: delivered, 4: canceled
         order_processing_date TIMESTAMP,
         order_in_transit_date TIMESTAMP,
         order_delivered_date TIMESTAMP,
