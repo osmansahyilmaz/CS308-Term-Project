@@ -8,6 +8,7 @@ import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from "./pages/CartPage";  // <-- import CartPage
 import CheckoutPage from './pages/CheckoutPage';
+import ProfilePage from './pages/ProfilePage'; // <-- Add ProfilePage import
 
 
 
@@ -26,6 +27,8 @@ function App() {
                 <Route path="/products/:productId" element={<ProductPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile/orders/:orderId" element={<ProfilePage />} />
             </Routes>
         </BrowserRouter>
     );

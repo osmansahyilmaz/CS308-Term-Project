@@ -164,7 +164,23 @@ function ProductPage() {
 
     const handleBuyNow = async () => {
         try {
+            // Add the current product to cart first
             console.log("Buy now - added to cart:", product.product_id, "Quantity:", quantity);
+            
+            // 1) Read existing cart from localStorage
+            const cartString = localStorage.getItem("cart");
+            let cart = cartString ? JSON.parse(cartString) : [];
+
+            // 2) Push the current product with the chosen quantity
+            cart.push({
+                ...product,
+                quantity: quantity,
+            });
+
+            // 3) Save back to localStorage
+            localStorage.setItem("cart", JSON.stringify(cart));
+            
+            // 4) Navigate directly to checkout
             navigate("/checkout");
         } catch (err) {
             console.error("Error processing buy now:", err);
