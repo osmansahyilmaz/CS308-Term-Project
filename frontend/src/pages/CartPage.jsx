@@ -10,15 +10,14 @@ function CartPage() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch cart items from the backend
+  // Fetch cart items from localStorage instead of backend
   useEffect(() => {
-    const fetchCart = async () => {
+    const fetchCart = () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:5000/api/cart", {
-          withCredentials: true,
-        });
-        setCartItems(response.data);
+        const cartString = localStorage.getItem("cart");
+        const cartData = cartString ? JSON.parse(cartString) : [];
+        setCartItems(cartData);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching cart:", err);
@@ -31,40 +30,31 @@ function CartPage() {
   }, []);
 
   // Remove an item from the cart
-  const handleRemoveItem = async (productId) => {
+  const handleRemoveItem = (productId) => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/cart/remove-all",
-        { productId },
-        { withCredentials: true }
-      );
-      setCartItems((prevItems) =>
-        prevItems.filter((item) => item.product_id !== productId)
-      );
+      // Remove item from localStorage
+      const cartString = localStorage.getItem("cart");
+      const cart = cartString ? JSON.parse(cartString) : [];
+      const updatedCart = cart.filter(item => item.product_id !== productId);
+      localStorage.setItem("cart", JSON.stringify(updatedCart));
+      
+      // Update state
+      setCartItems(updatedCart);
     } catch (err) {
       console.error("Error removing item from cart:", err);
       setError("Failed to remove item from cart.");
     }
   };
 
-  // Handle checkout redirection with auth check
-  const handleCheckoutClick = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/auth/profile", {
-        withCredentials: true,
-      });
-
-      if (res.data?.error === "Not Authenticated") {
-        alert("Please login to proceed to checkout.");
-        navigate("/login");
-      } else {
-        navigate("/checkout");
-      }
-    } catch (err) {
-      console.error("Auth check failed:", err);
-      alert("Please log in to proceed to checkout.");
-      navigate("/login");
+  // Handle checkout redirection without requiring auth
+  const handleCheckoutClick = () => {
+    if (cartItems.length === 0) {
+      alert("Your cart is empty. Add items before checking out.");
+      return;
     }
+    
+    // Proceed directly to checkout without authentication check
+    navigate("/checkout");
   };
 
   const total = cartItems.reduce(
