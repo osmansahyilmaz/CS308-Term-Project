@@ -1,0 +1,44 @@
+.checkoutContainer {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .leftWrapper {
+    width: 40%;
+    background-color: #E43D12;
+    height: 100%;
+  }
+  
+  .rightPanel {
+    width: 60%;
+    background-color: #EBE9E1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .successBox {
+    background-color: white;
+    padding: 3rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .successTitle {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #2e7d32; /* yeşilimsi ✓ için güzel */
+    margin-bottom: 1rem;
+  }
+  
+  .successMessage {
+    font-size: 1rem;
+    color: #444;
+  }
+  

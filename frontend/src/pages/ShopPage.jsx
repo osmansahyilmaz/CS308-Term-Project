@@ -12,47 +12,23 @@ function ShopPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [categories, setCategories] = useState(["All"]);
-    const [cart, setCart] = useState([]); // Initialize cart state
-    useEffect(() => {
-        const fetchCart = async () => {
-            try {
-                const response = await axios.get("http://localhost:5000/api/cart", {
-                    withCredentials: true,
-                });
-                setCart(response.data); // Save cart data
-            } catch (err) {
-                console.error("Error fetching cart:", err);
-            }
-        };
     
-        fetchCart();
-    }, []);
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const productsPerPage = 6; // Show 6 products per page
+
     const getRemainingStock = (product) => {
-        const cartItem = cart.find((item) => item.product_id === product.product_id);
+        // Get cart from localStorage
+        const cartString = localStorage.getItem("cart");
+        const cartItems = cartString ? JSON.parse(cartString) : [];
+        
+        // Find if product is in cart and get its quantity
+        const cartItem = cartItems.find((item) => item.product_id === product.product_id);
         const cartQuantity = cartItem ? cartItem.quantity : 0;
+        
         return product.in_stock - cartQuantity;
     };
-    /*
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                setLoading(true);
-                setTimeout(() => {  
-                    const data = getAllProducts();
-                    setProducts(data);
-                    const uniqueCategories = [...new Set(data.map(p => p.category))];
-                    setCategories(["All", ...uniqueCategories]);
-                    setLoading(false);
-                }, 800);
-            } catch (err) {
-                console.error("Error fetching products:", err);
-                setError(err.message);
-                setLoading(false);
-            }
-        };
-        fetchProducts();
-    }, []);
-    */
+    
     useEffect(() => {
         const fetchProducts = async () => {
           try {
@@ -63,9 +39,20 @@ function ShopPage() {
               throw new Error("Failed to fetch products");
             }
             const data = await response.json();
-            setProducts(data.products);
-            // Build a list of unique categories from the products
-            const uniqueCategories = [...new Set(data.products.map(p => p.category))];
+            
+            // Deduplicate products based on product_id
+            const uniqueProductMap = new Map();
+            data.products.forEach(product => {
+              if (!uniqueProductMap.has(product.product_id)) {
+                uniqueProductMap.set(product.product_id, product);
+              }
+            });
+            const uniqueProducts = Array.from(uniqueProductMap.values());
+            
+            setProducts(uniqueProducts); // Use the deduplicated list
+            
+            // Build a list of unique categories from the *deduplicated* products
+            const uniqueCategories = [...new Set(uniqueProducts.map(p => p.category))];
             setCategories(["All", ...uniqueCategories]);
             setLoading(false);
           } catch (err) {
@@ -84,41 +71,49 @@ function ShopPage() {
         return matchesCategory && matchesSearch;
     });
     
+    // --- Pagination Logic ---
+    // Calculate total number of pages
+    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+    // Calculate the products to display on the current page
+    const indexOfLastProduct = currentPage * productsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+    // --- End Pagination Logic ---
+
     const handleCategoryChange = category => {
         setActiveCategory(category);
+        setCurrentPage(1); // Reset to first page when category changes
     };
 
     const handleSearchChange = e => {
         setSearchQuery(e.target.value);
+        setCurrentPage(1); // Reset to first page when search query changes
     };
     
-    /*
-    const handleAddToCart = async (e, product) => {
+    const handleAddToCart = (e, product) => {
         e.preventDefault();
+        e.stopPropagation(); // Prevent navigating to product detail
+        
         try {
-            console.log('Added to cart:', product.id);
+            // 1) Read existing cart from localStorage
+            const cartString = localStorage.getItem("cart");
+            let cart = cartString ? JSON.parse(cartString) : [];
+
+            // 2) Push the product with quantity 1
+            cart.push({
+                ...product,
+                quantity: 1,
+            });
+
+            // 3) Save back to localStorage
+            localStorage.setItem("cart", JSON.stringify(cart));
+
+            // 4) Show success message
             alert(`Added ${product.name} to cart!`);
         } catch (err) {
             console.error("Error adding to cart:", err);
-            alert('Could not add product to cart. Please try again.');
-        }
-    };
-    */
-    const handleAddToCart = async (e, product) => {
-        e.preventDefault();
-        try {
-            const response = await axios.post(
-                "http://localhost:5000/api/cart/add",
-                { productId: product.product_id, quantity: 1 }, // Send product ID and quantity
-                { withCredentials: true } // Include session cookies
-            );
-    
-            if (response.status === 200) {
-                alert(`Added ${product.name} to cart!`);
-            }
-        } catch (err) {
-            console.error("Error adding to cart:", err.response?.data || err.message);
-            alert(err.response?.data?.error || "Could not add product to cart. Please try again.");
+            alert("Could not add product to cart. Please try again.");
         }
     };
 
@@ -152,6 +147,19 @@ function ShopPage() {
                             />
                             {/* Search icon could go here */}
                         </div>
+                        
+                        {/* User profile icon link */}
+                        <Link 
+                            to="/profile" 
+                            style={{ 
+                                marginLeft: "1rem", 
+                                fontSize: "1.5rem", 
+                                textDecoration: "none" 
+                            }}
+                            aria-label="View profile"
+                        >
+                            👤
+                        </Link>
                         
                         {/* Cart icon link */}
                         <Link 
@@ -201,7 +209,7 @@ function ShopPage() {
                             </button>
                         </div>
                     ) : filteredProducts.length > 0 ? (
-                        filteredProducts.map(product => (
+                        currentProducts.map(product => (
                             <Link
                                 to={`/products/${product.product_id}`}  
                                 key={product.product_id}
@@ -232,9 +240,9 @@ function ShopPage() {
                                             <button
                                                 className={styles.addToCartButton}
                                                 onClick={(e) => handleAddToCart(e, product)}
-                                                disabled={getRemainingStock(product) <= 0} // Disable button if no stock left
+                                                disabled={product.in_stock <= 0} // Disable if out of stock
                                             >
-                                                {getRemainingStock(product) === 0 ? "Out of Stock" : "Add to Cart"}
+                                                {product.in_stock <= 0 ? "Out of Stock" : "Add to Cart"}
                                             </button>
                                         </div>
                                     </div>
@@ -248,13 +256,15 @@ function ShopPage() {
 
                 {!loading && !error && products.length > 0 && (
                     <div className={styles.paginationSection}>
-                        <button
-                            className={`${styles.paginationButton} ${styles.paginationButtonActive}`}
-                        >
-                            1
-                        </button>
-                        <button className={styles.paginationButton}>2</button>
-                        <button className={styles.paginationButton}>3</button>
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                key={index + 1}
+                                className={`${styles.paginationButton} ${currentPage === index + 1 ? styles.paginationButtonActive : ""}`}
+                                onClick={() => setCurrentPage(index + 1)}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>

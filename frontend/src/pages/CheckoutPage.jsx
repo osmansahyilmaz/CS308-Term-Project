@@ -281,9 +281,26 @@ function CheckoutPage() {
       setTotalPrice(0);
       
       // Redirect to profile orders page after 2 seconds
-      setTimeout(() => {
-        navigate('/profile');
-      }, 2000);
+      
+      navigate('/checkout-success', {
+        state: {
+          order: {
+            invoiceNumber: `INV-${Date.now()}`,
+            date: new Date().toLocaleDateString(),
+            customer: {
+              name: "Test Müşterisi",
+              email: "test@example.com",
+            },
+            items: cartItems.map((item) => ({
+              description: item.name,
+              quantity: item.quantity || 1,
+              price: item.price,
+            })),
+          }
+        }
+      });
+      
+      
     } catch (error) {
       setMessage('An error occurred: ' + error.message);
     }
