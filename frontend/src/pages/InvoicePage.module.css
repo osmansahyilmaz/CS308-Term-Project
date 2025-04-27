@@ -1,0 +1,80 @@
+.invoiceContainer {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .leftWrapper {
+    width: 40%;
+    height: 100%;
+    background-color: #E43D12; /* Turuncu renk */
+  }
+  
+  .rightPanel {
+    width: 60%;
+    background-color: #EBE9E1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .invoiceWrapper {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .invoiceTitle {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  .invoiceInfo {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1rem;
+  }
+  
+  .invoiceTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .invoiceTable th,
+  .invoiceTable td {
+    border: 1px solid #ccc;
+    padding: 0.75rem;
+    text-align: left;
+  }
+  
+  .totalAmount {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    color: #333;
+  }
+  
+  .downloadButton {
+    margin-top: 2rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    border: none;
+    background-color: #E43D12;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .downloadButton:hover {
+    background-color: #D6536D;
+  }
+  

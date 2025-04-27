@@ -13,19 +13,6 @@ const addReview = async (req, res) => {
             return res.status(400).json({ error: 'Invalid product ID or rating' });
         }
 
-        // Check if the product has been delivered to the user
-        const deliveryCheckQuery = `
-            SELECT COUNT(*) AS delivered_count
-            FROM orders o
-            JOIN products_of_order po ON o.order_id = po.order_id
-            WHERE o.user_id = $1 AND po.product_id = $2 AND o.order_status = 3; -- 3: delivered
-        `;
-        const deliveryCheckResult = await pool.query(deliveryCheckQuery, [userId, productId]);
-
-        if (parseInt(deliveryCheckResult.rows[0].delivered_count, 10) === 0) {
-            return res.status(403).json({ error: 'You can only review products that have been delivered to you' });
-        }
-
         const query = `
             INSERT INTO reviews (product_id, user_id, rating, title, comment)
             VALUES ($1, $2, $3, $4, $5)
@@ -38,6 +25,37 @@ const addReview = async (req, res) => {
     } catch (err) {
         console.error('Error adding review:', err);
         res.status(500).json({ error: 'Failed to add review', details: err.message });
+    }
+};
+
+// Check if a user can add a review for a product
+const canAddReview = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        const userId = req.session.user.id;
+        const { productId } = req.params;
+
+        // Check if the product has been delivered to the user
+        const deliveryCheckQuery = `
+            SELECT COUNT(*) AS delivered_count
+            FROM orders o
+            JOIN products_of_order po ON o.order_id = po.order_id
+            WHERE o.user_id = $1 AND po.product_id = $2 AND o.order_status = 3; -- 3: delivered
+        `;
+        const deliveryCheckResult = await pool.query(deliveryCheckQuery, [userId, productId]);
+
+        const deliveredCount = parseInt(deliveryCheckResult.rows[0].delivered_count, 10);
+
+        if (deliveredCount === 0) {
+            return res.status(403).json({ canAddReview: false });
+        }
+
+        res.status(200).json({ canAddReview: true });
+    } catch (err) {
+        console.error('Error checking if user can add review:', err);
+        res.status(500).json({ error: 'Failed to check review eligibility', details: err.message });
     }
 };
 
@@ -76,4 +94,5 @@ const deleteReview = async (req, res) => {
 module.exports = {
     addReview,
     deleteReview,
+    canAddReview, // Export the new function
 };

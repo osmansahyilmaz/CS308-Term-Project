@@ -120,7 +120,47 @@ const cancelOrder = async (req, res) => {
     }
 };
 
+const getOrderHistory = async (req, res) => {
+    const userId = req.session.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    try {
+        const query = `
+            SELECT 
+                o.order_id,
+                o.order_date,
+                o.order_total_price,
+                o.order_status,
+                json_agg(
+                    json_build_object(
+                        'product_id', po.product_id,
+                        'price_when_buy', po.price_when_buy,
+                        'product_order_count', po.product_order_count,
+                        'name', p.name,
+                        'image', p.image
+                    )
+                ) AS products
+            FROM orders o
+            JOIN products_of_order po ON o.order_id = po.order_id
+            JOIN products p ON po.product_id = p.product_id
+            WHERE o.user_id = $1
+            GROUP BY o.order_id
+            ORDER BY o.order_date DESC;
+        `;
+        const result = await pool.query(query, [userId]);
+
+        res.status(200).json({ orders: result.rows });
+    } catch (err) {
+        console.error('Error fetching order history:', err);
+        res.status(500).json({ error: 'Failed to fetch order history', details: err.message });
+    }
+};
+
 module.exports = {
     placeOrder,
     cancelOrder,
+    getOrderHistory,
 };

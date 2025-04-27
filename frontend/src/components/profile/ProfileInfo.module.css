@@ -1,0 +1,148 @@
+.profileInfo {
+    padding: 10px 0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.header h2 {
+    font-size: 20px;
+    color: #232f3e;
+    margin: 0;
+}
+
+.button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border: none;
+}
+
+.editButton {
+    background-color: #f0f0f0;
+    color: #232f3e;
+}
+
+.editButton:hover {
+    background-color: #e0e0e0;
+}
+
+.cancelButton {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.cancelButton:hover {
+    background-color: #d0d0d0;
+}
+
+.saveButton {
+    background-color: #febd69;
+    color: #000;
+}
+
+.saveButton:hover {
+    background-color: #f3a847;
+}
+
+.successMessage {
+    padding: 12px;
+    background-color: #d4edda;
+    color: #155724;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.errorMessage {
+    padding: 12px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.formRow {
+    display: flex;
+    gap: 15px;
+}
+
+.formRow .formGroup {
+    flex: 1;
+}
+
+.formGroup label {
+    font-weight: 500;
+    color: #333;
+}
+
+.formGroup input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.formGroup input:focus {
+    outline: none;
+    border-color: #febd69;
+}
+
+.formActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.profileDetails {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detailRow {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detailRow:last-child {
+    border-bottom: none;
+}
+
+.label {
+    width: 120px;
+    font-weight: 500;
+    color: #666;
+}
+
+.value {
+    flex: 1;
+    color: #232f3e;
+}
+
+@media (max-width: 768px) {
+    .formRow {
+        flex-direction: column;
+        gap: 15px;
+    }
+} 

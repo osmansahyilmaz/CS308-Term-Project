@@ -1,0 +1,506 @@
+.pageBackground {
+    background-color: #FF4A00;
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .checkoutContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    max-width: 1100px;
+    width: 100%;
+    padding: 3rem;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .leftColumn {
+    flex: 2;
+  }
+  
+  .rightColumn {
+    flex: 1;
+    padding: 2rem;
+    background-color: #eeeeee; /* daha koyu gri */
+    border-radius: 10px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.05);
+  }
+  
+  .checkoutTitle {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+    text-align: left;
+  }
+  
+  .checkoutItem {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    gap: 1rem;
+    background-color: white;
+    border-radius: 8px;
+  }
+  
+  .itemImageWrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .itemImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .imagePlaceholder {
+    font-size: 0.8rem;
+    color: #aaa;
+    text-align: center;
+  }
+  
+  .itemInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .itemName {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .itemDetails {
+    font-size: 0.95rem;
+    color: #666;
+  }
+  
+  .totalPrice {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    text-align: right;
+    color: #333;
+  }
+  
+  .totalPrice span {
+    color: #FF4A00;
+    font-weight: bold;
+    margin-left: 0.5rem;
+  }
+  
+  .buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .purchaseButton {
+    padding: 0.8rem 2rem;
+    background-color: #FF4A00;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+  }
+  
+  .purchaseButton:hover {
+    background-color: #E43D12;
+  }
+  
+  .backButton {
+    padding: 0.8rem 2rem;
+    background: none;
+    border: 2px solid #FF4A00;
+    color: #FF4A00;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  
+  .backButton:hover {
+    background-color: #FF4A00;
+    color: white;
+  }
+  
+  .paymentTitle {
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+    color: #333;
+  }
+  
+  .paymentForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .inputGroup label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+  }
+  
+  .inputGroup input,
+  .inputRow input {
+    padding: 0.6rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+  }
+  
+  .inputRow {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .inputRow > div {
+    flex: 1;
+  }
+  
+  @media (max-width: 768px) {
+    .checkoutContainer {
+      flex-direction: column;
+      padding: 1rem;
+    }
+  
+    .buttonGroup {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  
+    .purchaseButton,
+    .backButton {
+      width: 100%;
+    }
+  }
+  
+  /* Address Section Styles */
+  .sectionTitle {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .addressSection {
+    margin-bottom: 30px;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .savedAddressesHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .savedAddressesHeader h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .addNewButton {
+    background-color: #FF4A00;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .addNewButton:hover {
+    background-color: #E43D12;
+  }
+  
+  .backToSavedButton {
+    background: none;
+    border: 1px solid #FF4A00;
+    color: #FF4A00;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 15px;
+    transition: all 0.2s;
+  }
+  
+  .backToSavedButton:hover {
+    background-color: #FF4A00;
+    color: white;
+  }
+  
+  .addressCardsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .addressCard {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .addressCard:hover {
+    border-color: #FF4A00;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  .selectedCard {
+    border-color: #FF4A00;
+    box-shadow: 0 2px 8px rgba(255, 74, 0, 0.2);
+  }
+  
+  .addressCard input[type="radio"] {
+    margin-right: 12px;
+    margin-top: 3px;
+    cursor: pointer;
+  }
+  
+  .addressCardContent {
+    flex: 1;
+  }
+  
+  .addressCardContent h4 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .addressCardContent p {
+    margin: 3px 0;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .noSavedAddresses {
+    background-color: white;
+    padding: 15px;
+    border-radius: 6px;
+    text-align: center;
+  }
+  
+  .addressSelect {
+    margin-bottom: 15px;
+  }
+  
+  .addressSelect label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #444;
+  }
+  
+  .selectInput {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+  
+  .newAddressForm {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    margin-top: 10px;
+  }
+  
+  .newAddressForm h3 {
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .formNote {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+  }
+  
+  .selectedAddress {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+  }
+  
+  .addressSummary h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .addressSummary p {
+    margin: 5px 0;
+    line-height: 1.4;
+    color: #444;
+  }
+  
+  /* Payment Section Styles */
+  .paymentSection {
+    margin-bottom: 30px;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .savedCardsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .savedCardsHeader h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .cardCardsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .paymentCard {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .paymentCard:hover {
+    border-color: #FF4A00;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  .paymentCardContent {
+    flex: 1;
+  }
+  
+  .cardHeader {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  
+  .cardTypeIcon {
+    width: 32px;
+    height: 20px;
+    margin-right: 10px;
+  }
+  
+  .cardHeader h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    flex: 1;
+  }
+  
+  .defaultBadge {
+    background-color: #FF4A00;
+    color: white;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+  }
+  
+  .cardNumber {
+    font-size: 14px;
+    color: #555;
+    margin: 5px 0;
+  }
+  
+  .cardDetails {
+    display: flex;
+    justify-content: space-between;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .noSavedCards {
+    background-color: white;
+    padding: 15px;
+    border-radius: 6px;
+    text-align: center;
+  }
+  
+  .cardSelect {
+    margin-bottom: 15px;
+  }
+  
+  .newCardForm {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    margin-top: 10px;
+  }
+  
+  .newCardForm h3 {
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .expiryInputs {
+    display: flex;
+    align-items: center;
+  }
+  
+  .expiryInputs select {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  
+  .expiryInputs span {
+    margin: 0 5px;
+    color: #666;
+  }
+  
+  
+  
