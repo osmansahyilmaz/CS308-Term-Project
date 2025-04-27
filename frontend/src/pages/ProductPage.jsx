@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import styles from "./ProductPage.module.css";
@@ -107,7 +105,14 @@ function ProductPage() {
     };
 
     const incrementQuantity = () => {
-        setQuantity((prevQuantity) => prevQuantity + 1);
+        const remaining = getRemainingStock();
+        setQuantity(prev => {
+            if (prev + 1 > remaining) {
+                alert("Cannot add more. Stock limit reached.");
+                return prev;
+            }
+            return prev + 1;
+        });
     };
 
     const decrementQuantity = () => {
@@ -186,21 +191,40 @@ function ProductPage() {
     
     //
 
+    // Helper to compute remaining stock considering items already in cart
+    const getRemainingStock = () => {
+        if (!product) return 0;
+        const cartString = localStorage.getItem("cart");
+        const cartItems = cartString ? JSON.parse(cartString) : [];
+        const cartItem = cartItems.find((item) => item.product_id === product.product_id);
+        const cartQuantity = cartItem ? cartItem.quantity : 0;
+        return product.in_stock - cartQuantity;
+    };
+
     // -- UPDATED HANDLE ADD TO CART --
     const handleAddToCart = async () => {
         try {
-            // Simulate an API call (development)
-            console.log("Added to cart:", product.product_id, "Quantity:", quantity);
+            const remaining = getRemainingStock();
+            if (quantity > remaining) {
+                alert(`Cannot add ${quantity} items. Only ${remaining} left in stock.`);
+                return;
+            }
 
             // 1) Read existing cart from localStorage
             const cartString = localStorage.getItem("cart");
             let cart = cartString ? JSON.parse(cartString) : [];
 
-            // 2) Push the current product with the chosen quantity
-            cart.push({
-                ...product,
-                quantity: quantity,
-            });
+            // 2) Check if product already in cart
+            const itemIndex = cart.findIndex((item) => item.product_id === product.product_id);
+
+            if (itemIndex !== -1) {
+                cart[itemIndex].quantity += quantity;
+            } else {
+                cart.push({
+                    ...product,
+                    quantity: quantity,
+                });
+            }
 
             // 3) Save back to localStorage
             localStorage.setItem("cart", JSON.stringify(cart));
@@ -219,8 +243,22 @@ function ProductPage() {
 
     const handleBuyNow = async () => {
         try {
-            console.log("Buy now - added to cart:", product.product_id, "Quantity:", quantity);
-            navigate("/checkout");
+            if (!product) return;
+
+            const remaining = getRemainingStock();
+            if (quantity > remaining) {
+                alert(`Cannot buy ${quantity} items. Only ${remaining} left in stock.`);
+                return;
+            }
+
+            // Build a temporary cart with just this item
+            const singleItem = {
+                ...product,
+                quantity,
+            };
+
+            // Navigate to checkout with state carrying buy-now items
+            navigate("/checkout", { state: { buyNowItems: [singleItem] } });
         } catch (err) {
             console.error("Error processing buy now:", err);
             alert("Could not process your order. Please try again.");
@@ -450,9 +488,9 @@ function ProductPage() {
                             <button
                                 className={styles.addToCartButton}
                                 onClick={handleAddToCart}
-                                disabled={!product.in_stock || quantity > product.in_stock}
+                                disabled={getRemainingStock() <= 0}
                             >
-                                Add to Cart
+                                {getRemainingStock() <= 0 ? "Out of Stock" : "Add to Cart"}
                             </button>
                             <button
                                 className={styles.buyNowButton}
@@ -558,7 +596,7 @@ function ProductPage() {
                                             }
                                             
                                             else if (!canAddReview) {
-                                                alert("You can only review products you’ve purchased and received.");
+                                                alert("You can only review products you've purchased and received.");
                                             }
                                         
                                                 
