@@ -10,29 +10,48 @@ const OrderHistory = () => {
     const [selectedYear, setSelectedYear] = useState('all');
     const navigate = useNavigate();
     
+    const BASE_URL = 'http://localhost:5000/api';
+    
     useEffect(() => {
         fetchOrders();
     }, []);
     
-    const fetchOrders = () => {
+    const fetchOrders = async () => {
         setIsLoading(true);
         setError(null);
-        
         try {
-            // Get order history from localStorage instead of API
-            const orderHistoryString = localStorage.getItem('orderHistory');
-            const orderHistory = orderHistoryString ? JSON.parse(orderHistoryString) : [];
-            
-            // Sort orders by date (newest first)
-            const sortedOrders = orderHistory.sort((a, b) => 
-                new Date(b.order_date) - new Date(a.order_date)
-            );
-            
-            setOrders(sortedOrders);
+            // Attempt to fetch from backend
+            const res = await axios.get(`${BASE_URL}/orders/history`, { withCredentials: true });
+            const backendOrders = res.data.orders || [];
+
+            // Map status numbers (0-4) to string names for UI reuse
+            const statusMap = {
+                0: 'verifying',
+                1: 'processing',
+                2: 'shipped',
+                3: 'delivered',
+                4: 'cancelled'
+            };
+
+            const mappedOrders = backendOrders.map(o => ({
+                ...o,
+                order_status: statusMap[o.order_status] || 'processing'
+            }));
+
+            setOrders(mappedOrders);
             setIsLoading(false);
-        } catch (error) {
-            console.error('Error fetching orders:', error);
-            setError('An error occurred while fetching your orders.');
+        } catch (err) {
+            console.error('Error fetching orders from backend:', err);
+            // Fallback to localStorage
+            try {
+                const orderHistoryString = localStorage.getItem('orderHistory');
+                const orderHistory = orderHistoryString ? JSON.parse(orderHistoryString) : [];
+                const sortedOrders = orderHistory.sort((a, b) => new Date(b.order_date) - new Date(a.order_date));
+                setOrders(sortedOrders);
+            } catch (localErr) {
+                console.error('Error fetching orders from localStorage:', localErr);
+                setError('An error occurred while fetching your orders.');
+            }
             setIsLoading(false);
         }
     };
@@ -76,6 +95,8 @@ const OrderHistory = () => {
     // Get status text based on order_status number
     const getStatusText = (status) => {
         switch (status) {
+            case 'verifying':
+                return 'Verifying';
             case 'processing':
                 return 'Processing';
             case 'shipped':
@@ -92,6 +113,8 @@ const OrderHistory = () => {
     // Get CSS class for status
     const getStatusClass = (status) => {
         switch (status) {
+            case 'verifying':
+                return styles.statusProcessing;
             case 'processing':
                 return styles.statusProcessing;
             case 'shipped':
@@ -112,6 +135,20 @@ const OrderHistory = () => {
             alert(`Order Details for #${orderId}\nDate: ${formatDate(order.order_date)}\nStatus: ${getStatusText(order.order_status)}\nTotal: ${formatCurrency(order.order_total_price)}`);
         }
     };
+
+    async function handleCancelOrder(orderId) {
+        if (!window.confirm('Are you sure you want to cancel this order?')) {
+            return;
+        }
+
+        try {
+            await axios.delete(`${BASE_URL}/orders/${orderId}/cancel`, { withCredentials: true });
+            fetchOrders(); // Refresh list after cancellation
+        } catch (err) {
+            console.error('Error cancelling order:', err);
+            setError('Failed to cancel order.');
+        }
+    }
 
     return (
         <div className={styles.orderHistory}>
@@ -217,7 +254,7 @@ const OrderHistory = () => {
                                         </button>
                                     )}
                                     
-                                    {order.order_status === 'processing' && (
+                                    {(order.order_status === 'processing' || order.order_status === 'verifying') && (
                                         <button 
                                             className={styles.cancelButton}
                                             onClick={() => handleCancelOrder(order.order_id)}
@@ -233,36 +270,6 @@ const OrderHistory = () => {
             )}
         </div>
     );
-    
-    // Handle order cancellation
-    function handleCancelOrder(orderId) {
-        if (!window.confirm('Are you sure you want to cancel this order?')) {
-            return;
-        }
-        
-        try {
-            // Get orders from localStorage
-            const orderHistoryString = localStorage.getItem('orderHistory');
-            const orderHistory = orderHistoryString ? JSON.parse(orderHistoryString) : [];
-            
-            // Update the order status to cancelled
-            const updatedOrders = orderHistory.map(order => {
-                if (order.order_id === orderId) {
-                    return { ...order, order_status: 'cancelled' };
-                }
-                return order;
-            });
-            
-            // Save back to localStorage
-            localStorage.setItem('orderHistory', JSON.stringify(updatedOrders));
-            
-            // Update state to reflect changes
-            setOrders(updatedOrders);
-        } catch (error) {
-            console.error('Error cancelling order:', error);
-            setError('An error occurred while cancelling the order.');
-        }
-    }
 };
 
 export default OrderHistory; 

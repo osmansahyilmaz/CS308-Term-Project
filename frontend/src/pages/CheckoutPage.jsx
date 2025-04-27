@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './CheckoutPage.module.css';
 import axios from 'axios';
 
@@ -7,6 +7,9 @@ import axios from 'axios';
 import visaIcon from '../assets/visa.svg';
 import mastercardIcon from '../assets/mastercard.svg';
 import amexIcon from '../assets/amex.svg';
+
+// Base URL for backend API
+const BASE_URL = 'http://localhost:5000/api';
 
 function CheckoutPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -42,16 +45,29 @@ function CheckoutPage() {
   });
   
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchCart = () => {
       try {
-        // Get cart from localStorage instead of backend
+        // If Buy Now items are passed via navigation state, use them directly
+        if (location.state && location.state.buyNowItems) {
+          const buyNowItems = location.state.buyNowItems;
+          setCartItems(buyNowItems);
+          const total = buyNowItems.reduce(
+            (acc, item) => acc + item.price * (item.quantity || 1),
+            0
+          );
+          setTotalPrice(total);
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise use full cart from localStorage
         const cartString = localStorage.getItem("cart");
         const cartData = cartString ? JSON.parse(cartString) : [];
         setCartItems(cartData);
         
-        // Calculate total price
         const total = cartData.reduce(
           (acc, item) => acc + item.price * (item.quantity || 1),
           0
@@ -64,30 +80,53 @@ function CheckoutPage() {
       }
     };
     
-    // Get saved addresses
-    const fetchAddresses = () => {
+    // Get saved addresses (first try backend, fallback to localStorage)
+    const fetchAddresses = async () => {
       try {
-        const addressesString = localStorage.getItem('savedAddresses');
-        let addresses = addressesString ? JSON.parse(addressesString) : [];
-        
-        // If no addresses in localStorage, use empty array
-        if (!addresses || !Array.isArray(addresses)) {
-          addresses = [];
-        }
-        
+        const res = await axios.get(`${BASE_URL}/addresses`, { withCredentials: true });
+
+        // Map backend address format to frontend format
+        const addresses = (res.data.addresses || []).map(addr => ({
+          id: addr.address_id,
+          title: addr.address_title,
+          recipientName: `${addr.address_contact_name} ${addr.address_contact_surname}`.trim(),
+          city: addr.address_city,
+          district: addr.address_district,
+          street: addr.address_street || addr.address_main_street || '',
+          buildingNumber: addr.address_building_number,
+          apartmentNumber: addr.address_apartment_number,
+          postCode: addr.address_post_code,
+          phone: addr.address_contact_phone
+        }));
+
+        // Persist to localStorage for legacy components
+        localStorage.setItem('savedAddresses', JSON.stringify(addresses));
+
         setSavedAddresses(addresses);
-        
-        // If there's at least one address, select it by default
         if (addresses.length > 0) {
           setSelectedAddressId(addresses[0].id);
-          setShowNewAddressForm(false); // Ensure new address form is hidden when we have saved addresses
+          setShowNewAddressForm(false);
         } else {
-          // If no saved addresses, show the new address form by default
           setShowNewAddressForm(true);
           setSelectedAddressId('');
         }
       } catch (err) {
-        console.error('Error loading saved addresses:', err);
+        console.error('Error loading addresses from backend, falling back to localStorage:', err);
+        try {
+          const addressesString = localStorage.getItem('savedAddresses');
+          let addresses = addressesString ? JSON.parse(addressesString) : [];
+          if (!Array.isArray(addresses)) addresses = [];
+          setSavedAddresses(addresses);
+          if (addresses.length > 0) {
+            setSelectedAddressId(addresses[0].id);
+            setShowNewAddressForm(false);
+          } else {
+            setShowNewAddressForm(true);
+            setSelectedAddressId('');
+          }
+        } catch (localErr) {
+          console.error('Error loading addresses from localStorage:', localErr);
+        }
       }
     };
     
@@ -151,158 +190,98 @@ function CheckoutPage() {
     fetchCart();
     fetchAddresses();
     fetchPaymentMethods();
-  }, []);
+  }, [location.state]);
 
   const handlePurchase = async () => {
     try {
-      // Check if address is selected or entered
+      setMessage('');
+
+      // 1) Validate address & payment selections
       if (!selectedAddressId && !showNewAddressForm) {
         setMessage('Please select or enter a shipping address.');
         return;
       }
-      
-      // Check if payment method is selected or entered
       if (!selectedCardId && !showNewCardForm) {
         setMessage('Please select or enter payment information.');
         return;
       }
-      
-      // Process address (same as before)
-      if (showNewAddressForm) {
-        // Validate new address
-        if (!newAddress.recipientName || !newAddress.city || !newAddress.street || !newAddress.phone) {
-          setMessage('Please complete all required address fields.');
-          return;
-        }
-        
-        // Save the new address to localStorage
-        const addressId = 'addr-' + Date.now();
-        const addressToSave = {
-          id: addressId,
-          ...newAddress
-        };
-        
-        const addressesString = localStorage.getItem('savedAddresses');
-        const addresses = addressesString ? JSON.parse(addressesString) : [];
-        addresses.push(addressToSave);
-        localStorage.setItem('savedAddresses', JSON.stringify(addresses));
-        
-        // Set the new address as selected
-        setSelectedAddressId(addressId);
-      }
-      
-      // Process payment method
+
+      // If user entered a new card, perform basic validation (front-end only)
       if (showNewCardForm) {
-        // Validate new card
         if (!newCard.cardNumber || !newCard.cardHolder || !newCard.expiryMonth || !newCard.expiryYear || !newCard.cvv) {
           setMessage('Please complete all payment information fields.');
           return;
         }
-        
-        // In a real app, you would pass card info to a payment processor
-        // Here we'll just save masked card info for demonstration
-        const cardId = 'card-' + Date.now();
-        const cardToSave = {
-          id: cardId,
-          cardName: newCard.cardName || 'My Card',
-          cardNumber: '**** **** **** ' + newCard.cardNumber.slice(-4),
-          cardType: getCardType(newCard.cardNumber),
-          cardHolder: newCard.cardHolder,
-          expiryMonth: newCard.expiryMonth,
-          expiryYear: newCard.expiryYear,
-          isDefault: false
-        };
-        
-        const cardsString = localStorage.getItem('savedCards');
-        const cards = cardsString ? JSON.parse(cardsString) : [];
-        cards.push(cardToSave);
-        localStorage.setItem('savedCards', JSON.stringify(cards));
-        
-        // Set the new card as selected
-        setSelectedCardId(cardId);
       }
-      
-      // Find the selected address and payment method
-      let shippingAddress;
+
+      // 2) If user created a new address, save it via backend first
+      let backendAddressId = selectedAddressId;
       if (showNewAddressForm) {
-        shippingAddress = newAddress;
-      } else {
-        shippingAddress = savedAddresses.find(addr => addr.id === selectedAddressId);
-      }
-      
-      let paymentMethod;
-      if (showNewCardForm) {
-        paymentMethod = {
-          cardName: newCard.cardName || 'My Card',
-          cardNumber: '**** **** **** ' + newCard.cardNumber.slice(-4),
-          cardType: getCardType(newCard.cardNumber),
-          cardHolder: newCard.cardHolder,
-          expiryMonth: newCard.expiryMonth,
-          expiryYear: newCard.expiryYear
+        // Basic validation
+        if (!newAddress.recipientName || !newAddress.city || !newAddress.street || !newAddress.phone) {
+          setMessage('Please complete all required address fields.');
+          return;
+        }
+
+        // Split recipient name into first + surname for backend schema
+        const nameParts = newAddress.recipientName.trim().split(' ');
+        const contactName = nameParts.shift();
+        const contactSurname = nameParts.join(' ');
+
+        const addressPayload = {
+          address_title: newAddress.title || 'Shipping',
+          address_city: newAddress.city,
+          address_district: newAddress.district,
+          address_neighbourhood: '',
+          address_main_street: '',
+          address_street: newAddress.street,
+          address_building_number: newAddress.buildingNumber,
+          address_floor: '',
+          address_apartment_number: newAddress.apartmentNumber,
+          address_post_code: newAddress.postCode,
+          address_contact_phone: newAddress.phone,
+          address_contact_name: contactName,
+          address_contact_surname: contactSurname
         };
-      } else {
-        paymentMethod = savedCards.find(card => card.id === selectedCardId);
+
+        const res = await axios.post(`${BASE_URL}/addresses`, addressPayload, { withCredentials: true });
+        backendAddressId = res.data.address.address_id;
       }
-      
-      // Generate a unique order ID
-      const orderId = 'ORD-' + Date.now();
-      
-      // Create order object with shipping address and payment method
-      const order = {
-        order_id: orderId,
-        order_date: new Date().toISOString(),
-        order_status: 'processing',
-        order_total_price: totalPrice,
-        shipping_address: shippingAddress,
-        payment_method: paymentMethod,
-        products: cartItems.map(item => ({
-          product_id: item.product_id,
-          name: item.name,
-          image: item.image,
-          price_when_buy: item.price,
-          product_order_count: item.quantity || 1
-        }))
-      };
-      
-      // Save to order history in localStorage
-      const orderHistoryString = localStorage.getItem('orderHistory');
-      const orderHistory = orderHistoryString ? JSON.parse(orderHistoryString) : [];
-      orderHistory.push(order);
-      localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
-      
-      // Show success message
+
+      // 3) Sync current cart items to backend cart (session or user based)
+      await Promise.all(
+        cartItems.map(item =>
+          axios.post(
+            `${BASE_URL}/cart/add`,
+            { productId: item.product_id, quantity: item.quantity || 1 },
+            { withCredentials: true }
+          )
+        )
+      );
+
+      // 4) Place the order using backend controller
+      const orderRes = await axios.post(`${BASE_URL}/orders`, {}, { withCredentials: true });
+
+      // 5) Provide feedback & clean up local cart
       setMessage('Purchase successful! Your order has been placed.');
-      
-      // Clear cart in localStorage
-      localStorage.setItem("cart", JSON.stringify([]));
-      
-      // Clear cart items and total
+      localStorage.setItem('cart', JSON.stringify([]));
       setCartItems([]);
       setTotalPrice(0);
-      
-      // Redirect to profile orders page after 2 seconds
-      
-      navigate('/checkout-success', {
-        state: {
-          order: {
-            invoiceNumber: `INV-${Date.now()}`,
-            date: new Date().toLocaleDateString(),
-            customer: {
-              name: "Test Müşterisi",
-              email: "test@example.com",
-            },
-            items: cartItems.map((item) => ({
-              description: item.name,
-              quantity: item.quantity || 1,
-              price: item.price,
-            })),
-          }
-        }
-      });
-      
-      
+
+      // 6) Optionally build order object for invoice page (using local data)
+      const orderForInvoice = {
+        invoiceNumber: `INV-${Date.now()}`,
+        date: new Date().toLocaleDateString(),
+        addressId: backendAddressId,
+        items: cartItems.map(i => ({ description: i.name, quantity: i.quantity || 1, price: i.price })),
+      };
+
+      navigate('/checkout-success', { state: { order: orderForInvoice, backendOrderId: orderRes.data.orderId } });
+
     } catch (error) {
-      setMessage('An error occurred: ' + error.message);
+      console.error('Error completing purchase:', error.response?.data || error.message);
+      const errMsg = error.response?.data?.error || 'Failed to complete purchase.';
+      setMessage(errMsg);
     }
   };
 
