@@ -43,13 +43,37 @@ function CheckoutPage() {
   
   const navigate = useNavigate();
   const API = 'http://localhost:5000/api';          // 🔸 tek satırdan değiştirebilmek için
-
+  const location = useLocation();
   useEffect(() => {
     const fetchCart = () => {
       try {
         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
         setCartItems(cart);
         setTotalPrice(cart.reduce((acc, i) => acc + i.price * (i.quantity||1), 0));
+
+        // If Buy Now items are passed via navigation state, use them directly
+        if (location.state && location.state.buyNowItems) {
+          const buyNowItems = location.state.buyNowItems;
+          setCartItems(buyNowItems);
+          const total = buyNowItems.reduce(
+            (acc, item) => acc + item.price * (item.quantity || 1),
+            0
+          );
+          setTotalPrice(total);
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise use full cart from localStorage
+        const cartString = localStorage.getItem("cart");
+        const cartData = cartString ? JSON.parse(cartString) : [];
+        setCartItems(cartData);
+        
+        const total = cartData.reduce(
+          (acc, item) => acc + item.price * (item.quantity || 1),
+          0
+        );
+        setTotalPrice(total);
         setLoading(false);
       } catch (err) {
         setMessage('Failed to load cart');
@@ -84,6 +108,23 @@ function CheckoutPage() {
         console.error('Address fetch error', err);
         setSavedAddresses([]);          // offline fallback = boş liste
         setShowNewAddressForm(true);
+
+        console.error('Error loading addresses from backend, falling back to localStorage:', err);
+        try {
+          const addressesString = localStorage.getItem('savedAddresses');
+          let addresses = addressesString ? JSON.parse(addressesString) : [];
+          if (!Array.isArray(addresses)) addresses = [];
+          setSavedAddresses(addresses);
+          if (addresses.length > 0) {
+            setSelectedAddressId(addresses[0].id);
+            setShowNewAddressForm(false);
+          } else {
+            setShowNewAddressForm(true);
+            setSelectedAddressId('');
+          }
+        } catch (localErr) {
+          console.error('Error loading addresses from localStorage:', localErr);
+        }
       }
     };
     
@@ -168,6 +209,61 @@ function CheckoutPage() {
         await axios.post(`${API}/cart/add`,               // ➜  POST /api/cart/add
           { productId: item.product_id, quantity: item.quantity || 1 },
           { withCredentials: true });
+
+      }
+
+      
+      // Process address (same as before)
+      if (showNewAddressForm) {
+        // input doğrulama
+        if (!newAddress.recipientName || !newAddress.city || !newAddress.street || !newAddress.phone) {
+          setMessage('Please complete all required address fields.'); return;
+        }
+        // 🔸 sunucuya POST et
+        const { data } = await axios.post(`${API}/addresses`, {
+          address_title       : newAddress.title,
+          address_city        : newAddress.city,
+          address_district    : newAddress.district,
+          address_neighbourhood:'',
+          address_main_street : newAddress.street,
+          address_street      : newAddress.street,
+          address_building_number : newAddress.buildingNumber,
+          address_floor : newAddress.floor ? Number(newAddress.floor) : undefined,
+          address_apartment_number: newAddress.apartmentNumber,
+          address_post_code   : newAddress.postCode,
+          address_contact_phone  : newAddress.phone,
+          address_contact_name   : newAddress.recipientName.split(' ')[0] || '',
+          address_contact_surname: newAddress.recipientName.split(' ').slice(1).join(' ')
+        }, { withCredentials:true });
+
+        const saved = data.address;
+        const frontFmt = {
+          id: saved.address_id,
+          title: saved.address_title,
+          recipientName: `${saved.address_contact_name} ${saved.address_contact_surname}`,
+          city: saved.address_city,
+          district: saved.address_district,
+          street: saved.address_main_street,
+          buildingNumber: saved.address_building_number,
+          apartmentNumber: saved.address_apartment_number,
+          postCode: saved.address_post_code,
+          phone: saved.address_contact_phone
+        };
+        // state’i güncelle
+        setSavedAddresses(prev => [...prev, frontFmt]);
+        setSelectedAddressId(frontFmt.id);
+      }
+
+      const orderRes = await axios.post(`${API}/orders`, {}, { withCredentials: true });
+      // Sunucu "orderId" döndürüyor
+      const backendOrderId = orderRes.data.orderId;
+      
+      // Process payment method
+      if (showNewCardForm) {
+        if (!newCard.cardNumber || !newCard.cardHolder || !newCard.expiryMonth || !newCard.expiryYear || !newCard.cvv) {
+          setMessage('Please complete all payment information fields.');
+          return;
+        }
       }
 
       
@@ -270,6 +366,8 @@ function CheckoutPage() {
       }
       
 
+=======
+
 
       // Generate a unique order ID
       const orderId = backendOrderId;   // gerçek DB kimliği
@@ -300,6 +398,39 @@ function CheckoutPage() {
       localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
       
       // Show success message
+
+
+      // Generate a unique order ID
+      const orderId = backendOrderId;   // gerçek DB kimliği
+
+      
+      // Create order object with shipping address and payment method
+      const order = {
+        order_id: orderId,
+        order_date: new Date().toISOString(),
+        order_status: 'processing',
+        order_total_price: totalPrice,
+        shipping_address: shippingAddress,
+        payment_method: paymentMethod,
+        products: cartItems.map(item => ({
+          product_id: item.product_id,
+          name: item.name,
+          image: item.image,
+          price_when_buy: item.price,
+          product_order_count: item.quantity || 1
+        }))
+      };
+      
+      // Save to order history in localStorage
+      const orderHistoryString = localStorage.getItem('orderHistory');
+      const orderHistory = orderHistoryString ? JSON.parse(orderHistoryString) : [];
+      orderHistory.push(order);
+      localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+      
+      // Show success message
+=======
+      // 5) Provide feedback & clean up local cart
+
       setMessage('Purchase successful! Your order has been placed.');
       
       // Clear cart in localStorage
@@ -333,6 +464,7 @@ function CheckoutPage() {
     } catch (error) {
       console.error(error);
       setMessage(error.response?.data?.error || error.message);
+
     }
   };
 
