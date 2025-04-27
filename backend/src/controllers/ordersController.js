@@ -10,7 +10,7 @@ const placeOrder = async (req, res) => {
     try {
         // Step 1: Fetch the user's cart
         const cartQuery = `
-            SELECT c.product_id, c.quantity, p.in_stock, p.price
+            SELECT c.product_id, c.quantity, p.in_stock, p.price, p.discount
             FROM cart c
             JOIN products p ON c.product_id = p.product_id
             WHERE c.user_id = $1
@@ -33,7 +33,7 @@ const placeOrder = async (req, res) => {
         // Step 3: Create a new order
         const orderQuery = `
             INSERT INTO orders (user_id, order_total_price, order_status)
-            VALUES ($1, $2, 0) RETURNING order_id
+            VALUES ($1, $2, 1) RETURNING order_id
         `;
         const totalPrice = cartResult.rows.reduce((sum, item) => sum + item.price * item.quantity, 0);
         const orderResult = await pool.query(orderQuery, [userId, totalPrice]);
@@ -41,15 +41,15 @@ const placeOrder = async (req, res) => {
 
         // Step 4: Add products to the order and reduce stock
         const orderItemsQuery = `
-            INSERT INTO products_of_order (order_id, product_id, price_when_buy, product_order_count)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO products_of_order (order_id, product_id, price_when_buy, discount_when_buy, product_order_count)
+            VALUES ($1, $2, $3, $4, $5)
         `;
         const updateStockQuery = `
             UPDATE products SET in_stock = in_stock - $1 WHERE product_id = $2
         `;
 
         for (const item of cartResult.rows) {
-            await pool.query(orderItemsQuery, [orderId, item.product_id, item.price, item.quantity]);
+            await pool.query(orderItemsQuery, [orderId, item.product_id, item.price, item.discount || 0, item.quantity]);
             await pool.query(updateStockQuery, [item.quantity, item.product_id]);
         }
 
@@ -153,8 +153,43 @@ const getOrderHistory = async (req, res) => {
     }
 };
 
+// Update order status to processing when checkout success page is viewed
+const updateOrderOnSuccess = async (req, res) => {
+    const userId = req.session.user?.id;
+    const { orderId } = req.params;
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    try {
+        // Update the order status to "processing" (1)
+        const updateQuery = `
+            UPDATE orders
+            SET order_status = 1
+            WHERE order_id = $1 AND user_id = $2
+            RETURNING order_id, order_status
+        `;
+        const result = await pool.query(updateQuery, [orderId, userId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        res.status(200).json({ 
+            message: 'Order status updated to processing',
+            orderId: result.rows[0].order_id,
+            status: result.rows[0].order_status
+        });
+    } catch (err) {
+        console.error('Error updating order status:', err);
+        res.status(500).json({ error: 'Failed to update order status', details: err.message });
+    }
+};
+
 module.exports = {
     placeOrder,
     cancelOrder,
     getOrderHistory,
+    updateOrderOnSuccess
 };

@@ -196,7 +196,7 @@ const createProductsOfOrderTable = async () => {
         product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
         price_when_buy INT NOT NULL,
         tax_when_buy INT,
-        discount_when_buy INT NOT NULL,
+        discount_when_buy INT NOT NULL DEFAULT 0,
         product_order_count INT NOT NULL
     );`;
     try {
