@@ -289,21 +289,77 @@ const seedCart = async (products, users) => {
   }
 };
 
+const seedOrders = async (products, users) => {
+    const orders = [
+        {
+            userIndex: 1, // "johndoe@example.com"
+            orderTotalPrice: 399.98, // 2 x Premium Wireless Headphones
+            orderStatus: 3, // Delivered
+            products: [
+                {
+                    productIndex: 0, // "Premium Wireless Headphones"
+                    quantity: 2,
+                    priceWhenBuy: 199.99,
+                    discountWhenBuy: 15.0, // 15% discount
+                },
+            ],
+        },
+    ];
+
+    for (const order of orders) {
+        const user_id = users[order.userIndex].id;
+
+        // Insert into orders table
+        const orderQuery = `
+            INSERT INTO orders (user_id, order_total_price, order_status, order_date)
+            VALUES ($1, $2, $3, NOW() - INTERVAL '7 days') -- Delivered 7 days ago
+            RETURNING order_id;
+        `;
+        const orderValues = [user_id, order.orderTotalPrice, order.orderStatus];
+        const orderResult = await pool.query(orderQuery, orderValues);
+        const order_id = orderResult.rows[0].order_id;
+
+        console.log(`Inserted order with ID: ${order_id} for user ID: ${user_id}`);
+
+        // Insert products into products_of_order table
+        for (const product of order.products) {
+            const product_id = products[product.productIndex].product_id;
+            const productQuery = `
+                INSERT INTO products_of_order (order_id, product_id, price_when_buy, discount_when_buy, product_order_count)
+                VALUES ($1, $2, $3, $4, $5);
+            `;
+            const productValues = [
+                order_id,
+                product_id,
+                product.priceWhenBuy,
+                product.discountWhenBuy,
+                product.quantity,
+            ];
+            await pool.query(productQuery, productValues);
+
+            console.log(
+                `Inserted product_of_order for order ID: ${order_id}, product ID: ${product_id}`
+            );
+        }
+    }
+};
+
 const seedAll = async () => {
-  try {
-    console.log("Seeding data...");
-    const users = await seedUsers();
-    const products = await seedProducts();
-    await seedReviews(products, users);
-    await seedRatings(users);
-    await seedComments(users);
-    await seedCart(products, users);
-    console.log("✅ Seeding completed.");
-    process.exit(0);
-  } catch (err) {
-    console.error("❌ Seeding error:", err);
-    process.exit(1);
-  }
+    try {
+        console.log("Seeding data...");
+        const users = await seedUsers();
+        const products = await seedProducts();
+        await seedReviews(products, users);
+        await seedRatings(users);
+        await seedComments(users);
+        await seedCart(products, users);
+        await seedOrders(products, users); // Add orders and products_of_order
+        console.log("✅ Seeding completed.");
+        process.exit(0);
+    } catch (err) {
+        console.error("❌ Seeding error:", err);
+        process.exit(1);
+    }
 };
 
 seedAll();

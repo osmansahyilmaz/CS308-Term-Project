@@ -170,7 +170,7 @@ const createOrdersTable = async () => {
         order_id SERIAL PRIMARY KEY,
         user_id INT REFERENCES users(id) ON DELETE CASCADE,
         order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        order_total_price INT NOT NULL,
+        order_total_price DECIMAL(10, 2) NOT NULL,
         order_tax_amount INT,
         order_status INT NOT NULL DEFAULT 0,
         order_processing_date TIMESTAMP,
@@ -194,9 +194,9 @@ const createProductsOfOrderTable = async () => {
         product_of_order_id SERIAL PRIMARY KEY,
         order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
         product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
-        price_when_buy INT NOT NULL,
-        tax_when_buy INT,
-        discount_when_buy INT NOT NULL DEFAULT 0,
+        price_when_buy DECIMAL(10, 2) NOT NULL, -- Changed to DECIMAL(10, 2)
+        tax_when_buy DECIMAL(10, 2), -- Changed to DECIMAL(10, 2)
+        discount_when_buy DECIMAL(10, 2) NOT NULL DEFAULT 0, -- Changed to DECIMAL(10, 2)
         product_order_count INT NOT NULL
     );`;
     try {

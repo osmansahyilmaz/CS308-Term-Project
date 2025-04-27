@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import styles from './CheckoutPage.module.css';
 import axios from 'axios';
 
@@ -7,9 +7,6 @@ import axios from 'axios';
 import visaIcon from '../assets/visa.svg';
 import mastercardIcon from '../assets/mastercard.svg';
 import amexIcon from '../assets/amex.svg';
-
-// Base URL for backend API
-const BASE_URL = 'http://localhost:5000/api';
 
 function CheckoutPage() {
   const [cartItems, setCartItems] = useState([]);
@@ -45,88 +42,48 @@ function CheckoutPage() {
   });
   
   const navigate = useNavigate();
-  const location = useLocation();
+  const API = 'http://localhost:5000/api';          // 🔸 tek satırdan değiştirebilmek için
 
   useEffect(() => {
     const fetchCart = () => {
       try {
-        // If Buy Now items are passed via navigation state, use them directly
-        if (location.state && location.state.buyNowItems) {
-          const buyNowItems = location.state.buyNowItems;
-          setCartItems(buyNowItems);
-          const total = buyNowItems.reduce(
-            (acc, item) => acc + item.price * (item.quantity || 1),
-            0
-          );
-          setTotalPrice(total);
-          setLoading(false);
-          return;
-        }
-
-        // Otherwise use full cart from localStorage
-        const cartString = localStorage.getItem("cart");
-        const cartData = cartString ? JSON.parse(cartString) : [];
-        setCartItems(cartData);
-        
-        const total = cartData.reduce(
-          (acc, item) => acc + item.price * (item.quantity || 1),
-          0
-        );
-        setTotalPrice(total);
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        setCartItems(cart);
+        setTotalPrice(cart.reduce((acc, i) => acc + i.price * (i.quantity||1), 0));
         setLoading(false);
       } catch (err) {
-        setMessage('Failed to load cart.');
+        setMessage('Failed to load cart');
         setLoading(false);
       }
     };
     
-    // Get saved addresses (first try backend, fallback to localStorage)
+    // Get saved addresses
     const fetchAddresses = async () => {
       try {
-        const res = await axios.get(`${BASE_URL}/addresses`, { withCredentials: true });
-
-        // Map backend address format to frontend format
-        const addresses = (res.data.addresses || []).map(addr => ({
-          id: addr.address_id,
-          title: addr.address_title,
-          recipientName: `${addr.address_contact_name} ${addr.address_contact_surname}`.trim(),
-          city: addr.address_city,
-          district: addr.address_district,
-          street: addr.address_street || addr.address_main_street || '',
-          buildingNumber: addr.address_building_number,
-          apartmentNumber: addr.address_apartment_number,
-          postCode: addr.address_post_code,
-          phone: addr.address_contact_phone
+        const { data } = await axios.get(`${API}/addresses`, { withCredentials:true });
+        const formatted = data.addresses.map(a => ({
+          id: a.address_id,
+          title: a.address_title,
+          recipientName: `${a.address_contact_name} ${a.address_contact_surname}`,
+          city: a.address_city,
+          district: a.address_district,
+          street: a.address_main_street,
+          buildingNumber: a.address_building_number,
+          apartmentNumber: a.address_apartment_number,
+          postCode: a.address_post_code,
+          phone: a.address_contact_phone
         }));
-
-        // Persist to localStorage for legacy components
-        localStorage.setItem('savedAddresses', JSON.stringify(addresses));
-
-        setSavedAddresses(addresses);
-        if (addresses.length > 0) {
-          setSelectedAddressId(addresses[0].id);
+        setSavedAddresses(formatted);
+        if (formatted.length) {
+          setSelectedAddressId(formatted[0].id);
           setShowNewAddressForm(false);
         } else {
           setShowNewAddressForm(true);
-          setSelectedAddressId('');
         }
       } catch (err) {
-        console.error('Error loading addresses from backend, falling back to localStorage:', err);
-        try {
-          const addressesString = localStorage.getItem('savedAddresses');
-          let addresses = addressesString ? JSON.parse(addressesString) : [];
-          if (!Array.isArray(addresses)) addresses = [];
-          setSavedAddresses(addresses);
-          if (addresses.length > 0) {
-            setSelectedAddressId(addresses[0].id);
-            setShowNewAddressForm(false);
-          } else {
-            setShowNewAddressForm(true);
-            setSelectedAddressId('');
-          }
-        } catch (localErr) {
-          console.error('Error loading addresses from localStorage:', localErr);
-        }
+        console.error('Address fetch error', err);
+        setSavedAddresses([]);          // offline fallback = boş liste
+        setShowNewAddressForm(true);
       }
     };
     
@@ -190,113 +147,197 @@ function CheckoutPage() {
     fetchCart();
     fetchAddresses();
     fetchPaymentMethods();
-  }, [location.state]);
+  }, []);
 
   const handlePurchase = async () => {
     try {
-      setMessage('');
-
-      // 1) Validate address & payment selections
+      // Check if address is selected or entered
       if (!selectedAddressId && !showNewAddressForm) {
         setMessage('Please select or enter a shipping address.');
         return;
       }
+      
+      // Check if payment method is selected or entered
       if (!selectedCardId && !showNewCardForm) {
         setMessage('Please select or enter payment information.');
         return;
       }
 
-      // If user entered a new card, perform basic validation (front-end only)
+      // 1) Sunucu tarafındaki kartı güncelle (ürünlerin DB'deki cart tablosuna girmesi gerekiyor)
+      for (const item of cartItems) {
+        await axios.post(`${API}/cart/add`,               // ➜  POST /api/cart/add
+          { productId: item.product_id, quantity: item.quantity || 1 },
+          { withCredentials: true });
+      }
+
+      
+      // Process address (same as before)
+      if (showNewAddressForm) {
+        // input doğrulama
+        if (!newAddress.recipientName || !newAddress.city || !newAddress.street || !newAddress.phone) {
+          setMessage('Please complete all required address fields.'); return;
+        }
+        // 🔸 sunucuya POST et
+        const { data } = await axios.post(`${API}/addresses`, {
+          address_title       : newAddress.title,
+          address_city        : newAddress.city,
+          address_district    : newAddress.district,
+          address_neighbourhood:'',
+          address_main_street : newAddress.street,
+          address_street      : newAddress.street,
+          address_building_number : newAddress.buildingNumber,
+          address_floor : newAddress.floor ? Number(newAddress.floor) : undefined,
+          address_apartment_number: newAddress.apartmentNumber,
+          address_post_code   : newAddress.postCode,
+          address_contact_phone  : newAddress.phone,
+          address_contact_name   : newAddress.recipientName.split(' ')[0] || '',
+          address_contact_surname: newAddress.recipientName.split(' ').slice(1).join(' ')
+        }, { withCredentials:true });
+
+        const saved = data.address;
+        const frontFmt = {
+          id: saved.address_id,
+          title: saved.address_title,
+          recipientName: `${saved.address_contact_name} ${saved.address_contact_surname}`,
+          city: saved.address_city,
+          district: saved.address_district,
+          street: saved.address_main_street,
+          buildingNumber: saved.address_building_number,
+          apartmentNumber: saved.address_apartment_number,
+          postCode: saved.address_post_code,
+          phone: saved.address_contact_phone
+        };
+        // state’i güncelle
+        setSavedAddresses(prev => [...prev, frontFmt]);
+        setSelectedAddressId(frontFmt.id);
+      }
+
+      const orderRes = await axios.post(`${API}/orders`, {}, { withCredentials: true });
+      // Sunucu "orderId" döndürüyor
+      const backendOrderId = orderRes.data.orderId;
+      
+      // Process payment method
       if (showNewCardForm) {
+        // Validate new card
         if (!newCard.cardNumber || !newCard.cardHolder || !newCard.expiryMonth || !newCard.expiryYear || !newCard.cvv) {
           setMessage('Please complete all payment information fields.');
           return;
         }
-      }
-
-      // 2) If user created a new address, save it via backend first
-      let backendAddressId = selectedAddressId;
-      if (showNewAddressForm) {
-        // Basic validation
-        if (!newAddress.recipientName || !newAddress.city || !newAddress.street || !newAddress.phone) {
-          setMessage('Please complete all required address fields.');
-          return;
-        }
-
-        // Split recipient name into first + surname for backend schema
-        const nameParts = newAddress.recipientName.trim().split(' ');
-        const contactName = nameParts.shift();
-        const contactSurname = nameParts.join(' ');
-
-        const addressPayload = {
-          address_title: newAddress.title || 'Shipping',
-          address_city: newAddress.city,
-          address_district: newAddress.district,
-          address_neighbourhood: '',
-          address_main_street: '',
-          address_street: newAddress.street,
-          address_building_number: newAddress.buildingNumber,
-          address_floor: '',
-          address_apartment_number: newAddress.apartmentNumber,
-          address_post_code: newAddress.postCode,
-          address_contact_phone: newAddress.phone,
-          address_contact_name: contactName,
-          address_contact_surname: contactSurname
+        
+        // In a real app, you would pass card info to a payment processor
+        // Here we'll just save masked card info for demonstration
+        const cardId = 'card-' + Date.now();
+        const cardToSave = {
+          id: cardId,
+          cardName: newCard.cardName || 'My Card',
+          cardNumber: '**** **** **** ' + newCard.cardNumber.slice(-4),
+          cardType: getCardType(newCard.cardNumber),
+          cardHolder: newCard.cardHolder,
+          expiryMonth: newCard.expiryMonth,
+          expiryYear: newCard.expiryYear,
+          isDefault: false
         };
-
-        const res = await axios.post(`${BASE_URL}/addresses`, addressPayload, { withCredentials: true });
-        backendAddressId = res.data.address.address_id;
+        
+        const cardsString = localStorage.getItem('savedCards');
+        const cards = cardsString ? JSON.parse(cardsString) : [];
+        cards.push(cardToSave);
+        localStorage.setItem('savedCards', JSON.stringify(cards));
+        
+        // Set the new card as selected
+        setSelectedCardId(cardId);
       }
+      
+      // Find the selected address and payment method
+      let shippingAddress;
+      if (showNewAddressForm) {
+        shippingAddress = newAddress;
+      } else {
+        shippingAddress = savedAddresses.find(addr => addr.id === selectedAddressId);
+      }
+      
+      let paymentMethod;
+      if (showNewCardForm) {
+        paymentMethod = {
+          cardName: newCard.cardName || 'My Card',
+          cardNumber: '**** **** **** ' + newCard.cardNumber.slice(-4),
+          cardType: getCardType(newCard.cardNumber),
+          cardHolder: newCard.cardHolder,
+          expiryMonth: newCard.expiryMonth,
+          expiryYear: newCard.expiryYear
+        };
+      } else {
+        paymentMethod = savedCards.find(card => card.id === selectedCardId);
+      }
+      
 
-      // 3) Sync current cart items to backend cart (session or user based)
-      await Promise.all(
-        cartItems.map(item =>
-          axios.post(
-            `${BASE_URL}/cart/add`,
-            { productId: item.product_id, quantity: item.quantity || 1 },
-            { withCredentials: true }
-          )
-        )
-      );
 
-      // 4) Place the order using backend controller
-      const orderRes = await axios.post(`${BASE_URL}/orders`, {}, { withCredentials: true });
+      // Generate a unique order ID
+      const orderId = backendOrderId;   // gerçek DB kimliği
 
-      // 5) Provide feedback & clean up local cart
+
+      
+      // Create order object with shipping address and payment method
+      const order = {
+        order_id: orderId,
+        order_date: new Date().toISOString(),
+        order_status: 'processing',
+        order_total_price: totalPrice,
+        shipping_address: shippingAddress,
+        payment_method: paymentMethod,
+        products: cartItems.map(item => ({
+          product_id: item.product_id,
+          name: item.name,
+          image: item.image,
+          price_when_buy: item.price,
+          product_order_count: item.quantity || 1
+        }))
+      };
+      
+      // Save to order history in localStorage
+      const orderHistoryString = localStorage.getItem('orderHistory');
+      const orderHistory = orderHistoryString ? JSON.parse(orderHistoryString) : [];
+      orderHistory.push(order);
+      localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+      
+      // Show success message
       setMessage('Purchase successful! Your order has been placed.');
-      localStorage.setItem('cart', JSON.stringify([]));
+      
+      // Clear cart in localStorage
+      localStorage.setItem("cart", JSON.stringify([]));
+      
+      // Clear cart items and total
       setCartItems([]);
       setTotalPrice(0);
-
-      // 6) Optionally build order object for invoice page (using local data)
-      const orderForInvoice = {
-        invoiceNumber: `INV-${Date.now()}`,
-        date: new Date().toLocaleDateString(),
-        addressId: backendAddressId,
-        items: cartItems.map(i => ({ description: i.name, quantity: i.quantity || 1, price: i.price })),
-      };
-
-      navigate('/checkout-success', { state: { order: orderForInvoice, backendOrderId: orderRes.data.orderId } });
-
+      
+      // Redirect to profile orders page after 2 seconds
+      
+      navigate('/checkout-success', {
+        state: {
+          order: {
+            invoiceNumber: `INV-${Date.now()}`,
+            date: new Date().toLocaleDateString(),
+            customer: {
+              name: "Test Müşterisi",
+              email: "test@example.com",
+            },
+            items: cartItems.map((item) => ({
+              description: item.name,
+              quantity: item.quantity || 1,
+              price: item.price,
+            })),
+          }
+        }
+      });
+      
+      
     } catch (error) {
-      console.error('Error completing purchase:', error.response?.data || error.message);
-      const errMsg = error.response?.data?.error || 'Failed to complete purchase.';
-      setMessage(errMsg);
+      console.error(error);
+      setMessage(error.response?.data?.error || error.message);
     }
   };
 
-  const handleAddressChange = (e) => {
-    setSelectedAddressId(e.target.value);
-    setShowNewAddressForm(e.target.value === 'new');
-  };
-  
-  const handleNewAddressChange = (e) => {
-    const { name, value } = e.target;
-    setNewAddress({
-      ...newAddress,
-      [name]: value
-    });
-  };
+  const handleAddressChange   = e => { setSelectedAddressId(e.target.value); setShowNewAddressForm(e.target.value==='new'); };
+  const handleNewAddressChange= e => { setNewAddress({...newAddress,[e.target.name]:e.target.value}); };
   
   // Handle card form changes
   const handleNewCardChange = (e) => {
@@ -739,4 +780,3 @@ function CheckoutPage() {
 }
 
 export default CheckoutPage;
-
