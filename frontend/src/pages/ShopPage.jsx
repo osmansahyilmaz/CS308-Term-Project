@@ -17,6 +17,8 @@ function ShopPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const productsPerPage = 6; // Show 6 products per page
 
+    const [sortOption, setSortOption] = useState("default"); // New state for sorting option
+
     const getRemainingStock = (product) => {
         // Get cart from localStorage
         const cartString = localStorage.getItem("cart");
@@ -71,14 +73,34 @@ function ShopPage() {
         return matchesCategory && matchesSearch;
     });
     
-    // --- Pagination Logic ---
-    // Calculate total number of pages
-    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+    // --- Sorting Logic ---
+    const sortedProducts = [...filteredProducts].sort((a, b) => {
+        switch (sortOption) {
+            case "price-asc":
+                return a.price - b.price;
+            case "price-desc":
+                return b.price - a.price;
+            case "alpha-asc":
+                return a.name.localeCompare(b.name);
+            case "alpha-desc":
+                return b.name.localeCompare(a.name);
+            case "popularity":
+                // Assuming higher rating means more popular; fallback to 0
+                const ratingA = a.rating || 0;
+                const ratingB = b.rating || 0;
+                return ratingB - ratingA;
+            default:
+                return 0;
+        }
+    });
+    // --- End Sorting Logic ---
 
-    // Calculate the products to display on the current page
+    // --- Pagination Logic ---
+    const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
+
     const indexOfLastProduct = currentPage * productsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-    const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+    const currentProducts = sortedProducts.slice(indexOfFirstProduct, indexOfLastProduct);
     // --- End Pagination Logic ---
 
     const handleCategoryChange = category => {
@@ -91,6 +113,11 @@ function ShopPage() {
         setCurrentPage(1); // Reset to first page when search query changes
     };
     
+    const handleSortChange = (e) => {
+        setSortOption(e.target.value);
+        setCurrentPage(1); // Reset to first page when sort option changes
+    };
+
     const handleAddToCart = (e, product) => {
         e.preventDefault();
         e.stopPropagation(); // Prevent navigating to product detail
@@ -100,11 +127,26 @@ function ShopPage() {
             const cartString = localStorage.getItem("cart");
             let cart = cartString ? JSON.parse(cartString) : [];
 
-            // 2) Push the product with quantity 1
-            cart.push({
-                ...product,
-                quantity: 1,
-            });
+            // 2) Check if product already in cart
+            const itemIndex = cart.findIndex((item) => item.product_id === product.product_id);
+
+            // Check remaining stock
+            const remaining = getRemainingStock(product);
+            if (remaining <= 0) {
+                alert("Cannot add more. Product stock limit reached.");
+                return;
+            }
+
+            if (itemIndex !== -1) {
+                // Increment quantity if within stock
+                cart[itemIndex].quantity += 1;
+            } else {
+                // Add new product with quantity 1
+                cart.push({
+                    ...product,
+                    quantity: 1,
+                });
+            }
 
             // 3) Save back to localStorage
             localStorage.setItem("cart", JSON.stringify(cart));
@@ -240,9 +282,9 @@ function ShopPage() {
                                             <button
                                                 className={styles.addToCartButton}
                                                 onClick={(e) => handleAddToCart(e, product)}
-                                                disabled={product.in_stock <= 0} // Disable if out of stock
+                                                disabled={getRemainingStock(product) <= 0}
                                             >
-                                                {product.in_stock <= 0 ? "Out of Stock" : "Add to Cart"}
+                                                {getRemainingStock(product) <= 0 ? "Out of Stock" : "Add to Cart"}
                                             </button>
                                         </div>
                                     </div>
@@ -267,6 +309,21 @@ function ShopPage() {
                         ))}
                     </div>
                 )}
+
+                {/* Sorting dropdown */}
+                <select 
+                    value={sortOption} 
+                    onChange={handleSortChange}
+                    style={{ marginLeft: "1rem", padding: "0.5rem" }}
+                    aria-label="Sort products"
+                >
+                    <option value="default">Sort By</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="popularity">Popularity</option>
+                    <option value="alpha-asc">Alphabetical (A-Z)</option>
+                    <option value="alpha-desc">Alphabetical (Z-A)</option>
+                </select>
             </div>
         </div>
     );

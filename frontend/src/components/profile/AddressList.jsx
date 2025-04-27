@@ -32,38 +32,22 @@ const AddressList = () => {
         fetchAddresses();
     }, []);
 
-    const fetchAddresses = () => {
+    const fetchAddresses = async () => {
         setIsLoading(true);
         setError(null);
-        
         try {
-            // Get addresses from localStorage instead of API
-            const savedAddressesString = localStorage.getItem('savedAddresses');
-            let savedAddresses = savedAddressesString ? JSON.parse(savedAddressesString) : [];
-            
-            // Convert saved addresses to the format expected by the component
-            const formattedAddresses = savedAddresses.map(addr => ({
-                address_id: addr.id,
-                address_title: addr.title,
-                address_city: addr.city,
-                address_district: addr.district,
-                address_neighbourhood: addr.neighbourhood || '',
-                address_main_street: addr.street || '',
-                address_street: addr.street || '',
-                address_building_number: addr.buildingNumber || '',
-                address_floor: addr.floor || '',
-                address_apartment_number: addr.apartmentNumber || '',
-                address_post_code: addr.postCode || '',
-                address_contact_phone: addr.phone || '',
-                address_contact_name: addr.recipientName ? addr.recipientName.split(' ')[0] : '',
-                address_contact_surname: addr.recipientName ? addr.recipientName.split(' ')[1] || '' : ''
-            }));
-            
-            setAddresses(formattedAddresses);
+            const res = await axios.get("http://localhost:5000/api/addresses", {
+                withCredentials: true,
+            });
+            setAddresses(res.data.addresses || []);
             setIsLoading(false);
         } catch (error) {
-            console.error('Error fetching addresses:', error);
-            setError('An error occurred while loading addresses.');
+            console.error("Error fetching addresses from backend:", error);
+            // Fallback to localStorage (legacy)
+            const savedAddressesString = localStorage.getItem("savedAddresses");
+            const savedAddresses = savedAddressesString ? JSON.parse(savedAddressesString) : [];
+            setAddresses(savedAddresses);
+            setError("Loaded addresses from local storage due to server error.");
             setIsLoading(false);
         }
     };
@@ -82,48 +66,31 @@ const AddressList = () => {
         setSuccessMessage(null);
         
         try {
-            // Get existing addresses from localStorage
-            const savedAddressesString = localStorage.getItem('savedAddresses');
-            let savedAddresses = savedAddressesString ? JSON.parse(savedAddressesString) : [];
-            
-            // Convert form data to simpler address format for localStorage
-            const addressToSave = {
-                id: editingAddressId || 'addr-' + Date.now(),
-                title: formData.address_title,
-                recipientName: `${formData.address_contact_name} ${formData.address_contact_surname}`.trim(),
-                city: formData.address_city,
-                district: formData.address_district,
-                neighbourhood: formData.address_neighbourhood,
-                street: formData.address_main_street || formData.address_street,
-                buildingNumber: formData.address_building_number,
-                floor: formData.address_floor,
-                apartmentNumber: formData.address_apartment_number,
-                postCode: formData.address_post_code,
-                phone: formData.address_contact_phone
-            };
-            
             if (editingAddressId) {
-                // Update existing address
-                savedAddresses = savedAddresses.map(addr => 
-                    addr.id === editingAddressId ? addressToSave : addr
+                // Update existing address via backend
+                await axios.put(
+                    `http://localhost:5000/api/addresses/${editingAddressId}`,
+                    formData,
+                    { withCredentials: true }
                 );
-                setSuccessMessage('Address updated successfully.');
+                setSuccessMessage("Address updated successfully.");
             } else {
-                // Add new address
-                savedAddresses.push(addressToSave);
-                setSuccessMessage('Address added successfully.');
+                // Add new address via backend
+                await axios.post(
+                    "http://localhost:5000/api/addresses",
+                    formData,
+                    { withCredentials: true }
+                );
+                setSuccessMessage("Address added successfully.");
             }
-            
-            // Save back to localStorage
-            localStorage.setItem('savedAddresses', JSON.stringify(savedAddresses));
-            
+
             setFormData(emptyAddressForm);
             setShowAddForm(false);
             setEditingAddressId(null);
             fetchAddresses();
         } catch (error) {
-            console.error('Error saving address:', error);
-            setError('An error occurred while saving the address.');
+            console.error("Error saving address via backend:", error);
+            setError("Failed to save address. Please try again.");
         }
     };
     
@@ -158,36 +125,38 @@ const AddressList = () => {
         setSuccessMessage(null);
         
         try {
-            // Get existing addresses from localStorage
-            const savedAddressesString = localStorage.getItem('savedAddresses');
-            let savedAddresses = savedAddressesString ? JSON.parse(savedAddressesString) : [];
-            
-            // Filter out the address to delete
-            savedAddresses = savedAddresses.filter(addr => addr.id !== addressId);
-            
-            // Save back to localStorage
-            localStorage.setItem('savedAddresses', JSON.stringify(savedAddresses));
-            
-            setSuccessMessage('Address deleted successfully.');
-            
+            await axios.delete(
+                `http://localhost:5000/api/addresses/${addressId}`,
+                { withCredentials: true }
+            );
+            setSuccessMessage("Address deleted successfully.");
+
             if (editingAddressId === addressId) {
                 setShowAddForm(false);
                 setEditingAddressId(null);
                 setFormData(emptyAddressForm);
             }
-            
+
             fetchAddresses();
         } catch (error) {
-            console.error('Error deleting address:', error);
-            setError('An error occurred while deleting the address.');
+            console.error("Error deleting address:", error);
+            setError("Failed to delete address. Please try again.");
         }
     };
     
     const setAsDefault = async (addressId) => {
-        setError('This feature is not available yet.');
-        setTimeout(() => {
-            setError(null);
-        }, 3000);
+        try {
+            // Extra: Could implement a PATCH endpoint to set default address
+            await axios.patch(
+                `http://localhost:5000/api/addresses/${addressId}`,
+                { is_default: true },
+                { withCredentials: true }
+            );
+            fetchAddresses();
+        } catch (err) {
+            setError("Failed to set default address.");
+            setTimeout(() => setError(null), 3000);
+        }
     };
     
     const resetForm = () => {
