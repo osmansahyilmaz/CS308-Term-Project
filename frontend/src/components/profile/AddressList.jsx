@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styles from './AddressList.module.css';
 
-const API = 'http://localhost:5000/api';   
+const API = 'http://localhost:5000/api';   // 🔸 tek yerde değiştirirsiniz
 
 const AddressList = () => {
   const [addresses, setAddresses] = useState([]);
@@ -101,140 +101,6 @@ const AddressList = () => {
     setEditingAddressId(null);
     setShowAddForm(false);
   };
-    const fetchAddresses = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const res = await axios.get("http://localhost:5000/api/addresses", {
-                withCredentials: true,
-            });
-            setAddresses(res.data.addresses || []);
-            setIsLoading(false);
-        } catch (error) {
-            console.error("Error fetching addresses from backend:", error);
-            // Fallback to localStorage (legacy)
-            const savedAddressesString = localStorage.getItem("savedAddresses");
-            const savedAddresses = savedAddressesString ? JSON.parse(savedAddressesString) : [];
-            setAddresses(savedAddresses);
-            setError("Loaded addresses from local storage due to server error.");
-            setIsLoading(false);
-        }
-    };
-    
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-    
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
-        setSuccessMessage(null);
-        
-        try {
-            if (editingAddressId) {
-                // Update existing address via backend
-                await axios.put(
-                    `http://localhost:5000/api/addresses/${editingAddressId}`,
-                    formData,
-                    { withCredentials: true }
-                );
-                setSuccessMessage("Address updated successfully.");
-            } else {
-                // Add new address via backend
-                await axios.post(
-                    "http://localhost:5000/api/addresses",
-                    formData,
-                    { withCredentials: true }
-                );
-                setSuccessMessage("Address added successfully.");
-            }
-
-            setFormData(emptyAddressForm);
-            setShowAddForm(false);
-            setEditingAddressId(null);
-            fetchAddresses();
-        } catch (error) {
-            console.error("Error saving address via backend:", error);
-            setError("Failed to save address. Please try again.");
-        }
-    };
-    
-    const handleEdit = (address) => {
-        setFormData({
-            address_title: address.address_title || '',
-            address_city: address.address_city || '',
-            address_district: address.address_district || '',
-            address_neighbourhood: address.address_neighbourhood || '',
-            address_main_street: address.address_main_street || '',
-            address_street: address.address_street || '',
-            address_building_number: address.address_building_number || '',
-            address_floor: address.address_floor?.toString() || '',
-            address_apartment_number: address.address_apartment_number || '',
-            address_post_code: address.address_post_code?.toString() || '',
-            address_contact_phone: address.address_contact_phone || '',
-            address_contact_name: address.address_contact_name || '',
-            address_contact_surname: address.address_contact_surname || ''
-        });
-        setEditingAddressId(address.address_id);
-        setShowAddForm(true);
-        setError(null);
-        setSuccessMessage(null);
-    };
-    
-    const handleDelete = async (addressId) => {
-        if (!window.confirm('Are you sure you want to delete this address?')) {
-            return;
-        }
-        
-        setError(null);
-        setSuccessMessage(null);
-        
-        try {
-            await axios.delete(
-                `http://localhost:5000/api/addresses/${addressId}`,
-                { withCredentials: true }
-            );
-            setSuccessMessage("Address deleted successfully.");
-
-            if (editingAddressId === addressId) {
-                setShowAddForm(false);
-                setEditingAddressId(null);
-                setFormData(emptyAddressForm);
-            }
-
-            fetchAddresses();
-        } catch (error) {
-            console.error("Error deleting address:", error);
-            setError("Failed to delete address. Please try again.");
-        }
-    };
-    
-    const setAsDefault = async (addressId) => {
-        try {
-            // Extra: Could implement a PATCH endpoint to set default address
-            await axios.patch(
-                `http://localhost:5000/api/addresses/${addressId}`,
-                { is_default: true },
-                { withCredentials: true }
-            );
-            fetchAddresses();
-        } catch (err) {
-            setError("Failed to set default address.");
-            setTimeout(() => setError(null), 3000);
-        }
-    };
-    
-    const resetForm = () => {
-        setFormData(emptyAddressForm);
-        setEditingAddressId(null);
-        setShowAddForm(false);
-        setError(null);
-        setSuccessMessage(null);
-    };
 
   const formatAddress = (a) => `${a.address_title} – ${a.address_main_street} No:${a.address_building_number} ${a.address_district}/${a.address_city}`;
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
@@ -8,6 +8,9 @@ import styles from './LoginPage.module.css';
 import LeftPanel from '../components/LeftPanel';
 
 function LoginPage() {
+    const location = useLocation();
+    const warning = location.state?.warning;
+
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -83,6 +86,7 @@ function LoginPage() {
             <div className={styles.rightPanel}>
                 <div className={styles.formWrapper}>
                     <h2 className={styles.formTitle}>Sign In</h2>
+                    {warning && <p className={styles.warningMessage}>{warning}</p>}
                     <form onSubmit={handleSubmit} className={styles.form}>
                         <div className={styles.inputGroup}>
                             <label htmlFor="email">Email</label>

@@ -47,15 +47,29 @@ function CartPage() {
   };
 
   // Handle checkout redirection without requiring auth
-  const handleCheckoutClick = () => {
+  const handleCheckoutClick = async () => {
     if (cartItems.length === 0) {
-      alert("Your cart is empty. Add items before checking out.");
-      return;
+        alert("Your cart is empty. Add items before checking out.");
+        return;
     }
-    
-    // Proceed directly to checkout without authentication check
-    navigate("/checkout");
-  };
+
+    try {
+        // Check if the user is signed in
+        const res = await axios.get("http://localhost:5000/api/auth/profile", { withCredentials: true });
+        if (!res.data.user) {
+            alert("You need to sign in first to proceed to checkout.");
+            navigate("/login", { state: { warning: "Please sign in to proceed to checkout." } });
+            return;
+        }
+
+        // If signed in, navigate to the checkout page
+        navigate("/checkout");
+    } catch (err) {
+        console.error("Error checking signed-in status:", err);
+        alert("You need to sign in first to proceed to checkout.");
+        navigate("/login", { state: { warning: "Please sign in to proceed to checkout." } });
+    }
+};
 
   const total = cartItems.reduce(
     (acc, item) => acc + item.price * (item.quantity || 1),

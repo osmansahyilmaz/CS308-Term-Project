@@ -154,42 +154,44 @@ function ProductPage() {
     // i added this - sinem
     const checkLoginAndReview = async () => {
         try {
-          const res = await axios.get("http://localhost:5000/api/auth/profile", {
-            withCredentials: true,
-          });
-          if (res.status === 200 && res.data.user) {
-            setIsLoggedIn(true);
-            setUserId(res.data.user.id); // kullanıcı id'si alındı
-            setUserUsername(res.data.user.username); //burası eklendi
-            await checkReviewEligibility();
-          } else {
-            setIsLoggedIn(false);
-          }
+            const res = await axios.get("http://localhost:5000/api/auth/profile", {
+                withCredentials: true,
+            });
+            if (res.status === 200 && res.data.user) {
+                setIsLoggedIn(true);
+                setUserId(res.data.user.id);
+                setUserUsername(res.data.user.username);
+                await checkReviewEligibility();
+            } else {
+                setIsLoggedIn(false);
+            }
         } catch (err) {
-          setIsLoggedIn(false);
+            setIsLoggedIn(false);
         }
-      };
-      checkLoginAndReview();
-
+    };
 
     const checkReviewEligibility = async () => {
         try {
-          const res = await axios.get(`http://localhost:5000/api/reviews/can-add/${productId}`, {
-            withCredentials: true,
-          });
-          if (res.status === 200 && res.data.canAddReview) {
-            setCanAddReview(true);
-          } else {
-            setCanAddReview(false);
-          }
+            const res = await axios.get(`http://localhost:5000/api/reviews/can-add/${productId}`, {
+                withCredentials: true,
+            });
+            if (res.status === 200 && res.data.canAddReview) {
+                setCanAddReview(true);
+            } else {
+                setCanAddReview(false);
+            }
         } catch (err) {
-          console.error("Error checking review eligibility:", err);
-          setCanAddReview(false);
+            console.error("Error checking review eligibility:", err);
+            setCanAddReview(false);
         }
-      };
-      
-    
+    };
+
+    useEffect(() => {
+        checkLoginAndReview();
+    }, [productId]);
+
     //
+
 
     // Helper to compute remaining stock considering items already in cart
     const getRemainingStock = () => {
@@ -397,7 +399,7 @@ function ProductPage() {
                             <div className={styles.ratingRow}>
                                 {renderStarRating(product.rating || 0)}
                                 <span className={styles.reviewCount}>
-                                    {product.reviewCount || 0} Reviews
+                                    {product.reviews?.length || 0} Reviews
                                 </span>
                             </div>
 
@@ -583,7 +585,7 @@ function ProductPage() {
                                                 {renderStarRating(product.rating || 0)}
                                             </div>
                                             <span className={styles.totalReviews}>
-                                                Based on {product.reviewCount || 0} reviews
+                                                Based on {product.reviews?.length || 0} reviews
                                             </span>
                                         </div>
                                     </div>
@@ -591,20 +593,13 @@ function ProductPage() {
                                         className={styles.writeReviewButton}
                                         onClick={() => {
                                             if (!isLoggedIn) {
-                                              alert("Please login to write a review.");
-                                              navigate("/login", { state: { from: `/products/${productId}` } });
-                                            }
-                                            
-                                            else if (!canAddReview) {
+                                                alert("Please login to write a review.");
+                                            } else if (!canAddReview) {
                                                 alert("You can only review products you've purchased and received.");
+                                            } else {
+                                                setShowReviewModal(true);
                                             }
-                                        
-                                                
-                                            else {
-                                              setShowReviewModal(true);
-                                            }
-                                          }}
-                                          //disabled={!canAddReview}
+                                        }}
                                     >
                                         Write a Review
                                     </button>
@@ -702,29 +697,35 @@ function ProductPage() {
 
                         <div className={styles.modalButtons}>
                             <button onClick={async () => {
-                            try {
-                                await axios.post(
-                                'http://localhost:5000/api/reviews',
-                                {
-                                    productId: product.product_id,
-                                    title: reviewTitle,
-                                    comment: reviewComment,
-                                    rating: reviewRating,
-                                },
-                                { withCredentials: true }
-                                );
-                                alert("Review submitted!");
-                                setShowReviewModal(false);
-                                setReviewTitle('');
-                                setReviewComment('');
-                                setReviewRating(5);
-                                window.location.reload(); // refresh reviews
-                            } catch (err) {
-                                console.error("Review submit error:", err);
-                                alert("Failed to submit review. Please try again.");
-                            }
+                                try {
+                                    await axios.post(
+                                        'http://localhost:5000/api/reviews',
+                                        {
+                                            productId: product.product_id,
+                                            title: reviewTitle,
+                                            comment: reviewComment,
+                                            rating: reviewRating,
+                                        },
+                                        { withCredentials: true }
+                                    );
+                                    alert("Review submitted!");
+                                    setShowReviewModal(false);
+                                    setReviewTitle('');
+                                    setReviewComment('');
+                                    setReviewRating(5);
+
+                                    // Re-fetch product details to update reviews and average rating
+                                    const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+                                    if (response.ok) {
+                                        const data = await response.json();
+                                        setProduct(data.product);
+                                    }
+                                } catch (err) {
+                                    console.error("Review submit error:", err);
+                                    alert("Failed to submit review. Please try again.");
+                                }
                             }}>
-                            Submit
+                                Submit
                             </button>
 
                             <button onClick={() => setShowReviewModal(false)}>Cancel</button>
