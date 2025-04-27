@@ -42,52 +42,48 @@ function CheckoutPage() {
   });
   
   const navigate = useNavigate();
+  const API = 'http://localhost:5000/api';          // 🔸 tek satırdan değiştirebilmek için
 
   useEffect(() => {
     const fetchCart = () => {
       try {
-        // Get cart from localStorage instead of backend
-        const cartString = localStorage.getItem("cart");
-        const cartData = cartString ? JSON.parse(cartString) : [];
-        setCartItems(cartData);
-        
-        // Calculate total price
-        const total = cartData.reduce(
-          (acc, item) => acc + item.price * (item.quantity || 1),
-          0
-        );
-        setTotalPrice(total);
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        setCartItems(cart);
+        setTotalPrice(cart.reduce((acc, i) => acc + i.price * (i.quantity||1), 0));
         setLoading(false);
       } catch (err) {
-        setMessage('Failed to load cart.');
+        setMessage('Failed to load cart');
         setLoading(false);
       }
     };
     
     // Get saved addresses
-    const fetchAddresses = () => {
+    const fetchAddresses = async () => {
       try {
-        const addressesString = localStorage.getItem('savedAddresses');
-        let addresses = addressesString ? JSON.parse(addressesString) : [];
-        
-        // If no addresses in localStorage, use empty array
-        if (!addresses || !Array.isArray(addresses)) {
-          addresses = [];
-        }
-        
-        setSavedAddresses(addresses);
-        
-        // If there's at least one address, select it by default
-        if (addresses.length > 0) {
-          setSelectedAddressId(addresses[0].id);
-          setShowNewAddressForm(false); // Ensure new address form is hidden when we have saved addresses
+        const { data } = await axios.get(`${API}/addresses`, { withCredentials:true });
+        const formatted = data.addresses.map(a => ({
+          id: a.address_id,
+          title: a.address_title,
+          recipientName: `${a.address_contact_name} ${a.address_contact_surname}`,
+          city: a.address_city,
+          district: a.address_district,
+          street: a.address_main_street,
+          buildingNumber: a.address_building_number,
+          apartmentNumber: a.address_apartment_number,
+          postCode: a.address_post_code,
+          phone: a.address_contact_phone
+        }));
+        setSavedAddresses(formatted);
+        if (formatted.length) {
+          setSelectedAddressId(formatted[0].id);
+          setShowNewAddressForm(false);
         } else {
-          // If no saved addresses, show the new address form by default
           setShowNewAddressForm(true);
-          setSelectedAddressId('');
         }
       } catch (err) {
-        console.error('Error loading saved addresses:', err);
+        console.error('Address fetch error', err);
+        setSavedAddresses([]);          // offline fallback = boş liste
+        setShowNewAddressForm(true);
       }
     };
     
@@ -166,30 +162,59 @@ function CheckoutPage() {
         setMessage('Please select or enter payment information.');
         return;
       }
+
+      // 1) Sunucu tarafındaki kartı güncelle (ürünlerin DB'deki cart tablosuna girmesi gerekiyor)
+      for (const item of cartItems) {
+        await axios.post(`${API}/cart/add`,               // ➜  POST /api/cart/add
+          { productId: item.product_id, quantity: item.quantity || 1 },
+          { withCredentials: true });
+      }
+
       
       // Process address (same as before)
       if (showNewAddressForm) {
-        // Validate new address
+        // input doğrulama
         if (!newAddress.recipientName || !newAddress.city || !newAddress.street || !newAddress.phone) {
-          setMessage('Please complete all required address fields.');
-          return;
+          setMessage('Please complete all required address fields.'); return;
         }
-        
-        // Save the new address to localStorage
-        const addressId = 'addr-' + Date.now();
-        const addressToSave = {
-          id: addressId,
-          ...newAddress
+        // 🔸 sunucuya POST et
+        const { data } = await axios.post(`${API}/addresses`, {
+          address_title       : newAddress.title,
+          address_city        : newAddress.city,
+          address_district    : newAddress.district,
+          address_neighbourhood:'',
+          address_main_street : newAddress.street,
+          address_street      : newAddress.street,
+          address_building_number : newAddress.buildingNumber,
+          address_floor : newAddress.floor ? Number(newAddress.floor) : undefined,
+          address_apartment_number: newAddress.apartmentNumber,
+          address_post_code   : newAddress.postCode,
+          address_contact_phone  : newAddress.phone,
+          address_contact_name   : newAddress.recipientName.split(' ')[0] || '',
+          address_contact_surname: newAddress.recipientName.split(' ').slice(1).join(' ')
+        }, { withCredentials:true });
+
+        const saved = data.address;
+        const frontFmt = {
+          id: saved.address_id,
+          title: saved.address_title,
+          recipientName: `${saved.address_contact_name} ${saved.address_contact_surname}`,
+          city: saved.address_city,
+          district: saved.address_district,
+          street: saved.address_main_street,
+          buildingNumber: saved.address_building_number,
+          apartmentNumber: saved.address_apartment_number,
+          postCode: saved.address_post_code,
+          phone: saved.address_contact_phone
         };
-        
-        const addressesString = localStorage.getItem('savedAddresses');
-        const addresses = addressesString ? JSON.parse(addressesString) : [];
-        addresses.push(addressToSave);
-        localStorage.setItem('savedAddresses', JSON.stringify(addresses));
-        
-        // Set the new address as selected
-        setSelectedAddressId(addressId);
+        // state’i güncelle
+        setSavedAddresses(prev => [...prev, frontFmt]);
+        setSelectedAddressId(frontFmt.id);
       }
+
+      const orderRes = await axios.post(`${API}/orders`, {}, { withCredentials: true });
+      // Sunucu "orderId" döndürüyor
+      const backendOrderId = orderRes.data.orderId;
       
       // Process payment method
       if (showNewCardForm) {
@@ -244,8 +269,12 @@ function CheckoutPage() {
         paymentMethod = savedCards.find(card => card.id === selectedCardId);
       }
       
+
+
       // Generate a unique order ID
-      const orderId = 'ORD-' + Date.now();
+      const orderId = backendOrderId;   // gerçek DB kimliği
+
+
       
       // Create order object with shipping address and payment method
       const order = {
@@ -302,22 +331,13 @@ function CheckoutPage() {
       
       
     } catch (error) {
-      setMessage('An error occurred: ' + error.message);
+      console.error(error);
+      setMessage(error.response?.data?.error || error.message);
     }
   };
 
-  const handleAddressChange = (e) => {
-    setSelectedAddressId(e.target.value);
-    setShowNewAddressForm(e.target.value === 'new');
-  };
-  
-  const handleNewAddressChange = (e) => {
-    const { name, value } = e.target;
-    setNewAddress({
-      ...newAddress,
-      [name]: value
-    });
-  };
+  const handleAddressChange   = e => { setSelectedAddressId(e.target.value); setShowNewAddressForm(e.target.value==='new'); };
+  const handleNewAddressChange= e => { setNewAddress({...newAddress,[e.target.name]:e.target.value}); };
   
   // Handle card form changes
   const handleNewCardChange = (e) => {
