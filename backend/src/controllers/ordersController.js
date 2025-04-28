@@ -57,6 +57,12 @@ const placeOrder = async (req, res) => {
         const clearCartQuery = `DELETE FROM cart WHERE user_id = $1`;
         await pool.query(clearCartQuery, [userId]);
 
+        // ✅ Step 6: Create invoice after successful order
+        await pool.query(`
+            INSERT INTO invoices (user_id, order_id, created_at)
+            VALUES ($1, $2, NOW())
+        `, [userId, orderId]);
+
         res.status(201).json({ message: 'Order placed successfully', orderId });
     } catch (err) {
         console.error('Error placing order:', err);

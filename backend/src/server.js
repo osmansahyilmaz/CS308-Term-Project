@@ -1,7 +1,12 @@
+require('dotenv').config();
+// console.log("EMAIL_USER:", process.env.EMAIL_USER);
+
 const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const pool = require('./db/pool');
+
+const invoiceRoutes = require('./routes/invoiceRoutes');
 const authRoutes = require('./routes/authRoutes');
 const commentsRoutes = require('./routes/commentsRoutes');
 const productsRoutes = require('./routes/productsRoutes');
@@ -13,13 +18,12 @@ const runMigrations = require('./db/migrate');
 const cors = require('cors');
 const cartRoutes = require('./routes/cartRoutes');
 
+
 const app = express();
 
-// Middleware
 app.use(express.json());
 app.use(cors({ credentials: true, origin: process.env.CLIENT_URL || "http://localhost:3000" }));
 
-// Session Configuration
 app.use(session({
     store: new pgSession({
         pool: pool,
@@ -30,13 +34,14 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24, // 1 day
+        maxAge: 1000 * 60 * 60 * 24,
         secure: false,
         httpOnly: true
     }
 }));
 
 // Routes
+app.use('/api', invoiceRoutes);
 app.use('/api', authRoutes);
 app.use('/api', commentsRoutes);
 app.use('/api', cartRoutes);
@@ -46,10 +51,9 @@ app.use('/api', ordersRoutes);
 app.use('/api', addressRoutes);
 app.use('/api', invoiceRoutes); // ✅ Add invoice routes
 
-// Export app for testing
+
 module.exports = app;
 
-// If running directly, start server
 if (require.main === module) {
     const startServer = async () => {
         try {

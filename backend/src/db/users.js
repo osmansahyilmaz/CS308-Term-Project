@@ -16,8 +16,14 @@ const getUserByEmail = async (email) => {
     return pool.query(query, [email]);
 };
 
+const getUserById = async (id) => {
+    const query = 'SELECT * FROM users WHERE id = $1';
+    return pool.query(query, [id]);
+};
+
 module.exports = {
     checkUserExists,
     createUser,
     getUserByEmail,
+    getUserById
 };
