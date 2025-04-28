@@ -3,15 +3,15 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const pool = require('./db/pool');
 const authRoutes = require('./routes/authRoutes');
-const commentsRoutes = require('./routes/commentsRoutes'); // <-- NEW
+const commentsRoutes = require('./routes/commentsRoutes');
 const productsRoutes = require('./routes/productsRoutes');
-const reviewsRoutes = require('./routes/reviewsRoutes'); // Import reviewsRoutes
-const ordersRoutes = require('./routes/ordersRoutes'); // Import ordersRoutes
-const addressRoutes = require('./routes/addressRoutes'); // Import addressRoutes
-
-const runMigrations = require('./db/migrate');  // ✅ Import migrate.js
-const cors = require('cors'); // ✅ Import CORS (if needed)
-const cartRoutes = require('./routes/cartRoutes'); // Import cartRoutes
+const reviewsRoutes = require('./routes/reviewsRoutes');
+const ordersRoutes = require('./routes/ordersRoutes');
+const addressRoutes = require('./routes/addressRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes'); // ✅ Import invoiceRoutes
+const runMigrations = require('./db/migrate');
+const cors = require('cors');
+const cartRoutes = require('./routes/cartRoutes');
 
 const app = express();
 
@@ -38,12 +38,13 @@ app.use(session({
 
 // Routes
 app.use('/api', authRoutes);
-app.use('/api', commentsRoutes); // <-- NEW
-app.use('/api', cartRoutes); // Add cart routes
+app.use('/api', commentsRoutes);
+app.use('/api', cartRoutes);
 app.use('/api', productsRoutes);
-app.use('/api', reviewsRoutes); // Add reviews routes
-app.use('/api', ordersRoutes); // Ensure orders routes are included
-app.use('/api', addressRoutes); // Add address routes
+app.use('/api', reviewsRoutes);
+app.use('/api', ordersRoutes);
+app.use('/api', addressRoutes);
+app.use('/api', invoiceRoutes); // ✅ Add invoice routes
 
 // Export app for testing
 module.exports = app;
