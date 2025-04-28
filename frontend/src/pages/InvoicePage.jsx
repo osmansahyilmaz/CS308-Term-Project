@@ -35,8 +35,8 @@ const InvoicePage = () => {
 
   const generatePDF = () => {
     if (!user) {
-      alert("Kullanıcı bilgisi henüz yüklenmedi.");
-      return;
+        alert("Kullanıcı bilgisi henüz yüklenmedi.");
+        return;
     }
 
     const doc = new jsPDF();
@@ -47,21 +47,56 @@ const InvoicePage = () => {
     doc.text(`Email: ${user.email}`, 14, 51);
 
     const rows = order.items.map((item) => [
-      item.description,
-      item.quantity,
-      `$${item.price}`,
-      `$${item.quantity * item.price}`,
+        item.description,
+        item.quantity,
+        `$${item.price}`,
+        `$${item.quantity * item.price}`,
     ]);
 
     autoTable(doc, {
-      startY: 58,
-      head: [["Item", "Qty", "Price", "Total"]],
-      body: rows,
+        startY: 58,
+        head: [["Item", "Qty", "Price", "Total"]],
+        body: rows,
     });
 
     doc.text(`Grand Total: $${calculateTotal()}`, 14, doc.lastAutoTable.finalY + 10);
-    doc.save(`invoice-${order.invoiceNumber}.pdf`);
-  };
+
+    // Convert the PDF to a Blob and then to a Base64 string
+    const pdfBlob = doc.output("blob");
+    console.log("📄 PDF Blob created:", pdfBlob); // Debugging log
+
+    const reader = new FileReader();
+    console.log("📄 Starting to read PDF Blob as Base64..."); // Debugging log
+    reader.readAsDataURL(pdfBlob);
+
+    reader.onloadend = function () {
+        console.log("📄 FileReader onloadend triggered."); // Debugging log
+        const base64data = reader.result;
+        console.log("📄 PDF Base64 Data:", base64data.substring(0, 50) + "..."); // Debugging log
+        axios
+            .post(
+                "http://localhost:5000/api/sendInvoiceEmail",
+                {
+                    to: user.email,
+                    invoiceNumber: order.invoiceNumber,
+                    pdfData: base64data, // Ensure this is the full Base64 string
+                },
+                { withCredentials: true }
+            )
+            .then((response) => {
+                console.log("✅ Email sent successfully:", response.data); // Debugging log
+                alert("Invoice sent to your email successfully!");
+            })
+            .catch((error) => {
+                console.error("❌ Error sending email:", error.response?.data || error.message); // Debugging log
+                alert("Failed to send the invoice email.");
+            });
+    };
+
+    reader.onerror = function (error) {
+        console.error("❌ FileReader error:", error); // Debugging log
+    };
+};
 
   return (
     <div className={styles.invoiceContainer}>
@@ -106,5 +141,3 @@ const InvoicePage = () => {
 };
 
 export default InvoicePage;
-
-

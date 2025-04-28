@@ -13,10 +13,11 @@ const productsRoutes = require('./routes/productsRoutes');
 const reviewsRoutes = require('./routes/reviewsRoutes');
 const ordersRoutes = require('./routes/ordersRoutes');
 const addressRoutes = require('./routes/addressRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-
+const invoiceRoutes = require('./routes/invoiceRoutes'); // ✅ Import invoiceRoutes
 const runMigrations = require('./db/migrate');
 const cors = require('cors');
+const cartRoutes = require('./routes/cartRoutes');
+
 
 const app = express();
 
@@ -48,6 +49,8 @@ app.use('/api', productsRoutes);
 app.use('/api', reviewsRoutes);
 app.use('/api', ordersRoutes);
 app.use('/api', addressRoutes);
+app.use('/api', invoiceRoutes); // ✅ Add invoice routes
+
 
 module.exports = app;
 
