@@ -24,7 +24,22 @@ const getProductDetails = async (req, res) => {
     }
 };
 
+const applyDiscount = async (req, res) => {
+    const { productIds, discount } = req.body;
+    if (!Array.isArray(productIds) || typeof discount !== 'number') {
+        return res.status(400).json({ error: 'Invalid input' });
+    }
+    try {
+        await productsDb.applyDiscountToProducts(productIds, discount);
+        res.status(200).json({ message: 'Discount applied successfully' });
+    } catch (err) {
+        console.error("Error in applyDiscount:", err);
+        res.status(500).json({ error: 'Failed to apply discount' });
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductDetails,
+    applyDiscount,
 };

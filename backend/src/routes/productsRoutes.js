@@ -9,4 +9,7 @@ router.get('/products', productController.getAllProducts);
 // Retrieve product details by id
 router.get('/products/:productId', productController.getProductDetails);
 
+// Apply discount to selected products
+router.post('/products/discount', productController.applyDiscount);
+
 module.exports = router;

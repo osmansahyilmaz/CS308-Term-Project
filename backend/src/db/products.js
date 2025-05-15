@@ -75,7 +75,19 @@ const getProductById = async (productId) => {
     }
 };
 
+const applyDiscountToProducts = async (productIds, discount) => {
+    // Update discount and price for each product
+    const query = `
+        UPDATE products
+        SET discount = $2,
+            price = ROUND(price * (1 - $2 / 100.0), 2)
+        WHERE product_id = ANY($1::int[])
+    `;
+    await pool.query(query, [productIds, discount]);
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
+    applyDiscountToProducts,
 };
