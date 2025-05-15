@@ -10,6 +10,8 @@ import CheckoutPage from './pages/CheckoutPage';
 import ProfilePage from './pages/ProfilePage';
 import CheckoutSuccess from './pages/CheckoutSuccess';   // ✅ Eklendi
 import InvoicePage from './pages/InvoicePage';           // ✅ Eklendi
+import WishlistPage from './components/WishlistPage';
+
 
 function App() {
     return (
@@ -26,6 +28,7 @@ function App() {
                 <Route path="/invoice" element={<InvoicePage />} /> {/* ✅ */}
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/profile/orders/:orderId" element={<ProfilePage />} />
+                <Route path="/wishlist" element={<WishlistPage />} />
             </Routes>
         </BrowserRouter>
     );
