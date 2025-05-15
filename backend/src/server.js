@@ -13,6 +13,7 @@ const reviewsRoutes = require('./routes/reviewsRoutes');
 const ordersRoutes = require('./routes/ordersRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
+const categoriesRoutes = require('./routes/categoriesRoutes');
 
 const runMigrations = require('./db/migrate');
 
@@ -37,6 +38,7 @@ app.use('/api', reviewsRoutes);
 app.use('/api', ordersRoutes);
 app.use('/api', addressRoutes);
 app.use('/api', invoiceRoutes);
+app.use('/api/categories', categoriesRoutes);
 
 module.exports = app;
 
