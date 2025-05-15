@@ -1,9 +1,15 @@
 // backend/src/routes/categoriesRoutes.js
 const express = require('express');
-const router = express.Router();
-const { addCategory, getCategories } = require('../controllers/categoriesController');
+const {
+  addCategory,
+  getCategories,
+  deleteCategory
+} = require('../controllers/categoriesController');
 
-router.post('/', addCategory);
-router.get('/', getCategories);
+const router = express.Router();
+
+router.post('/',          addCategory);
+router.get('/',           getCategories);
+router.delete('/:name',   deleteCategory);
 
 module.exports = router;

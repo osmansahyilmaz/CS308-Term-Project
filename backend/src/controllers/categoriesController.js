@@ -24,3 +24,12 @@ exports.getCategories = async (req, res) => {
     return res.status(500).json({ error: 'Database error' });
   }
 };
+
+// Delete a category (stub—not removing anything from DB)
+exports.deleteCategory = (req, res) => {
+  const { name } = req.params;
+  if (!name || typeof name !== 'string') {
+    return res.status(400).json({ error: 'Invalid category name' });
+  }
+  return res.json({ message: `Category '${name}' deleted` });
+};
