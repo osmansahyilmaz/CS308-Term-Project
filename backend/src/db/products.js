@@ -28,7 +28,6 @@ const getAllProducts = async () => {
     }
 };
 
-
 const getProductById = async (productId) => {
     const query = `
         SELECT 
@@ -39,8 +38,8 @@ const getProductById = async (productId) => {
             p.category, 
             p.in_stock, 
             p.discount, 
-            COALESCE(AVG(r.rating), 0) AS rating, -- Calculate average rating dynamically
-            COUNT(r.rating) AS review_count, -- Count the number of reviews dynamically
+            COALESCE(AVG(r.rating), 0) AS rating,
+            COUNT(r.rating) AS review_count,
             p.image, 
             p.images, 
             p.colors, 
@@ -75,7 +74,39 @@ const getProductById = async (productId) => {
     }
 };
 
+const applyDiscountToProducts = async (productIds, discountRate) => {
+    if (!Array.isArray(productIds) || typeof discountRate !== 'number') {
+        throw new Error('Invalid input');
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        for (const productId of productIds) {
+            const result = await client.query('SELECT price FROM products WHERE product_id = $1', [productId]);
+            if (result.rows.length === 0) continue;
+
+            const originalPrice = parseFloat(result.rows[0].price);
+            const newPrice = parseFloat((originalPrice * (1 - discountRate / 100)).toFixed(2));
+
+            await client.query(
+                'UPDATE products SET discount = $1, price = $2 WHERE product_id = $3',
+                [discountRate, newPrice, productId]
+            );
+        }
+
+        await client.query('COMMIT');
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw new Error('Error applying discount to products: ' + err.message);
+    } finally {
+        client.release();
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
+    applyDiscountToProducts,
 };

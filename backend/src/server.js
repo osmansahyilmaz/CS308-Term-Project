@@ -12,8 +12,9 @@ const invoiceRoutes = require('./routes/invoiceRoutes'); // ✅ Import invoiceRo
 const runMigrations = require('./db/migrate');
 const cors = require('cors');
 const cartRoutes = require('./routes/cartRoutes');
-
+const wishlistRoutes = require('./routes/wishlistRoutes'); // ✅ Import wishlist routes
 const app = express();
+
 
 // Middleware
 app.use(express.json());
@@ -45,6 +46,8 @@ app.use('/api', reviewsRoutes);
 app.use('/api', ordersRoutes);
 app.use('/api', addressRoutes);
 app.use('/api', invoiceRoutes); // ✅ Add invoice routes
+app.use('/api', wishlistRoutes); // ✅ Add wishlist routes
+
 
 // Export app for testing
 module.exports = app;
