@@ -239,6 +239,43 @@ const setInitialPrice = async (req, res) => {
     }
 };
 
+// Update price of an existing product
+const updateProductPrice = async (req, res) => {
+    try {
+        // Check authentication and authorization
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        // Only Sales Managers (role_id = 3) can update product prices
+        if (req.session.user.role_id !== 3) {
+            return res.status(403).json({ error: 'Forbidden: Only Sales Managers can update product prices' });
+        }
+        
+        const { productId } = req.params;
+        const { price } = req.body;
+        
+        // Validate input
+        if (price === undefined || price === null) {
+            return res.status(400).json({ error: 'Price is required' });
+        }
+        
+        if (isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+            return res.status(400).json({ error: 'Price must be a positive number' });
+        }
+        
+        const updatedProduct = await productsDb.updateProductPrice(productId, parseFloat(price));
+        
+        res.status(200).json({ 
+            message: 'Product price updated successfully', 
+            product: updatedProduct
+        });
+    } catch (err) {
+        console.error('Error updating product price:', err);
+        res.status(500).json({ error: 'Failed to update product price', details: err.message });
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductDetails,
@@ -246,4 +283,5 @@ module.exports = {
     createProduct,
     updateProductStock,
     setInitialPrice,
+    updateProductPrice,
 };

@@ -266,6 +266,38 @@ const setInitialPrice = async (productId, initialPrice) => {
     }
 };
 
+// Update price of an existing product
+const updateProductPrice = async (productId, newPrice) => {
+    if (isNaN(parseInt(productId)) || isNaN(parseFloat(newPrice)) || parseFloat(newPrice) <= 0) {
+        throw new Error('Invalid product ID or price value');
+    }
+
+    const query = `
+        UPDATE products
+        SET 
+            price = $1,
+            updated_at = NOW()
+        WHERE product_id = $2
+        RETURNING 
+            product_id, 
+            name,
+            price,
+            updated_at;
+    `;
+
+    try {
+        const result = await pool.query(query, [parseFloat(newPrice), productId]);
+        
+        if (result.rows.length === 0) {
+            throw new Error(`Product with ID ${productId} not found`);
+        }
+        
+        return result.rows[0];
+    } catch (err) {
+        throw new Error('Error updating product price: ' + err.message);
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
@@ -273,4 +305,5 @@ module.exports = {
     createProduct,
     updateProductStock,
     setInitialPrice,
+    updateProductPrice,
 };
