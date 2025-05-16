@@ -59,7 +59,7 @@ const placeOrder = async (req, res) => {
 
         // ✅ Step 6: Create invoice after successful order
         await pool.query(`
-            INSERT INTO invoices (user_id, order_id, created_at)
+            INSERT INTO invoices (user_id, order_id, generated_date)
             VALUES ($1, $2, NOW())
         `, [userId, orderId]);
 
