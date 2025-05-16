@@ -190,9 +190,42 @@ const createProduct = async (productData) => {
     }
 };
 
+// Update product stock levels
+const updateProductStock = async (productId, newStockLevel) => {
+    if (isNaN(parseInt(productId)) || isNaN(parseInt(newStockLevel)) || parseInt(newStockLevel) < 0) {
+        throw new Error('Invalid product ID or stock level');
+    }
+
+    const query = `
+        UPDATE products
+        SET 
+            in_stock = $1,
+            updated_at = NOW()
+        WHERE product_id = $2
+        RETURNING 
+            product_id, 
+            name, 
+            in_stock,
+            updated_at;
+    `;
+
+    try {
+        const result = await pool.query(query, [newStockLevel, productId]);
+        
+        if (result.rows.length === 0) {
+            throw new Error(`Product with ID ${productId} not found`);
+        }
+        
+        return result.rows[0];
+    } catch (err) {
+        throw new Error('Error updating product stock: ' + err.message);
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
     applyDiscountToProducts,
     createProduct,
+    updateProductStock,
 };

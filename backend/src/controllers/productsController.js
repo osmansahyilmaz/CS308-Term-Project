@@ -165,9 +165,47 @@ const createProduct = async (req, res) => {
     }
 };
 
+// Update product stock levels
+const updateProductStock = async (req, res) => {
+    try {
+        // Check authentication and authorization
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        // Only Product Managers (role_id = 2) can update stock levels
+        if (req.session.user.role_id !== 2) {
+            return res.status(403).json({ error: 'Forbidden: Only Product Managers can update stock levels' });
+        }
+        
+        const { productId } = req.params;
+        const { quantity } = req.body;
+        
+        // Validate input
+        if (quantity === undefined || quantity === null) {
+            return res.status(400).json({ error: 'Stock quantity is required' });
+        }
+        
+        if (isNaN(parseInt(quantity)) || parseInt(quantity) < 0) {
+            return res.status(400).json({ error: 'Stock quantity must be a positive integer' });
+        }
+        
+        const updatedProduct = await productsDb.updateProductStock(productId, parseInt(quantity));
+        
+        res.status(200).json({ 
+            message: 'Product stock updated successfully', 
+            product: updatedProduct
+        });
+    } catch (err) {
+        console.error('Error updating product stock:', err);
+        res.status(500).json({ error: 'Failed to update product stock', details: err.message });
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductDetails,
     applyDiscount,
     createProduct,
+    updateProductStock,
 };

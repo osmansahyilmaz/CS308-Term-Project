@@ -15,4 +15,7 @@ router.post('/products/discount', productController.applyDiscount);
 // Create a new product with full details
 router.post('/products', productController.createProduct);
 
+// Update product stock levels
+router.put('/products/:productId/stock', productController.updateProductStock);
+
 module.exports = router;
