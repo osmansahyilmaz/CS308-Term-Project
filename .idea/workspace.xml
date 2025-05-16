@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f69aa0fe-8b82-4e09-9a2c-daa3fe426cfa" name="Changes" comment="SCRUM-156: Frontend Management Features&#10;&#10;Implement product creation form with full input fields (name, model, serial number, description, etc.). (PM - 11 - Frontend)&#10;Implement product price update interface. (SM - 12 - Frontend)&#10;Create &quot;Delivery Management&quot; page listing pending deliveries with details. (PM - 11 - Frontend)&#10;Build comment moderation panel with approve/disapprove functionality. (PM - 11 - Frontend)&#10;Add delivery status update feature to the Delivery Management page. (PM - 11 - Frontend)&#10;Implement product deletion and stock update interface. (PM - 11 - Frontend)&#10;Implement UI for managing product categories (add/remove). (PM - 11 - Frontend)&#10;Build discount management interface: select products, set discount rate. (SM - 12 - Frontend)" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {}
+}</component>
+  <component name="GitHubPullRequestState">{
+  &quot;prStates&quot;: [
+    {
+      &quot;id&quot;: {
+        &quot;id&quot;: &quot;PR_kwDOOBIxtc6UKskO&quot;,
+        &quot;number&quot;: 54
+      },
+      &quot;lastSeen&quot;: 1747295929577
+    }
+  ]
+}</component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="a42aa80f-5aad-46b6-ba35-d4ddd4cf11d5" />
+  </component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/osmansahyilmaz/CS308-Term-Project.git&quot;,
+    &quot;accountId&quot;: &quot;a42aa80f-5aad-46b6-ba35-d4ddd4cf11d5&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="2x7hgwRfrv4qymoYpc0CDx8Fnb1" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "SCRUM-156",
+    "last_opened_file_path": "/Users/atakanvardar/WebstormProjects/CS308-Term-Project",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "vcs.Git",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-WS-243.25659.40" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f69aa0fe-8b82-4e09-9a2c-daa3fe426cfa" name="Changes" comment="" />
+      <created>1747295133472</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1747295133472</updated>
+      <workItem from="1747295134678" duration="149000" />
+      <workItem from="1747295285162" duration="728000" />
+      <workItem from="1747341540647" duration="1157000" />
+      <workItem from="1747389550033" duration="12000" />
+      <workItem from="1747389562538" duration="1061000" />
+    </task>
+    <task id="LOCAL-00001" summary="SCRUM-156: Frontend Management Features&#10;&#10;Implement product creation form with full input fields (name, model, serial number, description, etc.). (PM - 11 - Frontend)&#10;Implement product price update interface. (SM - 12 - Frontend)&#10;Create &quot;Delivery Management&quot; page listing pending deliveries with details. (PM - 11 - Frontend)&#10;Build comment moderation panel with approve/disapprove functionality. (PM - 11 - Frontend)&#10;Add delivery status update feature to the Delivery Management page. (PM - 11 - Frontend)&#10;Implement product deletion and stock update interface. (PM - 11 - Frontend)&#10;Implement UI for managing product categories (add/remove). (PM - 11 - Frontend)&#10;Build discount management interface: select products, set discount rate. (SM - 12 - Frontend)">
+      <option name="closed" value="true" />
+      <created>1747390342785</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1747390342785</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="c3b477d6-24c0-45c0-9cef-97e0fa8cc28d" value="TOOL_WINDOW" />
+      </map>
+    </option>
+    <option name="TAB_STATES">
+      <map>
+        <entry key="c3b477d6-24c0-45c0-9cef-97e0fa8cc28d">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="SCRUM-156: Frontend Management Features&#10;&#10;Implement product creation form with full input fields (name, model, serial number, description, etc.). (PM - 11 - Frontend)&#10;Implement product price update interface. (SM - 12 - Frontend)&#10;Create &quot;Delivery Management&quot; page listing pending deliveries with details. (PM - 11 - Frontend)&#10;Build comment moderation panel with approve/disapprove functionality. (PM - 11 - Frontend)&#10;Add delivery status update feature to the Delivery Management page. (PM - 11 - Frontend)&#10;Implement product deletion and stock update interface. (PM - 11 - Frontend)&#10;Implement UI for managing product categories (add/remove). (PM - 11 - Frontend)&#10;Build discount management interface: select products, set discount rate. (SM - 12 - Frontend)" />
+    <option name="LAST_COMMIT_MESSAGE" value="SCRUM-156: Frontend Management Features&#10;&#10;Implement product creation form with full input fields (name, model, serial number, description, etc.). (PM - 11 - Frontend)&#10;Implement product price update interface. (SM - 12 - Frontend)&#10;Create &quot;Delivery Management&quot; page listing pending deliveries with details. (PM - 11 - Frontend)&#10;Build comment moderation panel with approve/disapprove functionality. (PM - 11 - Frontend)&#10;Add delivery status update feature to the Delivery Management page. (PM - 11 - Frontend)&#10;Implement product deletion and stock update interface. (PM - 11 - Frontend)&#10;Implement UI for managing product categories (add/remove). (PM - 11 - Frontend)&#10;Build discount management interface: select products, set discount rate. (SM - 12 - Frontend)" />
+  </component>
+</project>

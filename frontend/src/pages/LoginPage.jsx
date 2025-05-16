@@ -6,11 +6,12 @@ import axios from 'axios';
 
 import styles from './LoginPage.module.css';
 import LeftPanel from '../components/LeftPanel';
+import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
     const location = useLocation();
     const warning = location.state?.warning;
-
+    const { login } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -35,37 +36,36 @@ function LoginPage() {
     
         if (Object.keys(validationErrors).length === 0) {
             try {
-                // Make an axios POST request to your login endpoint
-                console.log('Sending login request...');
-                const response = await axios.post(
-                    'http://localhost:5000/api/auth/login',
-                    { email, password },
-                    { withCredentials: true }
-                );
-                console.log('Login response:', response.data);
-    
-                // Show success message
-                toast.success('Login successful!');
-    
-                // Call merge endpoint to merge anonymous cart with user cart
-                try {
-                    console.log('Sending merge cart request...');
-                    const mergeResponse = await axios.post(
-                        'http://localhost:5000/api/cart/merge',
-                        {},
-                        { withCredentials: true }
-                    );
-                    console.log('Merge cart response:', mergeResponse.data);
-                    toast.success('Cart merged successfully!');
-                } catch (mergeError) {
-                    console.error('Cart merge failed:', mergeError.response?.data || mergeError.message);
-                    toast.error('Failed to merge cart. Please try again.');
+                // Use the login function from AuthContext
+                const result = await login(email, password);
+                
+                if (result.success) {
+                    // Show success message
+                    toast.success('Login successful!');
+                    
+                    // Call merge endpoint to merge anonymous cart with user cart
+                    try {
+                        console.log('Sending merge cart request...');
+                        const mergeResponse = await axios.post(
+                            'http://localhost:5000/api/cart/merge',
+                            {},
+                            { withCredentials: true }
+                        );
+                        console.log('Merge cart response:', mergeResponse.data);
+                        toast.success('Cart merged successfully!');
+                    } catch (mergeError) {
+                        console.error('Cart merge failed:', mergeError.response?.data || mergeError.message);
+                        toast.error('Failed to merge cart. Please try again.');
+                    }
+                    
+                    navigate('/shop'); // Redirect user after successful login
+                } else {
+                    // Show error message
+                    toast.error(result.error);
                 }
-    
-                navigate('/shop'); // Redirect user after successful login
             } catch (error) {
                 // Show error message
-                const errorMessage = error.response?.data?.error || 'Login failed';
+                const errorMessage = error.message || 'Login failed';
                 console.error('Login failed:', errorMessage);
                 toast.error(errorMessage);
             }
@@ -121,7 +121,7 @@ function LoginPage() {
                         </button>
                     </form>
                     <p className={styles.switchText}>
-                        Don’t have an account?{' '}
+                        Don't have an account?{' '}
                         <Link to="/register" className={styles.link}>
                             Sign Up
                         </Link>

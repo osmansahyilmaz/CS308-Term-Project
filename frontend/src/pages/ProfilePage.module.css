@@ -40,6 +40,10 @@
     border-radius: 5px;
     transition: all 0.2s ease;
     font-weight: 500;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .navItem:hover {
@@ -49,6 +53,35 @@
 .navItem.active {
     background-color: #febd69;
     color: #000;
+}
+
+/* Disabled link styling */
+.disabledLink {
+    opacity: 0.6;
+    cursor: not-allowed;
+    color: #777;
+}
+
+.disabledLink:hover {
+    background-color: #f8f8f8;
+}
+
+.noAccessIcon {
+    font-size: 14px;
+    margin-left: 5px;
+}
+
+/* Section divider for management section */
+.sectionDivider {
+    margin: 15px 0 10px;
+    padding: 0 15px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
 }
 
 .content {
