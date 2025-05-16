@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const pool = require('../db/pool');
+const invoiceDb = require('../db/invoices');
 
 exports.sendInvoiceEmail = async (req, res) => {
     const { to, invoiceNumber, pdfData } = req.body;
@@ -69,5 +71,85 @@ exports.getInvoices = async (req, res) => {
     console.error('Error fetching invoices:', err);
     return res.status(500).json({ error: 'Database error', details: err.message });
   }
+};
+
+// ---- New for SCRUM-150: Get invoices by date range (Sales Managers only) ----
+exports.getInvoicesByDateRange = async (req, res) => {
+    try {
+        // Check authentication and authorization
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        // Only Sales Managers (role_id = 3) can access this endpoint
+        if (req.session.user.role_id !== 3) {
+            return res.status(403).json({ error: 'Forbidden: Only Sales Managers can view invoices by date range' });
+        }
+        
+        const { startDate, endDate } = req.query;
+        
+        // Validate input
+        if (!startDate || !endDate) {
+            return res.status(400).json({ error: 'Start date and end date are required' });
+        }
+        
+        // Validate date format (YYYY-MM-DD)
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+            return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD format' });
+        }
+        
+        // Validate that start date is not after end date
+        if (new Date(startDate) > new Date(endDate)) {
+            return res.status(400).json({ error: 'Start date cannot be after end date' });
+        }
+        
+        const invoices = await invoiceDb.getInvoicesByDateRange(startDate, endDate);
+        
+        res.status(200).json({ 
+            message: 'Invoices retrieved successfully', 
+            invoices,
+            count: invoices.length,
+            dateRange: { startDate, endDate }
+        });
+    } catch (err) {
+        console.error('Error getting invoices by date range:', err);
+        res.status(500).json({ error: 'Failed to get invoices', details: err.message });
+    }
+};
+
+// ---- New for SCRUM-150: Get invoice details by ID (Sales Managers only) ----
+exports.getInvoiceById = async (req, res) => {
+    try {
+        // Check authentication and authorization
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        // Only Sales Managers (role_id = 3) can access this endpoint
+        if (req.session.user.role_id !== 3) {
+            return res.status(403).json({ error: 'Forbidden: Only Sales Managers can view invoice details' });
+        }
+        
+        const { invoiceId } = req.params;
+        
+        // Validate input
+        if (!invoiceId || isNaN(parseInt(invoiceId))) {
+            return res.status(400).json({ error: 'Valid invoice ID is required' });
+        }
+        
+        const invoice = await invoiceDb.getInvoiceById(parseInt(invoiceId));
+        
+        res.status(200).json({ 
+            message: 'Invoice retrieved successfully', 
+            invoice
+        });
+    } catch (err) {
+        console.error('Error getting invoice details:', err);
+        if (err.message.includes('not found')) {
+            return res.status(404).json({ error: 'Invoice not found' });
+        }
+        res.status(500).json({ error: 'Failed to get invoice details', details: err.message });
+    }
 };
 
