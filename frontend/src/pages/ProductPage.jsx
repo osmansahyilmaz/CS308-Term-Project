@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import styles from "./ProductPage.module.css";
 import LeftPanel from "../components/LeftPanel";
+import heartIcon from "../assets/heart.svg";
+import heartFilledIcon from "../assets/heart-filled.svg";
 import axios from "axios"; // Import axios for API calls
 
 //import { getProductById, getRelatedProducts } from "../mockData/products";
@@ -18,6 +20,20 @@ function ProductPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [relatedProducts, setRelatedProducts] = useState([]);
+
+
+
+
+
+
+    const [isInWishlist, setIsInWishlist] = useState(false);
+    const [showToast, setShowToast] = useState(false);
+    const [bounceClass, setBounceClass] = useState('');
+
+
+
+
+
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviewTitle, setReviewTitle] = useState('');
     const [reviewComment, setReviewComment] = useState('');
@@ -90,6 +106,100 @@ function ProductPage() {
         };
         fetchProductData();
       }, [productId]);
+
+
+
+    //i added this section for whislist - sinem
+
+    useEffect(() => {
+    const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+    const found = wishlist.some(p => p.product_id === product?.product_id);
+    setIsInWishlist(found);
+    }, [product]);
+
+
+    /*
+    const handleWishlistToggle = async () => {
+        try {
+            let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+            const exists = wishlist.some(p => p.product_id === product.product_id);
+
+            if (exists) {
+                wishlist = wishlist.filter(p => p.product_id !== product.product_id);
+                // Backend'den de kaldır
+                await axios.delete(`http://localhost:5000/api/wishlist/remove/${product.product_id}`, {
+                    withCredentials: true
+                });
+            } else {
+                wishlist.push(product);
+                // Backend'e de ekle
+                await axios.post(
+                    'http://localhost:5000/api/wishlist/add',
+                    { productId: product.product_id },
+                    { withCredentials: true }
+                );
+            }
+
+            localStorage.setItem("wishlist", JSON.stringify(wishlist));
+
+            // UI efektleri
+            setBounceClass('heartIconBounce');
+            setTimeout(() => setBounceClass(''), 500);
+
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 2000);
+
+            setIsInWishlist(!exists);
+        } catch (err) {
+            console.error("Wishlist toggle error:", err);
+            alert("Wishlist operation failed. Please login and try again.");
+        }
+    };  
+    */
+
+    const handleWishlistToggle = async () => {
+        if (!isLoggedIn) {
+            alert("Please login to use the wishlist feature.");
+            return;
+        }
+
+        try {
+            let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+            const exists = wishlist.some(p => p.product_id === product.product_id);
+
+            if (exists) {
+                wishlist = wishlist.filter(p => p.product_id !== product.product_id);
+                await axios.delete(`http://localhost:5000/api/wishlist/remove/${product.product_id}`, {
+                    withCredentials: true
+                });
+            } else {
+                wishlist.push(product);
+                await axios.post(
+                    'http://localhost:5000/api/wishlist/add',
+                    { productId: product.product_id },
+                    { withCredentials: true }
+                );
+            }
+
+            localStorage.setItem("wishlist", JSON.stringify(wishlist));
+
+            setBounceClass('heartIconBounce');
+            setTimeout(() => setBounceClass(''), 500);
+
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 2000);
+
+            setIsInWishlist(!exists);
+        } catch (err) {
+            console.error("Wishlist toggle error:", err);
+            alert("Wishlist operation failed. Please try again.");
+        }
+    };
+
+
+
+    // it ends here
+
 
     const discountedPrice = product?.discount
         ? (product.price - (product.price * product.discount) / 100).toFixed(2)
@@ -350,7 +460,15 @@ function ProductPage() {
                 {/* Product overview section */}
                 <div className={styles.productOverview}>
                     {/* Product image gallery */}
+                    {showToast && (<div className={styles.toast}>{isInWishlist ? "Added to Wishlist!" : "Removed from Wishlist!"}</div>)}
                     <div className={styles.productGallery}>
+                        <div className={styles.wishlistWrapper}>
+                            <img
+                                src={isInWishlist ? heartFilledIcon : heartIcon}
+                                alt="Wishlist"
+                                className={`${styles.wishlistIcon} ${bounceClass ? styles[bounceClass] : ''}`}
+                                onClick={handleWishlistToggle}
+                            />
                         <div className={styles.mainImage}>
                             {product.images && product.images.length > 0 ? (
                                 <img
@@ -366,6 +484,7 @@ function ProductPage() {
                                     <span>No Image Available</span>
                                 </div>
                             )}
+                            </div>
                         </div>
 
                         {product.images && product.images.length > 1 && (
@@ -501,7 +620,6 @@ function ProductPage() {
                             >
                                 Buy Now
                             </button>
-                            <button className={styles.wishlistButton}>♡</button>
                         </div>
                     </div>
                 </div>

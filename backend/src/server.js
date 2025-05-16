@@ -1,5 +1,4 @@
-require('dotenv').config();
-// console.log("EMAIL_USER:", process.env.EMAIL_USER);
+require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 
 const express = require('express');
 const session = require('express-session');
@@ -17,10 +16,11 @@ const invoiceRoutes = require('./routes/invoiceRoutes'); // ✅ Import invoiceRo
 const runMigrations = require('./db/migrate');
 const cors = require('cors');
 const cartRoutes = require('./routes/cartRoutes');
-
-
+const wishlistRoutes = require('./routes/wishlistRoutes'); // ✅ Import wishlist routes
 const app = express();
 
+
+// Middleware
 app.use(express.json());
 app.use(cors({ credentials: true, origin: process.env.CLIENT_URL || "http://localhost:3000" }));
 
@@ -50,8 +50,10 @@ app.use('/api', reviewsRoutes);
 app.use('/api', ordersRoutes);
 app.use('/api', addressRoutes);
 app.use('/api', invoiceRoutes); // ✅ Add invoice routes
+app.use('/api', wishlistRoutes); // ✅ Add wishlist routes
 
 
+// Export app for testing
 module.exports = app;
 
 if (require.main === module) {

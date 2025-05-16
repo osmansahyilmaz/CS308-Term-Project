@@ -852,3 +852,84 @@
     background-color: #d32f2f;
   }
   
+.wishlistButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  margin-left: 1rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.heartIcon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.heartIcon:hover {
+  transform: scale(1.1);
+}
+
+
+
+
+.wishlistWrapper {
+  position: relative;
+}
+
+.wishlistIcon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 2;
+}
+
+.wishlistIcon:hover {
+  transform: scale(1.2);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.4);
+  }
+  60% {
+    transform: scale(0.9);
+  }
+}
+
+.heartIconBounce {
+  animation: bounce 0.4s ease;
+}
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #323232;
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  opacity: 0;
+  animation: fadeInOut 2.5s forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+}
+

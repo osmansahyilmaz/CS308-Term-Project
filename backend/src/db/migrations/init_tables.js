@@ -263,6 +263,25 @@ const createAdminUser = async () => {
     }
 };
 
+const createWishlistTable = async () => {
+    const query = `
+        CREATE TABLE IF NOT EXISTS wishlist (
+            wishlist_id SERIAL PRIMARY KEY,
+            user_id INT REFERENCES users(id) ON DELETE CASCADE,
+            product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT unique_wishlist UNIQUE (user_id, product_id)
+        );
+    `;
+    try {
+        await pool.query(query);
+        console.log('✅ Wishlist table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating wishlist table:', err);
+    }
+};
+
+
 const createAllTables = async () => {
     await createUsersTable();
     await createAddressesTable(); // 🔼 Öne alındı
@@ -277,6 +296,8 @@ const createAllTables = async () => {
     await createInvoicesTable(); // 🔧 user_id dahil
     await createPaymentsTable();
     await createAdminUser();
+    await createWishlistTable();
+
 };
 
 module.exports = createAllTables;
