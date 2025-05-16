@@ -187,9 +187,77 @@ const updateOrderOnSuccess = async (req, res) => {
     }
 };
 
+// Get all pending deliveries with details
+const getPendingDeliveries = async (req, res) => {
+    try {
+        // Check authentication and authorization
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        // Only Sales Managers (role_id = 3) can view all pending deliveries
+        if (req.session.user.role_id !== 3) {
+            return res.status(403).json({ error: 'Forbidden: Only Sales Managers can view all pending deliveries' });
+        }
+        
+        // Get all orders that are not canceled or delivered
+        // Status: 1 = processing, 2 = in-transit
+        const query = `
+            SELECT 
+                o.order_id AS delivery_id,
+                o.user_id AS customer_id,
+                u.username AS customer_name,
+                o.order_date,
+                o.order_total_price AS total_price,
+                o.order_status,
+                CASE 
+                    WHEN o.order_status = 1 THEN 'Processing'
+                    WHEN o.order_status = 2 THEN 'In-Transit'
+                    ELSE 'Unknown'
+                END AS status_text,
+                a.address_line1,
+                a.address_line2,
+                a.city,
+                a.state,
+                a.postal_code,
+                a.country,
+                a.phone,
+                json_agg(
+                    json_build_object(
+                        'product_id', po.product_id,
+                        'product_name', p.name,
+                        'quantity', po.product_order_count,
+                        'price', po.price_when_buy,
+                        'discount', po.discount_when_buy
+                    )
+                ) AS products
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            JOIN address a ON u.id = a.user_id AND a.is_default = true
+            JOIN products_of_order po ON o.order_id = po.order_id
+            JOIN products p ON po.product_id = p.product_id
+            WHERE o.order_status IN (1, 2) -- Processing or In-Transit
+            GROUP BY o.order_id, o.user_id, u.username, o.order_date, o.order_total_price, o.order_status, 
+                     a.address_line1, a.address_line2, a.city, a.state, a.postal_code, a.country, a.phone
+            ORDER BY o.order_date ASC;
+        `;
+        
+        const result = await pool.query(query);
+        
+        res.status(200).json({ 
+            count: result.rows.length,
+            pendingDeliveries: result.rows 
+        });
+    } catch (err) {
+        console.error('Error fetching pending deliveries:', err);
+        res.status(500).json({ error: 'Failed to fetch pending deliveries', details: err.message });
+    }
+};
+
 module.exports = {
     placeOrder,
     cancelOrder,
     getOrderHistory,
-    updateOrderOnSuccess
+    updateOrderOnSuccess,
+    getPendingDeliveries
 };

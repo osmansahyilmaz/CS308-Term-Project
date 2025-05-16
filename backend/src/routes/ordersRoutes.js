@@ -12,6 +12,9 @@ router.delete('/orders/:orderId/cancel', ordersController.cancelOrder);
 // Update order status when checkout success page is viewed
 router.put('/orders/:orderId/success', ordersController.updateOrderOnSuccess);
 
+// Get all pending deliveries with details
+router.get('/orders/pending-deliveries', ordersController.getPendingDeliveries);
+
 // Fetch order history for a user
 router.get('/orders/history', ordersController.getOrderHistory);
 
