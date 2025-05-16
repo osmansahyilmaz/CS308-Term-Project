@@ -18,4 +18,7 @@ router.post('/products', productController.createProduct);
 // Update product stock levels
 router.put('/products/:productId/stock', productController.updateProductStock);
 
+// Set initial price for a newly added product
+router.put('/products/:productId/initial-price', productController.setInitialPrice);
+
 module.exports = router;

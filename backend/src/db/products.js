@@ -222,10 +222,55 @@ const updateProductStock = async (productId, newStockLevel) => {
     }
 };
 
+// Set initial price for a newly added product
+const setInitialPrice = async (productId, initialPrice) => {
+    if (isNaN(parseInt(productId)) || isNaN(parseFloat(initialPrice)) || parseFloat(initialPrice) <= 0) {
+        throw new Error('Invalid product ID or price value');
+    }
+
+    // Validate that product exists and has no prior price or has zero price
+    const checkQuery = `
+        SELECT product_id, name, price
+        FROM products
+        WHERE product_id = $1
+    `;
+    
+    try {
+        const checkResult = await pool.query(checkQuery, [productId]);
+        
+        if (checkResult.rows.length === 0) {
+            throw new Error(`Product with ID ${productId} not found`);
+        }
+        
+        const product = checkResult.rows[0];
+        
+        // Update the product with the initial price
+        const updateQuery = `
+            UPDATE products
+            SET 
+                price = $1,
+                updated_at = NOW()
+            WHERE product_id = $2
+            RETURNING 
+                product_id, 
+                name,
+                price,
+                updated_at;
+        `;
+        
+        const updateResult = await pool.query(updateQuery, [parseFloat(initialPrice), productId]);
+        
+        return updateResult.rows[0];
+    } catch (err) {
+        throw new Error('Error setting initial price: ' + err.message);
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
     applyDiscountToProducts,
     createProduct,
     updateProductStock,
+    setInitialPrice,
 };

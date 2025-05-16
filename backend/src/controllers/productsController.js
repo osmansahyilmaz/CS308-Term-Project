@@ -202,10 +202,48 @@ const updateProductStock = async (req, res) => {
     }
 };
 
+// Set initial price for a newly added product
+const setInitialPrice = async (req, res) => {
+    try {
+        // Check authentication and authorization
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        // Only Sales Managers (role_id = 3) can set initial prices
+        if (req.session.user.role_id !== 3) {
+            return res.status(403).json({ error: 'Forbidden: Only Sales Managers can set initial prices for products' });
+        }
+        
+        const { productId } = req.params;
+        const { price } = req.body;
+        
+        // Validate input
+        if (price === undefined || price === null) {
+            return res.status(400).json({ error: 'Price is required' });
+        }
+        
+        if (isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+            return res.status(400).json({ error: 'Price must be a positive number' });
+        }
+        
+        const updatedProduct = await productsDb.setInitialPrice(productId, parseFloat(price));
+        
+        res.status(200).json({ 
+            message: 'Initial product price set successfully', 
+            product: updatedProduct
+        });
+    } catch (err) {
+        console.error('Error setting initial product price:', err);
+        res.status(500).json({ error: 'Failed to set initial product price', details: err.message });
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductDetails,
     applyDiscount,
     createProduct,
     updateProductStock,
+    setInitialPrice,
 };
