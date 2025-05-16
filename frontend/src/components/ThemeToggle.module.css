@@ -1,0 +1,24 @@
+.themeToggle {
+  background: none;
+  border: none;
+  color: var(--foreground);
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.themeToggle:hover {
+  background-color: var(--secondary);
+}
+
+.themeToggle svg {
+  transition: transform 0.2s ease;
+}
+
+.themeToggle:hover svg {
+  transform: rotate(12deg);
+} 

@@ -101,17 +101,14 @@ function RegisterPage() {
                         </div>
 
                         <div className={styles.inputGroup}>
-                            <label htmlFor="role_id">Registration type</label>
-                            <select
-                                id="role_id"
-                                name="role_id"
+                            <label htmlFor="role">Account Type</label>
+                            <select 
+                                id="role"
+                                name="role"
                                 value={formData.role_id}
                                 onChange={handleChange}
                                 required
                             >
-                                <option value="" disabled>
-                                    Select an option
-                                </option>
                                 <option value="1">Customer</option>
                                 <option value="2">Product Manager</option>
                                 <option value="3">Sales Manager</option>
