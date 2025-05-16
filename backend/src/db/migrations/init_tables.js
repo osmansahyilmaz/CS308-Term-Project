@@ -119,6 +119,7 @@ const createReviewsTable = async () => {
         rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
         title VARCHAR(100),
         comment TEXT,
+        is_approved BOOLEAN DEFAULT FALSE,
         FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );`;
