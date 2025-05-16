@@ -62,6 +62,17 @@ const approveComment = async (commentId) => {
     return pool.query(query, [commentId]);
 };
 
+// Disapprove a comment
+const disapproveComment = async (commentId) => {
+    const query = `
+        UPDATE comments
+        SET is_approved = false
+        WHERE comment_id = $1
+        RETURNING comment_id, user_id, comment_text, is_approved, created_at;
+    `;
+    return pool.query(query, [commentId]);
+};
+
 module.exports = {
     createComment,
     getAllComments,
@@ -69,5 +80,6 @@ module.exports = {
     getCommentById,
     updateComment,
     deleteComment,
-    approveComment
+    approveComment,
+    disapproveComment
 };
