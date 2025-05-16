@@ -298,6 +298,20 @@ const updateProductPrice = async (productId, newPrice) => {
     }
 };
 
+const deleteProduct = async (productId) => {
+  const query = `
+    DELETE FROM products
+     WHERE product_id = $1
+   RETURNING *;
+  `;
+  try {
+    const result = await pool.query(query, [productId]);
+    return result.rows[0];
+  } catch (err) {
+    throw new Error('Error deleting product: ' + err.message);
+  }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
@@ -306,4 +320,5 @@ module.exports = {
     updateProductStock,
     setInitialPrice,
     updateProductPrice,
+    deleteProduct, 
 };

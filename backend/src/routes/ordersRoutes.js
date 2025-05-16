@@ -18,4 +18,7 @@ router.get('/orders/pending-deliveries', ordersController.getPendingDeliveries);
 // Fetch order history for a user
 router.get('/orders/history', ordersController.getOrderHistory);
 
+// ---- New route for SCRUM-136: update delivery status ----
+router.patch('/orders/:orderId/status', ordersController.updateDeliveryStatus);
+
 module.exports = router;

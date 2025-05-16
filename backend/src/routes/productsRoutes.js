@@ -24,4 +24,7 @@ router.put('/products/:productId/initial-price', productController.setInitialPri
 // Update price of an existing product
 router.put('/products/:productId/price', productController.updateProductPrice);
 
+// Delete a product by id
+router.delete('/products/:productId', productController.deleteProduct);
+
 module.exports = router;

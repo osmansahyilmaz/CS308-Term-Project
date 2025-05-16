@@ -43,3 +43,31 @@ exports.sendInvoiceEmail = async (req, res) => {
     }
 };
 
+// ---- New for SCRUM-137: fetch all invoices (admin only) ----
+exports.getInvoices = async (req, res) => {
+  const user = req.session.user;
+  if (!user || user.role_id !== 0) {
+    return res.status(403).json({ error: 'Forbidden: Admins only' });
+  }
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        i.invoice_id,
+        i.order_id,
+        i.user_id,
+        u.username,
+        u.email,
+        i.generated_date,
+        i.invoice_description,
+        i.invoice_pdf_url
+      FROM invoices i
+      LEFT JOIN users u ON i.user_id = u.id
+      ORDER BY i.generated_date DESC;
+    `);
+    return res.json({ invoices: rows });
+  } catch (err) {
+    console.error('Error fetching invoices:', err);
+    return res.status(500).json({ error: 'Database error', details: err.message });
+  }
+};
+

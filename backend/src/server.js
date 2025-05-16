@@ -5,7 +5,7 @@ const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const pool = require('./db/pool');
 
-const invoiceRoutes = require('./routes/invoiceRoutes');
+
 const authRoutes = require('./routes/authRoutes');
 const commentsRoutes = require('./routes/commentsRoutes');
 const productsRoutes = require('./routes/productsRoutes');
@@ -13,10 +13,11 @@ const reviewsRoutes = require('./routes/reviewsRoutes');
 const ordersRoutes = require('./routes/ordersRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes'); // ✅ Import invoiceRoutes
+const wishlistRoutes = require('./routes/wishlistRoutes'); // ✅ Import wishlist routes
+const categoriesRoutes = require('./routes/categoriesRoutes'); // ✅ Add this import
 const runMigrations = require('./db/migrate');
 const cors = require('cors');
 const cartRoutes = require('./routes/cartRoutes');
-const wishlistRoutes = require('./routes/wishlistRoutes'); // ✅ Import wishlist routes
 const app = express();
 
 
@@ -49,8 +50,8 @@ app.use('/api', productsRoutes);
 app.use('/api', reviewsRoutes);
 app.use('/api', ordersRoutes);
 app.use('/api', addressRoutes);
-app.use('/api', invoiceRoutes); // ✅ Add invoice routes
 app.use('/api', wishlistRoutes); // ✅ Add wishlist routes
+app.use('/api/categories', categoriesRoutes); // ✅ Add categories routes
 
 
 // Export app for testing

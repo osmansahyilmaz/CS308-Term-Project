@@ -260,10 +260,56 @@ const getPendingDeliveries = async (req, res) => {
     }
 };
 
+// ---- New handler for SCRUM-136: update delivery status ----
+const updateDeliveryStatus = async (req, res) => {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const statusMap = {
+        processing:    { code: 1, dateField: 'order_processing_date' },
+        'in-transit':  { code: 2, dateField: 'order_in_transit_date' },
+        delivered:     { code: 3, dateField: 'order_delivered_date' },
+    };
+    const mapping = statusMap[status];
+    if (!mapping) {
+        return res.status(400).json({ error: 'Invalid status. Must be one of processing, in-transit, delivered' });
+    }
+
+    try {
+        const query = `
+            UPDATE orders
+               SET order_status = $1,
+                   ${mapping.dateField} = CURRENT_TIMESTAMP
+             WHERE order_id = $2
+        RETURNING 
+            order_id, 
+            order_status, 
+            order_processing_date, 
+            order_in_transit_date, 
+            order_delivered_date;
+        `;
+        const { rows } = await pool.query(query, [mapping.code, orderId]);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Order not found' });
+        }
+        return res.json({
+            message: `Order status updated to '${status}'`,
+            order: rows[0]
+        });
+    } catch (err) {
+        console.error('Error updating delivery status:', err);
+        return res.status(500).json({ error: 'Failed to update delivery status', details: err.message });
+    }
+};
+
 module.exports = {
     placeOrder,
     cancelOrder,
     getOrderHistory,
     updateOrderOnSuccess,
-    getPendingDeliveries
+    getPendingDeliveries,
+    updateDeliveryStatus,
 };
