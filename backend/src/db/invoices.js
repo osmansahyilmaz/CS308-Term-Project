@@ -104,7 +104,66 @@ const getInvoiceById = async (invoiceId) => {
     }
 };
 
+/**
+ * Generate PDF metadata for invoice
+ * @param {number} invoiceId - The invoice ID
+ * @returns {Promise<Object>} - Updated invoice object with PDF metadata
+ */
+const generateInvoicePdfMetadata = async (invoiceId) => {
+    // First get the invoice data
+    const invoice = await getInvoiceById(invoiceId);
+    
+    if (!invoice) {
+        throw new Error(`Invoice with ID ${invoiceId} not found`);
+    }
+    
+    // Generate PDF metadata
+    const pdfMetadata = {
+        fileName: `invoice_${invoiceId}_${Date.now()}.pdf`,
+        title: `Invoice #${invoiceId}`,
+        author: 'Online Store',
+        subject: `Invoice for Order #${invoice.order_id}`,
+        keywords: 'invoice, order, online store',
+        creationDate: new Date(),
+        modificationDate: new Date(),
+        creator: 'PDF Generator Service',
+        producer: 'Online Store E-Commerce Platform',
+        contentData: invoice
+    };
+    
+    return pdfMetadata;
+};
+
+/**
+ * Update invoice with PDF URL
+ * @param {number} invoiceId - The invoice ID
+ * @param {string} pdfUrl - The URL to the generated PDF
+ * @returns {Promise<Object>} - Updated invoice object
+ */
+const updateInvoicePdfUrl = async (invoiceId, pdfUrl) => {
+    const updateQuery = `
+        UPDATE invoices
+        SET invoice_pdf_url = $1
+        WHERE invoice_id = $2
+        RETURNING invoice_id, invoice_pdf_url
+    `;
+    
+    try {
+        const result = await pool.query(updateQuery, [pdfUrl, invoiceId]);
+        
+        if (result.rows.length === 0) {
+            throw new Error(`Failed to update invoice ${invoiceId} with PDF URL`);
+        }
+        
+        return result.rows[0];
+    } catch (err) {
+        throw new Error('Error updating invoice PDF URL: ' + err.message);
+    }
+};
+
 module.exports = {
     getInvoicesByDateRange,
-    getInvoiceById
+    getInvoiceById,
+    generateInvoicePdfMetadata,
+    updateInvoicePdfUrl
 }; 

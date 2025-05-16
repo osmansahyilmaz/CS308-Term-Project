@@ -4,6 +4,7 @@ const express = require('express');
 const session = require('express-session');
 const pgSession = require('connect-pg-simple')(session);
 const pool = require('./db/pool');
+const path = require('path');
 
 
 const authRoutes = require('./routes/authRoutes');
@@ -24,6 +25,9 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors({ credentials: true, origin: process.env.CLIENT_URL || "http://localhost:3000" }));
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use(session({
     store: new pgSession({
