@@ -1,3 +1,4 @@
+const { sendMail } = require('../utils/emailService');
 const pool = require('../db/pool');
 const productsDb = require('../db/products');
 
@@ -26,47 +27,66 @@ const getProductDetails = async (req, res) => {
 };
 
 const applyDiscount = async (req, res) => {
-    const user = req.session.user;
-    if (!user || user.role_id !== 3) {
-        return res.status(403).json({ error: 'Only sales managers can apply discounts.' });
-    }
+  const user = req.session.user;
+  if (!user || user.role_id !== 3) {
+    return res.status(403).json({ error: 'Only sales managers can apply discounts.' });
+  }
 
-    const { productIds, discount } = req.body;
+  const { productIds, discount } = req.body;
+  if (!Array.isArray(productIds) || discount <= 0 || discount >= 100) {
+    return res.status(400).json({ error: 'Invalid input' });
+  }
 
-    if (!Array.isArray(productIds) || typeof discount !== 'number' || discount <= 0 || discount >= 100) {
-        return res.status(400).json({ error: 'Invalid input' });
-    }
+  try {
+    for (const productId of productIds) {
+      // 1) Eski fiyatı al
+      const { rows } = await pool.query(
+        'SELECT name, price FROM products WHERE product_id = $1',
+        [productId]
+      );
+      if (!rows.length) continue;
 
-    try {
-        for (const productId of productIds) {
-            const result = await pool.query('SELECT price FROM products WHERE product_id = $1', [productId]);
-            if (result.rows.length === 0) continue;
+      const { name, price: oldPrice } = rows[0];
+      const newPrice = (oldPrice * (1 - discount / 100)).toFixed(2);
 
-            const originalPrice = parseFloat(result.rows[0].price);
-            const newPrice = originalPrice * (1 - discount / 100);
+      // 2) DB’yi güncelle
+      await pool.query(
+        'UPDATE products SET discount = $1, price = $2 WHERE product_id = $3',
+        [discount, newPrice, productId]
+      );
 
-            await pool.query(
-                'UPDATE products SET discount = $1, price = $2 WHERE product_id = $3',
-                [discount, newPrice, productId]
-            );
+      // 3) O ürünü wishliste ekleyen kullanıcıların e-postalarını getir
+      const { rows: users } = await pool.query(`
+        SELECT u.email 
+        FROM wishlist w 
+        JOIN users u ON u.id = w.user_id
+        WHERE w.product_id = $1
+      `, [productId]);
 
-            // Bildirim gönderimi (log olarak)
-            const userQuery = await pool.query(
-                'SELECT u.email FROM wishlist w JOIN users u ON w.user_id = u.id WHERE w.product_id = $1',
-                [productId]
-            );
+      // 4) Hepsine mail at
+      const subject = `${name} şimdi %${discount} indirimde!`;
+      const text = `${name} ürününün fiyatı ${oldPrice} ₺ → ${newPrice} ₺ oldu. Stoklar bitmeden satın alın!`;
 
-            userQuery.rows.forEach(({ email }) => {
-                console.log(`📣 Send email to ${email}: Product ${productId} is now ${discount}% off!`);
+      for (const { email } of users) {
+        try {
+            await sendMail({
+                to: email,
+                subject: `${name} şimdi %${discount} indirimde!`,
+                text: `${name} ürününün fiyatı ${oldPrice} ₺ → ${newPrice} ₺ oldu. Hemen incele!`
             });
+        } catch (mailErr) {
+          console.error(`❌ Mail failed for ${email}:`, mailErr);
         }
-
-        res.status(200).json({ message: 'Discount applied and notifications sent.' });
-    } catch (err) {
-        console.error("Error in applyDiscount:", err);
-        res.status(500).json({ error: 'Failed to apply discount', details: err.message });
+      }
     }
+
+    res.status(200).json({ message: 'Discount applied and emails sent.' });
+  } catch (err) {
+    console.error('Error in applyDiscount:', err);
+    res.status(500).json({ error: 'Failed to apply discount' });
+  }
 };
+
 
 module.exports = {
     getAllProducts,
