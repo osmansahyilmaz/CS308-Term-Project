@@ -12,4 +12,7 @@ router.get('/products/:productId', productController.getProductDetails);
 // Apply discount to selected products (multiple)
 router.post('/products/discount', productController.applyDiscount);
 
+// Create a new product with full details
+router.post('/products', productController.createProduct);
+
 module.exports = router;

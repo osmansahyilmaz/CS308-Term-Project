@@ -105,8 +105,94 @@ const applyDiscountToProducts = async (productIds, discountRate) => {
     }
 };
 
+// Create a new product with full details
+const createProduct = async (productData) => {
+    const { 
+        name, 
+        model, 
+        serial_number, 
+        description, 
+        price, 
+        quantity, 
+        warranty, 
+        distributor, 
+        cost,
+        category = 'other',
+        image = null,
+        images = [],
+        colors = [],
+        features = {},
+        specifications = {}
+    } = productData;
+
+    const query = `
+        INSERT INTO products (
+            name, 
+            model, 
+            serial_number, 
+            description, 
+            price, 
+            in_stock, 
+            warranty, 
+            distributor, 
+            cost,
+            category,
+            image,
+            images,
+            colors,
+            features,
+            specifications
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        RETURNING 
+            product_id, 
+            name, 
+            model, 
+            serial_number, 
+            description, 
+            price, 
+            in_stock, 
+            warranty, 
+            distributor, 
+            cost,
+            category,
+            image,
+            images,
+            colors,
+            features,
+            specifications,
+            created_at;
+    `;
+
+    try {
+        const values = [
+            name, 
+            model, 
+            serial_number, 
+            description, 
+            price, 
+            quantity, // in_stock
+            warranty, 
+            distributor, 
+            cost,
+            category,
+            image,
+            JSON.stringify(images),
+            JSON.stringify(colors),
+            JSON.stringify(features),
+            JSON.stringify(specifications)
+        ];
+        
+        const result = await pool.query(query, values);
+        return result.rows[0];
+    } catch (err) {
+        throw new Error('Error creating product: ' + err.message);
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
     applyDiscountToProducts,
+    createProduct,
 };
