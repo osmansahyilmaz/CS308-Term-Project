@@ -18,6 +18,7 @@ const getAllProducts = async () => {
             created_at, 
             updated_at
         FROM products
+        WHERE price IS NOT NULL AND price > 0
         ORDER BY created_at DESC;
     `;
     try {
@@ -63,7 +64,7 @@ const getProductById = async (productId) => {
         FROM products p
         LEFT JOIN reviews r ON p.product_id = r.product_id
         LEFT JOIN users u ON r.user_id = u.id
-        WHERE p.product_id = $1
+        WHERE p.product_id = $1 AND p.price IS NOT NULL AND p.price > 0
         GROUP BY p.product_id
     `;
     try {
@@ -105,57 +106,46 @@ const applyDiscountToProducts = async (productIds, discountRate) => {
     }
 };
 
-// Create a new product with full details
+// Create a new product with only allowed columns, price is set to NULL
 const createProduct = async (productData) => {
     const { 
         name, 
-        model, 
-        serial_number, 
         description, 
-        price, 
-        quantity, 
-        warranty, 
-        distributor, 
-        cost,
-        category = 'other',
+        category,
+        in_stock,
+        discount = 0,
         image = null,
         images = [],
         colors = [],
-        features = {},
+        features = [],
         specifications = {}
     } = productData;
+
+    const stockValue = (typeof in_stock === 'number' && in_stock >= 0) ? in_stock : 0;
 
     const query = `
         INSERT INTO products (
             name, 
-            model, 
-            serial_number, 
             description, 
             price, 
-            in_stock, 
-            warranty, 
-            distributor, 
-            cost,
             category,
+            in_stock,
+            discount,
             image,
             images,
             colors,
             features,
             specifications
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        VALUES ($1, $2, NULL, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING 
             product_id, 
             name, 
-            model, 
-            serial_number, 
             description, 
             price, 
-            in_stock, 
-            warranty, 
-            distributor, 
-            cost,
             category,
+            in_stock,
+            discount,
             image,
             images,
             colors,
@@ -167,20 +157,15 @@ const createProduct = async (productData) => {
     try {
         const values = [
             name, 
-            model, 
-            serial_number, 
             description, 
-            price, 
-            quantity, // in_stock
-            warranty, 
-            distributor, 
-            cost,
             category,
+            stockValue,
+            discount,
             image,
-            JSON.stringify(images),
-            JSON.stringify(colors),
-            JSON.stringify(features),
-            JSON.stringify(specifications)
+            images,      // pass as JS array
+            colors,      // pass as JS array
+            features,    // pass as JS array
+            specifications // pass as JS object, pg will cast to JSONB
         ];
         
         const result = await pool.query(query, values);

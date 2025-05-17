@@ -87,76 +87,58 @@ const applyDiscount = async (req, res) => {
   }
 };
 
-// Create a new product with full details
+// Create a new product with only allowed fields, price is not set
 const createProduct = async (req, res) => {
     try {
         // Check authentication and authorization
-        if (!req.session.user) {
+ /*       if (!req.session.user) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
-        
         // Only Product Managers (role_id = 2) can add products
         if (req.session.user.role_id !== 2) {
             return res.status(403).json({ error: 'Forbidden: Only Product Managers can add products' });
-        }
-        
+        } */
+
         const { 
             name, 
-            model, 
-            serial_number, 
             description, 
-            price, 
-            quantity, 
-            warranty, 
-            distributor, 
-            cost,
             category,
+            in_stock,
+            discount,
             image,
             images,
             colors,
             features,
             specifications
         } = req.body;
-        
+
         // Validate required fields
-        if (!name || !model || !serial_number || !description || !price || quantity === undefined || 
-            !warranty || !distributor || cost === undefined) {
+        if (!name || !description) {
             return res.status(400).json({ 
                 error: 'Missing required fields', 
                 required: [
-                    'name', 'model', 'serial_number', 'description', 
-                    'price', 'quantity', 'warranty', 'distributor', 'cost'
+                    'name', 'description'
                 ] 
             });
         }
-        
-        // Validate numeric fields
-        if (isNaN(parseFloat(price)) || isNaN(parseInt(quantity)) || isNaN(parseFloat(cost))) {
-            return res.status(400).json({ error: 'Price, quantity, and cost must be valid numbers' });
-        }
-        
+
         const productData = {
             name, 
-            model, 
-            serial_number, 
             description, 
-            price: parseFloat(price), 
-            quantity: parseInt(quantity), 
-            warranty, 
-            distributor, 
-            cost: parseFloat(cost),
             category,
+            in_stock,
+            discount,
             image,
             images,
             colors,
             features,
             specifications
         };
-        
+
         const product = await productsDb.createProduct(productData);
-        
+
         res.status(201).json({ 
-            message: 'Product created successfully', 
+            message: 'Product created successfully. Awaiting price set by sales manager.', 
             product 
         });
     } catch (err) {

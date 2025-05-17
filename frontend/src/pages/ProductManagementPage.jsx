@@ -5,6 +5,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './ProductManagementPage.module.css';
 
+const API_BASE = "http://localhost:5000/api";
+
 const ProductManagementPage = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -13,7 +15,7 @@ const ProductManagementPage = () => {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [currentCategory, setCurrentCategory] = useState('');
   const [error, setError] = useState(null);
-  
+
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
   useEffect(() => {
@@ -23,30 +25,27 @@ const ProductManagementPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('/api/products');
-      setProducts(response.data);
+      const response = await axios.get(`${API_BASE}/products`);
+      setProducts(response.data.products || []);
     } catch (error) {
       console.error('Failed to fetch products:', error);
       toast.error('Failed to fetch products');
-      // Create sample data for demonstration
-      createSampleProductData();
-      setError('Failed to load real data. Showing sample data for demonstration.');
+      setProducts([]);
+      setError('Failed to load real data.');
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/api/categories');
-      setCategories(response.data);
-      
-      // Add default categories if none exist
-      if (response.data.length === 0) {
+      const response = await axios.get(`${API_BASE}/categories`);
+      // Ensure categories is always an array
+      setCategories(Array.isArray(response.data) ? response.data : []);
+      if (Array.isArray(response.data) && response.data.length === 0) {
         await addDefaultCategories();
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
       toast.error('Failed to fetch categories');
-      // Create sample categories for demonstration
       createSampleCategoryData();
       setError('Failed to load real data. Showing sample data for demonstration.');
     }
@@ -55,13 +54,10 @@ const ProductManagementPage = () => {
   const addDefaultCategories = async () => {
     try {
       const defaultCategories = ['Electronics', 'Wearables'];
-      
       for (const categoryName of defaultCategories) {
-        await axios.post('/api/categories', { name: categoryName });
+        await axios.post(`${API_BASE}/categories`, { name: categoryName });
       }
-      
-      // Fetch categories again to update the list
-      const response = await axios.get('/api/categories');
+      const response = await axios.get(`${API_BASE}/categories`);
       setCategories(response.data);
       toast.success('Default categories added successfully');
     } catch (error) {
@@ -70,15 +66,22 @@ const ProductManagementPage = () => {
     }
   };
 
+  // Only send allowed fields to backend
   const onSubmitProduct = async (data) => {
     try {
-      if (isEditing) {
-        await axios.put(`/api/products/${currentProduct._id}`, data);
-        toast.success('Product updated successfully');
-      } else {
-        await axios.post('/api/products', data);
-        toast.success('Product created successfully');
-      }
+      const payload = {
+        name: data.name,
+        description: data.description,
+        category: data.category,
+        in_stock: data.in_stock ? parseInt(data.in_stock) : 0,
+        image: data.image || null,
+        images: data.images ? data.images.split(',').map(s => s.trim()).filter(Boolean) : [],
+        colors: data.colors ? data.colors.split(',').map(s => s.trim()).filter(Boolean) : [],
+        features: data.features ? data.features.split(',').map(s => s.trim()).filter(Boolean) : [],
+        specifications: data.specifications ? JSON.parse(data.specifications) : {},
+      };
+      await axios.post(`${API_BASE}/products`, payload);
+      toast.success('Product created successfully');
       reset();
       setIsEditing(false);
       setCurrentProduct(null);
@@ -92,9 +95,8 @@ const ProductManagementPage = () => {
   const onSubmitCategory = async (e) => {
     e.preventDefault();
     if (!currentCategory) return;
-    
     try {
-      await axios.post('/api/categories', { name: currentCategory });
+      await axios.post(`${API_BASE}/categories`, { name: currentCategory });
       toast.success('Category added successfully');
       setCurrentCategory('');
       fetchCategories();
@@ -106,9 +108,8 @@ const ProductManagementPage = () => {
 
   const deleteProduct = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
-    
     try {
-      await axios.delete(`/api/products/${id}`);
+      await axios.delete(`${API_BASE}/products/${id}`);
       toast.success('Product deleted successfully');
       fetchProducts();
     } catch (error) {
@@ -119,9 +120,8 @@ const ProductManagementPage = () => {
 
   const deleteCategory = async (id) => {
     if (!window.confirm('Are you sure you want to delete this category?')) return;
-    
     try {
-      await axios.delete(`/api/categories/${id}`);
+      await axios.delete(`${API_BASE}/categories/${id}`);
       toast.success('Category deleted successfully');
       fetchCategories();
     } catch (error) {
@@ -133,14 +133,21 @@ const ProductManagementPage = () => {
   const editProduct = (product) => {
     setIsEditing(true);
     setCurrentProduct(product);
-    Object.keys(product).forEach(key => {
-      setValue(key, product[key]);
-    });
+    setValue('name', product.name || '');
+    setValue('description', product.description || '');
+    setValue('category', product.category || '');
+    setValue('in_stock', product.in_stock || 0);
+    setValue('image', product.image || '');
+    setValue('images', Array.isArray(product.images) ? product.images.join(', ') : '');
+    setValue('colors', Array.isArray(product.colors) ? product.colors.join(', ') : '');
+    setValue('features', Array.isArray(product.features) ? product.features.join(', ') : '');
+    setValue('specifications', product.specifications ? JSON.stringify(product.specifications) : '');
   };
 
+  // Update stock using correct API and payload
   const updateStock = async (id, newStock) => {
     try {
-      await axios.put(`/api/products/${id}/stock`, { countInStock: newStock });
+      await axios.put(`${API_BASE}/products/${id}/stock`, { quantity: newStock });
       toast.success('Stock updated successfully');
       fetchProducts();
     } catch (error) {
@@ -155,36 +162,27 @@ const ProductManagementPage = () => {
       {
         _id: 'sample1',
         name: 'Sample Smartphone',
-        model: 'X-2000',
         description: 'High-end smartphone with advanced features',
         category: { _id: 'cat1', name: 'Electronics' },
-        price: 899.99,
-        costPrice: 499.99,
-        countInStock: 25,
+        in_stock: 25,
         image: 'https://via.placeholder.com/150',
         serialNumber: 'SN-2023-001'
       },
       {
         _id: 'sample2',
         name: 'Sample Smartwatch',
-        model: 'W-500',
         description: 'Fitness tracking smartwatch',
         category: { _id: 'cat2', name: 'Wearables' },
-        price: 199.99,
-        costPrice: 99.99,
-        countInStock: 40,
+        in_stock: 40,
         image: 'https://via.placeholder.com/150',
         serialNumber: 'SN-2023-002'
       },
       {
         _id: 'sample3',
         name: 'Sample Headphones',
-        model: 'H-100',
         description: 'Noise cancelling wireless headphones',
         category: { _id: 'cat1', name: 'Electronics' },
-        price: 149.99,
-        costPrice: 79.99,
-        countInStock: 15,
+        in_stock: 15,
         image: 'https://via.placeholder.com/150',
         serialNumber: 'SN-2023-003'
       }
@@ -241,92 +239,93 @@ const ProductManagementPage = () => {
           <form onSubmit={handleSubmit(onSubmitProduct)}>
             <div className={styles.formGroup}>
               <label>Name</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 {...register('name', { required: 'Product name is required' })}
               />
               {errors.name && <span className={styles.error}>{errors.name.message}</span>}
             </div>
-            
-            <div className={styles.formGroup}>
-              <label>Model</label>
-              <input 
-                type="text" 
-                {...register('model', { required: 'Model is required' })}
-              />
-              {errors.model && <span className={styles.error}>{errors.model.message}</span>}
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label>Serial Number</label>
-              <input 
-                type="text" 
-                {...register('serialNumber')}
-              />
-            </div>
-            
+
             <div className={styles.formGroup}>
               <label>Description</label>
-              <textarea 
+              <textarea
                 {...register('description', { required: 'Description is required' })}
               />
               {errors.description && <span className={styles.error}>{errors.description.message}</span>}
             </div>
-            
+
             <div className={styles.formGroup}>
               <label>Category</label>
-              <select 
+              <input
+                type="text"
                 {...register('category', { required: 'Category is required' })}
-              >
-                <option value="">Select Category</option>
-                {categories.map(category => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="e.g. Electronics"
+              />
               {errors.category && <span className={styles.error}>{errors.category.message}</span>}
             </div>
-            
+
+            <div className={styles.formGroup}>
+              <label>Initial Stock</label>
+              <input
+                type="number"
+                {...register('in_stock', {
+                  required: 'Initial stock is required',
+                  min: { value: 0, message: 'Stock must be positive' }
+                })}
+              />
+              {errors.in_stock && <span className={styles.error}>{errors.in_stock.message}</span>}
+            </div>
+
             <div className={styles.formGroup}>
               <label>Image URL</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 {...register('image')}
               />
             </div>
-            
+
             <div className={styles.formGroup}>
-              <label>Cost Price</label>
-              <input 
-                type="number" 
-                {...register('costPrice', { 
-                  required: 'Cost price is required',
-                  min: { value: 0, message: 'Cost price must be positive' } 
-                })}
+              <label>Images (comma separated URLs)</label>
+              <input
+                type="text"
+                {...register('images')}
+                placeholder="https://img1.jpg, https://img2.jpg"
               />
-              {errors.costPrice && <span className={styles.error}>{errors.costPrice.message}</span>}
             </div>
-            
+
             <div className={styles.formGroup}>
-              <label>Initial Stock</label>
-              <input 
-                type="number" 
-                {...register('countInStock', { 
-                  required: 'Initial stock is required',
-                  min: { value: 0, message: 'Stock must be positive' } 
-                })}
+              <label>Colors (comma separated)</label>
+              <input
+                type="text"
+                {...register('colors')}
+                placeholder="red, blue, green"
               />
-              {errors.countInStock && <span className={styles.error}>{errors.countInStock.message}</span>}
             </div>
-            
+
+            <div className={styles.formGroup}>
+              <label>Features (comma separated)</label>
+              <input
+                type="text"
+                {...register('features')}
+                placeholder="Bluetooth, Waterproof"
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label>Specifications (JSON)</label>
+              <textarea
+                {...register('specifications')}
+                placeholder='{"weight":"200g","battery":"3000mAh"}'
+              />
+            </div>
+
             <div className={styles.buttonGroup}>
               <button type="submit" className={styles.submitButton}>
                 {isEditing ? 'Update Product' : 'Create Product'}
               </button>
               {isEditing && (
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className={styles.cancelButton}
                   onClick={() => {
                     reset();
@@ -343,15 +342,15 @@ const ProductManagementPage = () => {
           <h2>Product List</h2>
           <div className={styles.productsList}>
             {products.map(product => (
-              <div key={product._id} className={styles.productCard}>
+              <div key={product.product_id} className={styles.productCard}>
                 <h3>{product.name}</h3>
-                <p><strong>Model:</strong> {product.model}</p>
-                <p><strong>Serial Number:</strong> {product.serialNumber}</p>
-                <p><strong>Cost Price:</strong> ${product.costPrice}</p>
-                <p><strong>Stock:</strong> {product.countInStock}</p>
+                <p><strong>Description:</strong> {product.description}</p>
+                <p><strong>Category:</strong> {product.category}</p>
+                <p><strong>Stock:</strong> {product.in_stock}</p>
+                <p><strong>Discount:</strong> {product.discount}%</p>
                 <div className={styles.productActions}>
                   <button onClick={() => editProduct(product)}>Edit</button>
-                  <button onClick={() => deleteProduct(product._id)}>Delete</button>
+                  <button onClick={() => deleteProduct(product.product_id)}>Delete</button>
                 </div>
               </div>
             ))}
@@ -375,10 +374,10 @@ const ProductManagementPage = () => {
           
           <h2>Categories List</h2>
           <div className={styles.categoriesList}>
-            {categories.map(category => (
-              <div key={category._id} className={styles.categoryItem}>
+            {(Array.isArray(categories) ? categories : []).map(category => (
+              <div key={category._id || category.id || category.name} className={styles.categoryItem}>
                 <span>{category.name}</span>
-                <button onClick={() => deleteCategory(category._id)}>Delete</button>
+                <button onClick={() => deleteCategory(category._id || category.id)}>Delete</button>
               </div>
             ))}
           </div>
@@ -393,23 +392,21 @@ const ProductManagementPage = () => {
               <thead>
                 <tr>
                   <th>Product Name</th>
-                  <th>Model</th>
                   <th>Current Stock</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map(product => (
-                  <tr key={product._id}>
+                  <tr key={product.product_id}>
                     <td>{product.name}</td>
-                    <td>{product.model}</td>
-                    <td>{product.countInStock}</td>
+                    <td>{product.in_stock}</td>
                     <td>
                       <div className={styles.stockActions}>
                         <button onClick={() => {
-                          const newStock = prompt(`Enter new stock for ${product.name}:`, product.countInStock);
+                          const newStock = prompt(`Enter new stock for ${product.name}:`, product.in_stock);
                           if (newStock !== null && !isNaN(newStock) && newStock >= 0) {
-                            updateStock(product._id, parseInt(newStock));
+                            updateStock(product.product_id, parseInt(newStock));
                           }
                         }}>
                           Update Stock
@@ -427,4 +424,4 @@ const ProductManagementPage = () => {
   );
 };
 
-export default ProductManagementPage; 
+export default ProductManagementPage;
