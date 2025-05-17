@@ -179,7 +179,7 @@ const createOrdersTable = async () => {
         order_delivered_date TIMESTAMP,
         order_shipping_code VARCHAR(255),
         order_shipping_price INT,
-        order_shipping_address INT REFERENCES addresses(address_id) ON DELETE SET NULL
+        order_shipping_address VARCHAR(100) -- Changed from INT REFERENCES addresses(address_id)
     );`;
     try {
         await pool.query(query);
@@ -282,11 +282,26 @@ const createWishlistTable = async () => {
     }
 };
 
+const createCategoriesTable = async () => {
+    const query = `
+        CREATE TABLE IF NOT EXISTS categories (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) UNIQUE NOT NULL
+        );
+    `;
+    try {
+        await pool.query(query);
+        console.log('✅ Categories table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating categories table:', err);
+    }
+};
 
 const createAllTables = async () => {
     await createUsersTable();
-    await createAddressesTable(); // 🔼 Öne alındı
+    await createAddressesTable();
     await createSessionTable();
+    await createCategoriesTable();
     await createProductsTable();
     await createCartTable();
     await createReviewsTable();

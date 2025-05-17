@@ -52,10 +52,6 @@ function ShopPage() {
             const uniqueProducts = Array.from(uniqueProductMap.values());
             
             setProducts(uniqueProducts); // Use the deduplicated list
-            
-            // Build a list of unique categories from the *deduplicated* products
-            const uniqueCategories = [...new Set(uniqueProducts.map(p => p.category))];
-            setCategories(["All", ...uniqueCategories]);
             setLoading(false);
           } catch (err) {
             console.error("Error fetching products:", err);
@@ -64,6 +60,18 @@ function ShopPage() {
           }
         };
         fetchProducts();
+
+        // Fetch categories from backend
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get("http://localhost:5000/api/categories");
+                const cats = response.data.categories || [];
+                setCategories(["All", ...cats]);
+            } catch (err) {
+                setCategories(["All"]);
+            }
+        };
+        fetchCategories();
       }, []);
 
     const filteredProducts = products.filter(product => {

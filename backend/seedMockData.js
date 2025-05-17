@@ -45,6 +45,18 @@ const seedUsers = async () => {
   return insertedUsers;
 };
 
+const seedCategories = async (products) => {
+  // Get unique category names from products array
+  const uniqueCategories = [...new Set(products.map(p => p.category))];
+  for (const name of uniqueCategories) {
+    await pool.query(
+      `INSERT INTO categories (name) VALUES ($1) ON CONFLICT (name) DO NOTHING;`,
+      [name]
+    );
+    console.log(`Category "${name}" ensured in categories table.`);
+  }
+};
+
 const seedProducts = async () => {
   const products = [
     {
@@ -145,6 +157,9 @@ const seedProducts = async () => {
       }
     }
   ];
+
+  // Ensure categories exist before inserting products
+  await seedCategories(products);
 
   const insertedProducts = [];
   for (const product of products) {

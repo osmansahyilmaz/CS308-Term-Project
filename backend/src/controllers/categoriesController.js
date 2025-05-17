@@ -6,18 +6,24 @@ exports.addCategory = async (req, res) => {
   if (!name || typeof name !== 'string') {
     return res.status(400).json({ error: 'Invalid category name' });
   }
-  // NOTE: we're not persisting to a dedicated table yet.
-  return res.status(201).json({ message: 'Category added', category: name });
+  try {
+    await pool.query(
+      `INSERT INTO categories (name) VALUES ($1) ON CONFLICT (name) DO NOTHING;`,
+      [name]
+    );
+    return res.status(201).json({ message: 'Category added', category: name });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Database error' });
+  }
 };
 
 exports.getCategories = async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT DISTINCT category
-         FROM products
-        WHERE category IS NOT NULL;`
+      `SELECT name FROM categories ORDER BY name;`
     );
-    const categories = rows.map(r => r.category);
+    const categories = rows.map(r => r.name);
     return res.json({ categories });
   } catch (err) {
     console.error(err);
@@ -25,11 +31,16 @@ exports.getCategories = async (req, res) => {
   }
 };
 
-// Delete a category (stub—not removing anything from DB)
-exports.deleteCategory = (req, res) => {
+exports.deleteCategory = async (req, res) => {
   const { name } = req.params;
   if (!name || typeof name !== 'string') {
     return res.status(400).json({ error: 'Invalid category name' });
   }
-  return res.json({ message: `Category '${name}' deleted` });
+  try {
+    await pool.query(`DELETE FROM categories WHERE name = $1;`, [name]);
+    return res.json({ message: `Category '${name}' deleted` });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Database error' });
+  }
 };

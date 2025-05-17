@@ -7,6 +7,9 @@ const placeOrder = async (req, res) => {
         return res.status(401).json({ error: 'Not authenticated' });
     }
 
+    // Accept order_shipping_address as a string (address title)
+    const { order_shipping_address } = req.body;
+
     try {
         // Step 1: Fetch the user's cart
         const cartQuery = `
@@ -30,13 +33,13 @@ const placeOrder = async (req, res) => {
             }
         }
 
-        // Step 3: Create a new order
+        // Step 3: Create a new order (store order_shipping_address as title)
         const orderQuery = `
-            INSERT INTO orders (user_id, order_total_price, order_status)
-            VALUES ($1, $2, 1) RETURNING order_id
+            INSERT INTO orders (user_id, order_total_price, order_status, order_shipping_address)
+            VALUES ($1, $2, 1, $3) RETURNING order_id
         `;
         const totalPrice = cartResult.rows.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        const orderResult = await pool.query(orderQuery, [userId, totalPrice]);
+        const orderResult = await pool.query(orderQuery, [userId, totalPrice, order_shipping_address]);
         const orderId = orderResult.rows[0].order_id;
 
         // Step 4: Add products to the order and reduce stock

@@ -38,9 +38,19 @@ const ProductManagementPage = () => {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(`${API_BASE}/categories`);
-      // Ensure categories is always an array
-      setCategories(Array.isArray(response.data) ? response.data : []);
-      if (Array.isArray(response.data) && response.data.length === 0) {
+      // Accept both {categories: [...]} (array of strings) and array of objects
+      let cats = [];
+      if (Array.isArray(response.data.categories)) {
+        cats = response.data.categories.map(c =>
+          typeof c === "string" ? { name: c } : c
+        );
+      } else if (Array.isArray(response.data)) {
+        cats = response.data.map(c =>
+          typeof c === "string" ? { name: c } : c
+        );
+      }
+      setCategories(cats);
+      if (cats.length === 0) {
         await addDefaultCategories();
       }
     } catch (error) {
@@ -57,8 +67,7 @@ const ProductManagementPage = () => {
       for (const categoryName of defaultCategories) {
         await axios.post(`${API_BASE}/categories`, { name: categoryName });
       }
-      const response = await axios.get(`${API_BASE}/categories`);
-      setCategories(response.data);
+      await fetchCategories();
       toast.success('Default categories added successfully');
     } catch (error) {
       toast.error('Failed to add default categories');
@@ -99,7 +108,7 @@ const ProductManagementPage = () => {
       await axios.post(`${API_BASE}/categories`, { name: currentCategory });
       toast.success('Category added successfully');
       setCurrentCategory('');
-      fetchCategories();
+      await fetchCategories();
     } catch (error) {
       toast.error('Failed to add category');
       console.error(error);
@@ -377,7 +386,7 @@ const ProductManagementPage = () => {
             {(Array.isArray(categories) ? categories : []).map(category => (
               <div key={category._id || category.id || category.name} className={styles.categoryItem}>
                 <span>{category.name}</span>
-                <button onClick={() => deleteCategory(category._id || category.id)}>Delete</button>
+                <button onClick={() => deleteCategory(category._id || category.id || category.name)}>Delete</button>
               </div>
             ))}
           </div>

@@ -9,28 +9,17 @@ const BASE_URL = 'http://localhost:5000/api';
 const CheckoutSuccess = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { order, backendOrderId } = state || {};
+  const { order, invoiceId } = state || {};
 
   useEffect(() => {
     if (order) {
       // Update order status to processing
-      if (backendOrderId) {
-        axios.put(`${BASE_URL}/orders/${backendOrderId}/success`, {}, { withCredentials: true })
-          .then(res => {
-            console.log('Order status updated to processing:', res.data);
-          })
-          .catch(err => {
-            console.error('Error updating order status:', err);
-          });
-      }
-
-      // Redirect to invoice after a short delay
       const t = setTimeout(() => {
-        navigate("/invoice", { state: { order } });
+        navigate("/invoice", { state: { order, invoiceId } });
       }, 3000); // Increased delay to show success message longer
       return () => clearTimeout(t);
     }
-  }, [navigate, order, backendOrderId]);
+  }, [navigate, order, invoiceId]);
 
   if (!order) {
     return (

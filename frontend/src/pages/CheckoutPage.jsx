@@ -163,11 +163,9 @@ function CheckoutPage() {
         return;
       }
 
-      // 1) Sunucu tarafındaki kartı güncelle (ürünlerin DB'deki cart tablosuna girmesi gerekiyor)
+      // 1) Add cart items to backend cart (unchanged)
       for (const item of cartItems) {
-        await axios.post(`${API}/cart/add`,               // ➜  POST /api/cart/add
-          { productId: item.product_id, quantity: item.quantity || 1 },
-          { withCredentials: true });
+        await axios.post(`${API}/cart/add`, { productId: item.product_id, quantity: item.quantity || 1 }, { withCredentials: true });
       }
 
       
@@ -212,10 +210,34 @@ function CheckoutPage() {
         setSelectedAddressId(frontFmt.id);
       }
 
-      const orderRes = await axios.post(`${API}/orders`, {}, { withCredentials: true });
-      // Sunucu "orderId" döndürüyor
+      // Find the selected address object (for both new and saved)
+      let shippingAddress;
+      let orderShippingAddressTitle = '';
+      if (showNewAddressForm) {
+        shippingAddress = newAddress;
+        orderShippingAddressTitle = newAddress.title;
+      } else {
+        shippingAddress = savedAddresses.find(addr => addr.id === selectedAddressId);
+        orderShippingAddressTitle = shippingAddress ? shippingAddress.title : '';
+      }
+
+      // 2) Place order with shipping address title
+      const orderRes = await axios.post(
+        `${API}/orders`,
+        { order_shipping_address: orderShippingAddressTitle },
+        { withCredentials: true }
+      );
       const backendOrderId = orderRes.data.orderId;
-      
+
+      // --- Fetch the invoice for this order ---
+      let invoiceId = null;
+      try {
+        const invoiceRes = await axios.get(`${API}/invoices/by-order/${backendOrderId}`, { withCredentials: true });
+        invoiceId = invoiceRes.data.invoice_id;
+      } catch (err) {
+        console.error('Could not fetch invoice for order:', err);
+      }
+
       // Process payment method
       if (showNewCardForm) {
         // Validate new card
@@ -248,13 +270,6 @@ function CheckoutPage() {
       }
       
       // Find the selected address and payment method
-      let shippingAddress;
-      if (showNewAddressForm) {
-        shippingAddress = newAddress;
-      } else {
-        shippingAddress = savedAddresses.find(addr => addr.id === selectedAddressId);
-      }
-      
       let paymentMethod;
       if (showNewCardForm) {
         paymentMethod = {
@@ -310,7 +325,6 @@ function CheckoutPage() {
       setTotalPrice(0);
       
       // Redirect to profile orders page after 2 seconds
-      
       navigate('/checkout-success', {
         state: {
           order: {
@@ -325,7 +339,8 @@ function CheckoutPage() {
               quantity: item.quantity || 1,
               price: item.price,
             })),
-          }
+          },
+          invoiceId, // pass invoiceId to next page
         }
       });
       

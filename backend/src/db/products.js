@@ -123,38 +123,49 @@ const createProduct = async (productData) => {
 
     const stockValue = (typeof in_stock === 'number' && in_stock >= 0) ? in_stock : 0;
 
-    const query = `
-        INSERT INTO products (
-            name, 
-            description, 
-            price, 
-            category,
-            in_stock,
-            discount,
-            image,
-            images,
-            colors,
-            features,
-            specifications
-        )
-        VALUES ($1, $2, NULL, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING 
-            product_id, 
-            name, 
-            description, 
-            price, 
-            category,
-            in_stock,
-            discount,
-            image,
-            images,
-            colors,
-            features,
-            specifications,
-            created_at;
-    `;
-
+    const client = await pool.connect();
     try {
+        await client.query('BEGIN');
+
+        // Insert category if it doesn't exist
+        if (category) {
+            await client.query(
+                `INSERT INTO categories (name) VALUES ($1) ON CONFLICT (name) DO NOTHING;`,
+                [category]
+            );
+        }
+
+        const query = `
+            INSERT INTO products (
+                name, 
+                description, 
+                price, 
+                category,
+                in_stock,
+                discount,
+                image,
+                images,
+                colors,
+                features,
+                specifications
+            )
+            VALUES ($1, $2, NULL, $3, $4, $5, $6, $7, $8, $9, $10)
+            RETURNING 
+                product_id, 
+                name, 
+                description, 
+                price, 
+                category,
+                in_stock,
+                discount,
+                image,
+                images,
+                colors,
+                features,
+                specifications,
+                created_at;
+        `;
+
         const values = [
             name, 
             description, 
@@ -162,16 +173,20 @@ const createProduct = async (productData) => {
             stockValue,
             discount,
             image,
-            images,      // pass as JS array
-            colors,      // pass as JS array
-            features,    // pass as JS array
-            specifications // pass as JS object, pg will cast to JSONB
+            images,
+            colors,
+            features,
+            specifications
         ];
         
-        const result = await pool.query(query, values);
+        const result = await client.query(query, values);
+        await client.query('COMMIT');
         return result.rows[0];
     } catch (err) {
+        await client.query('ROLLBACK');
         throw new Error('Error creating product: ' + err.message);
+    } finally {
+        client.release();
     }
 };
 

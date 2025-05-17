@@ -7,7 +7,7 @@ import styles from "./InvoicePage.module.css";
 
 const InvoicePage = () => {
   const location = useLocation();
-  const { order } = location.state;
+  const { order, invoiceId } = location.state;
 
   const [user, setUser] = useState(null);
 
@@ -91,6 +91,22 @@ const InvoicePage = () => {
                 console.error("❌ Error sending email:", error.response?.data || error.message); // Debugging log
                 alert("Failed to send the invoice email.");
             });
+
+        // Save PDF to backend
+        axios.post(
+            "http://localhost:5000/api/invoices/save-invoice-pdf",
+            {
+                invoiceId: invoiceId, // Use invoiceId to update the correct invoice row
+                pdfData: base64data
+            },
+            { withCredentials: true }
+        )
+        .then((response) => {
+            console.log("✅ Invoice PDF saved to backend:", response.data);
+        })
+        .catch((error) => {
+            console.error("❌ Error saving invoice PDF:", error.response?.data || error.message);
+        });
     };
 
     reader.onerror = function (error) {
