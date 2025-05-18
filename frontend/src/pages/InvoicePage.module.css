@@ -1,80 +1,212 @@
 .invoiceContainer {
-    display: flex;
-    width: 100%;
-    height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    min-height: 100vh;
+    background-color: #f7f8fa;
     font-family: 'Helvetica Neue', Arial, sans-serif;
   }
   
   .leftWrapper {
-    width: 40%;
-    height: 100%;
-    background-color: #E43D12; /* Turuncu renk */
+    grid-column: 1 / 2;
+    background-color: #f7f8fa;
   }
   
   .rightPanel {
-    width: 60%;
-    background-color: #EBE9E1;
+    grid-column: 2 / 3;
+    padding: 2rem 0;
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 2rem;
+    align-items: flex-start;
   }
   
   .invoiceWrapper {
     background-color: #fff;
-    border-radius: 16px;
-    padding: 3rem;
-    width: 100%;
-    max-width: 600px;
+    border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    width: 100%;
+    max-width: 800px;
   }
   
   .invoiceTitle {
-    font-size: 1.8rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
+    text-align: center;
     color: #333;
+    font-size: 28px;
+    margin-bottom: 1.5rem;
   }
   
   .invoiceInfo {
-    margin-bottom: 1rem;
-    color: #333;
-    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 16px;
+    color: #555;
   }
   
   .invoiceTable {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+    margin: 1.5rem 0;
   }
   
-  .invoiceTable th,
-  .invoiceTable td {
-    border: 1px solid #ccc;
-    padding: 0.75rem;
+  .invoiceTable th {
+    background-color: #f5f5f7;
+    padding: 12px;
     text-align: left;
-  }
-  
-  .totalAmount {
-    font-weight: bold;
-    font-size: 1.2rem;
-    margin-top: 1rem;
+    font-weight: 600;
     color: #333;
   }
   
-  .downloadButton {
+  .invoiceTable td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    color: #444;
+  }
+  
+  .totalAmount {
+    text-align: right;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin: 1.5rem 0;
+  }
+  
+  .buttonContainer {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
     margin-top: 2rem;
-    padding: 0.8rem 1.5rem;
-    border-radius: 6px;
-    border: none;
-    background-color: #E43D12;
+    margin-bottom: 1rem;
+  }
+  
+  .downloadButton {
+    background-color: #5469d4;
     color: white;
-    font-weight: bold;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.2s;
   }
   
   .downloadButton:hover {
-    background-color: #D6536D;
+    background-color: #455bbf;
+  }
+  
+  .emailButton {
+    background-color: #2abf6d;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .emailButton:hover {
+    background-color: #20a05c;
+  }
+
+  .viewLink {
+    text-align: center;
+    margin-top: 1rem;
+  }
+  
+  .viewLink a {
+    color: #5469d4;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  
+  .viewLink a:hover {
+    color: #455bbf;
+    text-decoration: underline;
+  }
+  
+  .pdfContainer {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .viewPdfButton {
+    background-color: #6772e5;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-bottom: 1rem;
+  }
+  
+  .viewPdfButton:hover {
+    background-color: #5661c5;
+  }
+  
+  .pdfViewer {
+    width: 100%;
+    margin-top: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  .messageWrapper {
+    text-align: center;
+    margin: 4rem auto;
+    padding: 2rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+  }
+  
+  .messageWrapper p {
+    color: #e74c3c;
+    font-size: 18px;
+    margin: 0;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 992px) {
+    .invoiceContainer {
+      grid-template-columns: 0.5fr 3fr 0.5fr;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .invoiceContainer {
+      grid-template-columns: 1fr;
+    }
+  
+    .leftWrapper {
+      display: none;
+    }
+  
+    .rightPanel {
+      grid-column: 1;
+      padding: 1rem;
+    }
+  
+    .invoiceWrapper {
+      padding: 1rem;
+    }
+
+    .buttonContainer {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .downloadButton, .emailButton, .viewPdfButton {
+      width: 100%;
+    }
+    
+    .pdfViewer iframe {
+      height: 350px;
+    }
   }
   

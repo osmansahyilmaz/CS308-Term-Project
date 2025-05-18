@@ -205,7 +205,7 @@ function CheckoutPage() {
           postCode: saved.address_post_code,
           phone: saved.address_contact_phone
         };
-        // state’i güncelle
+        // state'i güncelle
         setSavedAddresses(prev => [...prev, frontFmt]);
         setSelectedAddressId(frontFmt.id);
       }
@@ -227,17 +227,19 @@ function CheckoutPage() {
         { order_shipping_address: orderShippingAddressTitle },
         { withCredentials: true }
       );
+      
+      // Get order and invoice details from the response
       const backendOrderId = orderRes.data.orderId;
+      const invoiceId = orderRes.data.invoiceId;
+      const invoiceNumber = orderRes.data.invoiceNumber;
+      const invoicePdfUrl = orderRes.data.invoicePdfUrl;
+      
+      console.log("✅ Order created successfully:", orderRes.data);
 
-      // --- Fetch the invoice for this order ---
-      let invoiceId = null;
-      try {
-        const invoiceRes = await axios.get(`${API}/invoices/by-order/${backendOrderId}`, { withCredentials: true });
-        invoiceId = invoiceRes.data.invoice_id;
-      } catch (err) {
-        console.error('Could not fetch invoice for order:', err);
+      if (!invoiceId) {
+        console.warn("⚠️ No invoice ID received from the server");
       }
-
+      
       // Process payment method
       if (showNewCardForm) {
         // Validate new card
@@ -286,25 +288,21 @@ function CheckoutPage() {
       
 
 
-      // Generate a unique order ID
-      const orderId = backendOrderId;   // gerçek DB kimliği
-
-
-      
       // Create order object with shipping address and payment method
       const order = {
-        order_id: orderId,
-        order_date: new Date().toISOString(),
+        order_id: backendOrderId,
+        invoiceNumber: invoiceNumber,
+        date: new Date().toLocaleDateString(),
         order_status: 'processing',
         order_total_price: totalPrice,
         shipping_address: shippingAddress,
         payment_method: paymentMethod,
-        products: cartItems.map(item => ({
+        items: cartItems.map(item => ({
+          description: item.name,
+          quantity: item.quantity || 1,
+          price: item.price,
           product_id: item.product_id,
-          name: item.name,
-          image: item.image,
-          price_when_buy: item.price,
-          product_order_count: item.quantity || 1
+          image: item.image
         }))
       };
       
@@ -324,23 +322,12 @@ function CheckoutPage() {
       setCartItems([]);
       setTotalPrice(0);
       
-      // Redirect to profile orders page after 2 seconds
+      // Redirect to checkout success page
       navigate('/checkout-success', {
         state: {
-          order: {
-            invoiceNumber: `INV-${Date.now()}`,
-            date: new Date().toLocaleDateString(),
-            customer: {
-              name: "Test Müşterisi",
-              email: "test@example.com",
-            },
-            items: cartItems.map((item) => ({
-              description: item.name,
-              quantity: item.quantity || 1,
-              price: item.price,
-            })),
-          },
-          invoiceId, // pass invoiceId to next page
+          order: order,
+          invoiceId: invoiceId,
+          invoicePdfUrl: invoicePdfUrl
         }
       });
       

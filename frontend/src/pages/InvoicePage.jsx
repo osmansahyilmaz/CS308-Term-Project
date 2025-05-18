@@ -1,118 +1,148 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import styles from "./InvoicePage.module.css";
+import jsPDF from "jspdf";
 
 const InvoicePage = () => {
   const location = useLocation();
-  const { order, invoiceId } = location.state;
-
+  const { order, invoiceId, invoicePdfUrl } = location.state || {};
+  
+  // State variables
+  const [invoiceNumber, setInvoiceNumber] = useState(order?.invoiceNumber || '');
   const [user, setUser] = useState(null);
+  const [existingPdfUrl, setExistingPdfUrl] = useState(invoicePdfUrl || null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
 
-  // Giriş yapan kullanıcıyı çek
+  // Fetch user and check for existing PDF
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/auth/profile", 
-            {
-            withCredentials: true,
-          });
-          
-        console.log("✅ Kullanıcı bilgisi alındı:", res.data.user); // 👈 burayı ekle
-        setUser(res.data.user);
+        // Get user profile
+        const userRes = await axios.get("http://localhost:5000/api/auth/profile", {
+          withCredentials: true,
+        });
+        
+        console.log("✅ Kullanıcı bilgisi alındı:", userRes.data.user);
+        setUser(userRes.data.user);
+        
+        // If we already have the PDF URL from the state, use it
+        if (invoicePdfUrl) {
+          console.log("📄 Using PDF URL from state:", invoicePdfUrl);
+          setExistingPdfUrl(`http://localhost:5000${invoicePdfUrl}`);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Otherwise, check if invoice PDF exists on backend
+        if (order) {
+          const orderId = order.order_id || (order.invoiceNumber && order.invoiceNumber.split('-')[1]);
+          if (orderId) {
+            const invoiceRes = await axios.get(`http://localhost:5000/api/invoices/by-order/${orderId}`, {
+              withCredentials: true,
+            });
+            
+            if (invoiceRes.data && invoiceRes.data.invoice_pdf_url) {
+              console.log("📄 Mevcut fatura PDF'i bulundu:", invoiceRes.data.invoice_pdf_url);
+              setExistingPdfUrl(`http://localhost:5000${invoiceRes.data.invoice_pdf_url}`);
+              
+              // Always use invoice number from the backend
+              if (invoiceRes.data.invoice_description) {
+                setInvoiceNumber(invoiceRes.data.invoice_description);
+              }
+            } else {
+              console.log("❌ Bu sipariş için kayıtlı fatura bulunamadı");
+            }
+          }
+        }
       } catch (err) {
-        console.error("❌ Kullanıcı bilgisi alınamadı:", err); // 👈 burayı ekle
+        console.error("❌ Veri alınamadı:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchUser();
-  }, []);
-  
+    
+    fetchData();
+  }, [invoiceId, order, invoicePdfUrl]);
 
   const calculateTotal = () =>
     order.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
 
-  const generatePDF = () => {
-    if (!user) {
-        alert("Kullanıcı bilgisi henüz yüklenmedi.");
+  // Send PDF via email
+  const sendEmailPDF = async () => {
+    try {
+      if (!user || !user.email) {
+        alert("User email is not available.");
         return;
+      }
+      
+      // Always ensure we're using an existing PDF from the backend
+      if (!existingPdfUrl) {
+        alert("No invoice PDF found. Please contact support.");
+        return;
+      }
+      
+      // Send email with the PDF from backend
+      const response = await axios.post(
+        "http://localhost:5000/api/sendInvoiceEmail",
+        {
+          to: user.email,
+          invoiceNumber: invoiceNumber
+        },
+        { withCredentials: true }
+      );
+      
+      console.log("✅ Email sent successfully:", response.data);
+      alert("Invoice sent to your email successfully!");
+    } catch (error) {
+      console.error("❌ Error sending email:", error);
+      alert("Failed to send the invoice email.");
     }
+  };
 
-    const doc = new jsPDF();
-    doc.text("Invoice", 14, 20);
-    doc.text(`Invoice #: ${order.invoiceNumber}`, 14, 30);
-    doc.text(`Date: ${order.date}`, 14, 37);
-    doc.text(`Customer: ${user.username}`, 14, 44);
-    doc.text(`Email: ${user.email}`, 14, 51);
+  // Download PDF
+  const downloadPDF = async () => {
+    try {
+      // Only allow downloading if we have a PDF URL from backend
+      if (existingPdfUrl) {
+        // Create download link
+        const link = document.createElement('a');
+        link.href = existingPdfUrl;
+        link.download = `invoice-${invoiceNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log("PDF downloaded from server:", existingPdfUrl);
+      } else {
+        alert("No invoice PDF available for download.");
+      }
+    } catch (error) {
+      console.error("❌ Error downloading PDF:", error);
+      alert("Error downloading PDF. Please try again.");
+    }
+  };
 
-    const rows = order.items.map((item) => [
-        item.description,
-        item.quantity,
-        `$${item.price}`,
-        `$${item.quantity * item.price}`,
-    ]);
+  // Toggle PDF viewer
+  const togglePdfViewer = () => {
+    setShowPdfViewer(!showPdfViewer);
+  };
 
-    autoTable(doc, {
-        startY: 58,
-        head: [["Item", "Qty", "Price", "Total"]],
-        body: rows,
-    });
-
-    doc.text(`Grand Total: $${calculateTotal()}`, 14, doc.lastAutoTable.finalY + 10);
-
-    // Convert the PDF to a Blob and then to a Base64 string
-    const pdfBlob = doc.output("blob");
-    console.log("📄 PDF Blob created:", pdfBlob); // Debugging log
-
-    const reader = new FileReader();
-    console.log("📄 Starting to read PDF Blob as Base64..."); // Debugging log
-    reader.readAsDataURL(pdfBlob);
-
-    reader.onloadend = function () {
-        console.log("📄 FileReader onloadend triggered."); // Debugging log
-        const base64data = reader.result;
-        console.log("📄 PDF Base64 Data:", base64data.substring(0, 50) + "..."); // Debugging log
-        axios
-            .post(
-                "http://localhost:5000/api/sendInvoiceEmail",
-                {
-                    to: user.email,
-                    invoiceNumber: order.invoiceNumber,
-                    pdfData: base64data, // Ensure this is the full Base64 string
-                },
-                { withCredentials: true }
-            )
-            .then((response) => {
-                console.log("✅ Email sent successfully:", response.data); // Debugging log
-                alert("Invoice sent to your email successfully!");
-            })
-            .catch((error) => {
-                console.error("❌ Error sending email:", error.response?.data || error.message); // Debugging log
-                alert("Failed to send the invoice email.");
-            });
-
-        // Save PDF to backend
-        axios.post(
-            "http://localhost:5000/api/invoices/save-invoice-pdf",
-            {
-                invoiceId: invoiceId, // Use invoiceId to update the correct invoice row
-                pdfData: base64data
-            },
-            { withCredentials: true }
-        )
-        .then((response) => {
-            console.log("✅ Invoice PDF saved to backend:", response.data);
-        })
-        .catch((error) => {
-            console.error("❌ Error saving invoice PDF:", error.response?.data || error.message);
-        });
-    };
-
-    reader.onerror = function (error) {
-        console.error("❌ FileReader error:", error); // Debugging log
-    };
-};
+  // Check for invoice data
+  if (isLoading) {
+    return <div className={styles.invoiceContainer}><p>Loading invoice data...</p></div>;
+  }
+  
+  if (!invoiceNumber && !isLoading) {
+    return (
+      <div className={styles.invoiceContainer}>
+        <div className={styles.messageWrapper}>
+          <p>Invoice data not found. Please contact customer support.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.invoiceContainer}>
@@ -120,7 +150,7 @@ const InvoicePage = () => {
       <div className={styles.rightPanel}>
         <div className={styles.invoiceWrapper}>
           <h2 className={styles.invoiceTitle}>Invoice</h2>
-          <p className={styles.invoiceInfo}><strong>Invoice #:</strong> {order.invoiceNumber}</p>
+          <p className={styles.invoiceInfo}><strong>Invoice #:</strong> {invoiceNumber}</p>
           <p className={styles.invoiceInfo}><strong>Date:</strong> {order.date}</p>
           <p className={styles.invoiceInfo}><strong>Customer:</strong> {user?.username || "Loading..."}</p>
           <p className={styles.invoiceInfo}><strong>Email:</strong> {user?.email || "Loading..."}</p>
@@ -147,9 +177,36 @@ const InvoicePage = () => {
           </table>
 
           <p className={styles.totalAmount}>Total: ${calculateTotal()}</p>
-          <button className={styles.downloadButton} onClick={generatePDF}>
-            Download PDF
-          </button>
+          <div className={styles.buttonContainer}>
+            <button className={styles.downloadButton} onClick={downloadPDF}>
+              Download PDF
+            </button>
+            <button className={styles.emailButton} onClick={sendEmailPDF}>
+              Send to Email
+            </button>
+          </div>
+          
+          {existingPdfUrl && (
+            <div className={styles.pdfContainer}>
+              <button 
+                className={styles.viewPdfButton} 
+                onClick={togglePdfViewer}
+              >
+                {showPdfViewer ? "Hide PDF" : "View PDF"}
+              </button>
+              
+              {showPdfViewer && (
+                <div className={styles.pdfViewer}>
+                  <iframe 
+                    src={existingPdfUrl} 
+                    width="100%" 
+                    height="500px"
+                    title="Invoice PDF" 
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

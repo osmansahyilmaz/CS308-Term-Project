@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { generateInvoicePdf } = require('./invoiceController');
 
 const placeOrder = async (req, res) => {
     const userId = req.session.user?.id;
@@ -45,7 +46,7 @@ const placeOrder = async (req, res) => {
         // Step 4: Add products to the order and reduce stock
         const orderItemsQuery = `
             INSERT INTO products_of_order (order_id, product_id, price_when_buy, discount_when_buy, product_order_count)
-            VALUES ($1, $2, $3, $4, $5)
+            VALUES ($1, $2, CAST($3 AS numeric), $4, $5)
         `;
         const updateStockQuery = `
             UPDATE products SET in_stock = in_stock - $1 WHERE product_id = $2
@@ -60,11 +61,53 @@ const placeOrder = async (req, res) => {
         const clearCartQuery = `DELETE FROM cart WHERE user_id = $1`;
         await pool.query(clearCartQuery, [userId]);
 
-        // ✅ Step 6: Create invoice after successful order
-        await pool.query(`
-            INSERT INTO invoices (user_id, order_id, generated_date)
-            VALUES ($1, $2, NOW())
-        `, [userId, orderId]);
+        // Step 6: Create invoice with a consistent invoice number
+        const timestamp = Date.now();
+        const invoiceNumber = `INV-${timestamp}`;
+        
+        const invoiceResult = await pool.query(`
+            INSERT INTO invoices (user_id, order_id, generated_date, invoice_description)
+            VALUES ($1, $2, to_timestamp($3/1000.0), $4) RETURNING invoice_id
+        `, [userId, orderId, timestamp, invoiceNumber]);
+        
+        const invoiceId = invoiceResult.rows[0].invoice_id;
+        
+        // Step 7: Automatically generate and save invoice PDF
+        try {
+            console.log(`⏳ Generating invoice PDF for order ${orderId}...`);
+            const pdfResult = await generateInvoicePdf(invoiceId, orderId, userId);
+            
+            if (pdfResult && pdfResult.success) {
+                console.log(`✅ Invoice PDF automatically generated for order ${orderId}`);
+                
+                // Return all necessary information
+                return res.status(201).json({ 
+                    message: 'Order placed successfully', 
+                    orderId,
+                    invoiceId,
+                    invoiceNumber,
+                    invoicePdfUrl: pdfResult.url
+                });
+            } else {
+                console.error(`❌ Failed to generate PDF for order ${orderId}:`, pdfResult?.error || 'Unknown error');
+                // Even if PDF generation fails, return order info
+                return res.status(201).json({ 
+                    message: 'Order placed successfully, but PDF generation failed', 
+                    orderId,
+                    invoiceId,
+                    invoiceNumber
+                });
+            }
+        } catch (invoiceErr) {
+            console.error(`Error generating invoice PDF for order ${orderId}:`, invoiceErr);
+            // Even if PDF generation fails, return order info
+            return res.status(201).json({ 
+                message: 'Order placed successfully, but PDF generation failed', 
+                orderId,
+                invoiceId,
+                invoiceNumber
+            });
+        }
 
         res.status(201).json({ message: 'Order placed successfully', orderId });
     } catch (err) {
