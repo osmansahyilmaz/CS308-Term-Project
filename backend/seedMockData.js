@@ -238,24 +238,6 @@ const seedReviews = async (products, users) => {
   }
 };
 
-const seedRatings = async (users) => {
-  const ratings = [
-    { userIndex: 1, rating: 5 },
-    { userIndex: 2, rating: 4 }
-  ];
-  for (const rate of ratings) {
-    const user_id = users[rate.userIndex].id;
-    const query = `
-      INSERT INTO ratings (user_id, rating_value)
-      VALUES ($1, $2)
-      RETURNING rating_id;
-    `;
-    const values = [user_id, rate.rating];
-    const result = await pool.query(query, values);
-    console.log(`Inserted rating with ID: ${result.rows[0].rating_id} by user ID: ${user_id}`);
-  }
-};
-
 const seedComments = async (users) => {
   const comments = [
     { userIndex: 1, comment: "I really enjoy using this app. Great experience!" },
@@ -365,7 +347,6 @@ const seedAll = async () => {
         const users = await seedUsers();
         const products = await seedProducts();
         await seedReviews(products, users);
-        await seedRatings(users);
         await seedComments(users);
         await seedCart(products, users);
         await seedOrders(products, users); // Add orders and products_of_order

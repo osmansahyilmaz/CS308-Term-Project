@@ -40,6 +40,7 @@ function ProductPage() {
     const [reviewRating, setReviewRating] = useState(5);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [canAddReview, setCanAddReview] = useState(false);
+    const [hasReviewed, setHasReviewed] = useState(false);
     const [userId, setUserId] = useState(null);
     const [userUsername, setUserUsername] = useState('');
 
@@ -285,14 +286,17 @@ function ProductPage() {
             const res = await axios.get(`http://localhost:5000/api/reviews/can-add/${productId}`, {
                 withCredentials: true,
             });
-            if (res.status === 200 && res.data.canAddReview) {
-                setCanAddReview(true);
+            if (res.status === 200) {
+                setCanAddReview(res.data.canAddReview);
+                setHasReviewed(res.data.hasReviewed);
             } else {
                 setCanAddReview(false);
+                setHasReviewed(false);
             }
         } catch (err) {
             console.error("Error checking review eligibility:", err);
             setCanAddReview(false);
+            setHasReviewed(false);
         }
     };
 
@@ -712,6 +716,8 @@ function ProductPage() {
                                         onClick={() => {
                                             if (!isLoggedIn) {
                                                 alert("Please login to write a review.");
+                                            } else if (hasReviewed) {
+                                                alert("You have already reviewed this product.");
                                             } else if (!canAddReview) {
                                                 alert("You can only review products you've purchased and received.");
                                             } else {
