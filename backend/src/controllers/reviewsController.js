@@ -30,6 +30,7 @@ const addReview = async (req, res) => {
             });
         }
 
+        // Create the review
         const review = await reviewsDb.createReview(userId, productId, rating, title, comment);
 
         res.status(201).json({ 
@@ -112,16 +113,16 @@ const approveReview = async (req, res) => {
     }
 };
 
-// Disapprove a review (Product Manager only)
-const disapproveReview = async (req, res) => {
+// Reject a review (Product Manager only)
+const rejectReview = async (req, res) => {
     try {
         if (!req.session.user) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
         
-        // Only Product Managers can disapprove reviews
+        // Only Product Managers can reject reviews
         if (req.session.user.role_id !== 2) {
-            return res.status(403).json({ error: 'Forbidden: Only Product Managers can disapprove reviews' });
+            return res.status(403).json({ error: 'Forbidden: Only Product Managers can reject reviews' });
         }
         
         const { reviewId } = req.params;
@@ -132,15 +133,15 @@ const disapproveReview = async (req, res) => {
             return res.status(404).json({ error: 'Review not found' });
         }
         
-        const updatedReview = await reviewsDb.disapproveReview(reviewId);
+        const updatedReview = await reviewsDb.rejectReview(reviewId);
         
         res.status(200).json({ 
-            message: 'Review disapproved successfully', 
+            message: 'Review rejected successfully', 
             review: updatedReview 
         });
     } catch (err) {
-        console.error('Error disapproving review:', err);
-        res.status(500).json({ error: 'Failed to disapprove review', details: err.message });
+        console.error('Error rejecting review:', err);
+        res.status(500).json({ error: 'Failed to reject review', details: err.message });
     }
 };
 
@@ -206,7 +207,7 @@ const updateReview = async (req, res) => {
     }
 };
 
-// Delete a review (only by the owner)
+// Delete a review (only by the owner or Product Manager)
 const deleteReview = async (req, res) => {
     try {
         if (!req.session.user) {
@@ -238,13 +239,26 @@ const deleteReview = async (req, res) => {
     }
 };
 
+// Get product rating
+const getProductRating = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const rating = await reviewsDb.calculateProductRating(productId);
+        res.status(200).json({ rating });
+    } catch (err) {
+        console.error('Error getting product rating:', err);
+        res.status(500).json({ error: 'Failed to get product rating', details: err.message });
+    }
+};
+
 module.exports = {
     addReview,
     getProductReviews,
     getPendingReviews,
     approveReview,
-    disapproveReview,
+    rejectReview,
     deleteReview,
     updateReview,
-    canAddReview
+    canAddReview,
+    getProductRating
 };

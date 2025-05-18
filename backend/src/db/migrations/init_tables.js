@@ -119,7 +119,7 @@ const createReviewsTable = async () => {
         rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
         title VARCHAR(100),
         comment TEXT,
-        is_approved BOOLEAN DEFAULT FALSE,
+        status VARCHAR(20) DEFAULT 'PENDING',
         FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );`;
@@ -145,23 +145,6 @@ const createCommentsTable = async () => {
         console.log('✅ Comments table created/updated.');
     } catch (err) {
         console.error('❌ Error creating comments table:', err);
-    }
-};
-
-const createRatingsTable = async () => {
-    const query = `
-    CREATE TABLE IF NOT EXISTS ratings (
-        rating_id SERIAL PRIMARY KEY,
-        user_id INT NOT NULL,
-        rating_value INT NOT NULL CHECK (rating_value >= 1 AND rating_value <= 5),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );`;
-    try {
-        await pool.query(query);
-        console.log('✅ Ratings table created/updated.');
-    } catch (err) {
-        console.error('❌ Error creating ratings table:', err);
     }
 };
 
@@ -306,7 +289,6 @@ const createAllTables = async () => {
     await createCartTable();
     await createReviewsTable();
     await createCommentsTable();
-    await createRatingsTable();
     await createOrdersTable();
     await createProductsOfOrderTable();
     await createInvoicesTable(); // 🔧 user_id dahil

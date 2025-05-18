@@ -7,6 +7,9 @@ const router = express.Router();
 // Get all reviews for a product
 router.get('/reviews/product/:productId', reviewsController.getProductReviews);
 
+// Get product rating
+router.get('/reviews/rating/:productId', reviewsController.getProductRating);
+
 // Protected endpoints - require authentication
 // Add a new review
 router.post('/reviews', reviewsController.addReview);
@@ -27,7 +30,7 @@ router.get('/reviews/pending', reviewsController.getPendingReviews);
 // Approve a review
 router.put('/reviews/:reviewId/approve', reviewsController.approveReview);
 
-// Disapprove a review
-router.put('/reviews/:reviewId/disapprove', reviewsController.disapproveReview);
+// Reject a review
+router.put('/reviews/:reviewId/reject', reviewsController.rejectReview);
 
 module.exports = router;

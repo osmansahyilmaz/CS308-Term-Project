@@ -90,13 +90,21 @@ const CommentModerationPage = () => {
       );
       
       if (response.data && response.data.review) {
-        // Update local state to reflect changes
+        // Remove the approved review from display since we only show pending reviews
         setProductComments(prevComments => {
           const updatedComments = { ...prevComments };
           if (updatedComments[productId]) {
-            updatedComments[productId] = updatedComments[productId].map(comment => 
-              comment.review_id === reviewId ? { ...comment, is_approved: true } : comment
+            updatedComments[productId] = updatedComments[productId].filter(
+              comment => comment.review_id !== reviewId
             );
+            
+            // If no more reviews for this product, remove it from the list
+            if (updatedComments[productId].length === 0) {
+              delete updatedComments[productId];
+              setProducts(prevProducts => 
+                prevProducts.filter(product => product.product_id !== productId)
+              );
+            }
           }
           return updatedComments;
         });
@@ -109,33 +117,41 @@ const CommentModerationPage = () => {
     }
   };
 
-  // Disapprove a review
-  const handleDisapprove = async (productId, reviewId) => {
+  // Reject a review
+  const handleReject = async (productId, reviewId) => {
     try {
-      // Call the API to disapprove a review
+      // Call the API to reject a review
       const response = await axios.put(
-        `http://localhost:5000/api/reviews/${reviewId}/disapprove`, 
+        `http://localhost:5000/api/reviews/${reviewId}/reject`, 
         {}, 
         { withCredentials: true }
       );
       
       if (response.data && response.data.review) {
-        // Update local state to reflect changes
+        // Remove the rejected review from display since we only show pending reviews
         setProductComments(prevComments => {
           const updatedComments = { ...prevComments };
           if (updatedComments[productId]) {
-            updatedComments[productId] = updatedComments[productId].map(comment => 
-              comment.review_id === reviewId ? { ...comment, is_approved: false } : comment
+            updatedComments[productId] = updatedComments[productId].filter(
+              comment => comment.review_id !== reviewId
             );
+            
+            // If no more reviews for this product, remove it from the list
+            if (updatedComments[productId].length === 0) {
+              delete updatedComments[productId];
+              setProducts(prevProducts => 
+                prevProducts.filter(product => product.product_id !== productId)
+              );
+            }
           }
           return updatedComments;
         });
         
-        toast.success('Review disapproved successfully');
+        toast.success('Review rejected successfully');
       }
     } catch (err) {
-      console.error('Error disapproving review:', err);
-      toast.error(err.response?.data?.error || 'Failed to disapprove review');
+      console.error('Error rejecting review:', err);
+      toast.error(err.response?.data?.error || 'Failed to reject review');
     }
   };
 
@@ -198,16 +214,9 @@ const CommentModerationPage = () => {
     return stars;
   };
 
-  // Count total reviews and pending reviews
+  // Count total reviews
   const getTotalComments = () => {
     return Object.values(productComments).flat().length;
-  };
-
-  const getPendingComments = () => {
-    return Object.values(productComments)
-      .flat()
-      .filter(comment => !comment.is_approved)
-      .length;
   };
 
   if (loading) {
@@ -233,10 +242,6 @@ const CommentModerationPage = () => {
         </div>
         <div className={styles.statBox}>
           <h3>Pending Reviews</h3>
-          <span className={styles.statNumber}>{getPendingComments()}</span>
-        </div>
-        <div className={styles.statBox}>
-          <h3>Total Reviews</h3>
           <span className={styles.statNumber}>{getTotalComments()}</span>
         </div>
       </div>
@@ -270,14 +275,14 @@ const CommentModerationPage = () => {
             <div className={styles.productComments}>
               {!productComments[product.product_id] || productComments[product.product_id].length === 0 ? (
                 <div className={styles.emptyComments}>
-                  <p>No reviews for this product.</p>
+                  <p>No pending reviews for this product.</p>
                 </div>
               ) : (
                 <div className={styles.commentsList}>
                   {productComments[product.product_id].map(review => (
                     <div 
                       key={review.review_id} 
-                      className={`${styles.commentCard} ${review.is_approved ? styles.approvedComment : styles.pendingComment}`}
+                      className={`${styles.commentCard} ${styles.pendingComment}`}
                     >
                       <div className={styles.commentHeader}>
                         <div className={styles.commentUser}>
@@ -297,27 +302,24 @@ const CommentModerationPage = () => {
                       </div>
                       
                       <div className={styles.commentStatus}>
-                        <span className={review.is_approved ? styles.approvedBadge : styles.pendingBadge}>
-                          {review.is_approved ? 'Approved' : 'Pending Approval'}
+                        <span className={styles.pendingBadge}>
+                          Pending Approval
                         </span>
                       </div>
                       
                       <div className={styles.commentActions}>
-                        {!review.is_approved ? (
-                          <button 
-                            className={`${styles.actionButton} ${styles.approveButton}`}
-                            onClick={() => handleApprove(product.product_id, review.review_id)}
-                          >
-                            Approve
-                          </button>
-                        ) : (
-                          <button 
-                            className={`${styles.actionButton} ${styles.disapproveButton}`}
-                            onClick={() => handleDisapprove(product.product_id, review.review_id)}
-                          >
-                            Disapprove
-                          </button>
-                        )}
+                        <button 
+                          className={`${styles.actionButton} ${styles.approveButton}`}
+                          onClick={() => handleApprove(product.product_id, review.review_id)}
+                        >
+                          Approve
+                        </button>
+                        <button 
+                          className={`${styles.actionButton} ${styles.rejectButton}`}
+                          onClick={() => handleReject(product.product_id, review.review_id)}
+                        >
+                          Reject
+                        </button>
                         <button 
                           className={`${styles.actionButton} ${styles.deleteButton}`}
                           onClick={() => handleDelete(product.product_id, review.review_id)}

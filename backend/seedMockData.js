@@ -227,9 +227,9 @@ const seedReviews = async (products, users) => {
     const user_id = users[rev.userIndex].id;
     const query = `
       INSERT INTO reviews 
-        (product_id, user_id, rating, title, comment)
+        (product_id, user_id, rating, title, comment, status)
       VALUES
-        ($1, $2, $3, $4, $5)
+        ($1, $2, $3, $4, $5, 'PENDING')
       RETURNING review_id;
     `;
     const values = [product_id, user_id, rev.rating, rev.title, rev.comment];

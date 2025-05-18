@@ -5,9 +5,9 @@ const pool = require('./pool');
  */
 const createReview = async (userId, productId, rating, title, comment) => {
     const query = `
-        INSERT INTO reviews (user_id, product_id, rating, title, comment)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING review_id, user_id, product_id, rating, title, comment, date, is_approved;
+        INSERT INTO reviews (user_id, product_id, rating, title, comment, status)
+        VALUES ($1, $2, $3, $4, $5, 'PENDING')
+        RETURNING review_id, user_id, product_id, rating, title, comment, date, status;
     `;
     const result = await pool.query(query, [userId, productId, rating, title, comment]);
     return result.rows[0];
@@ -28,7 +28,7 @@ const getAllReviews = async (approvedOnly = false) => {
     `;
     
     if (approvedOnly) {
-        query += ` WHERE r.is_approved = true`;
+        query += ` WHERE r.status = 'APPROVED'`;
     }
     
     query += ` ORDER BY r.date DESC`;
@@ -51,10 +51,25 @@ const getReviewsByProductId = async (productId, approvedOnly = true) => {
     `;
     
     if (approvedOnly) {
-        query += ` AND r.is_approved = true`;
+        query += ` AND r.status = 'APPROVED'`;
     }
     
     query += ` ORDER BY r.date DESC`;
+    
+    const result = await pool.query(query, [productId]);
+    return result.rows;
+};
+
+/**
+ * Get all reviews for a specific product to calculate rating
+ */
+const getAllReviewsForRating = async (productId) => {
+    const query = `
+        SELECT 
+            r.rating
+        FROM reviews r
+        WHERE r.product_id = $1
+    `;
     
     const result = await pool.query(query, [productId]);
     return result.rows;
@@ -72,7 +87,7 @@ const getPendingReviews = async () => {
         FROM reviews r
         JOIN users u ON r.user_id = u.id
         JOIN products p ON r.product_id = p.product_id
-        WHERE r.is_approved = false
+        WHERE r.status = 'PENDING'
         ORDER BY r.date ASC
     `;
     
@@ -109,9 +124,9 @@ const updateReview = async (reviewId, rating, title, comment) => {
             rating = $1,
             title = $2,
             comment = $3,
-            is_approved = false
+            status = 'PENDING'
         WHERE review_id = $4
-        RETURNING review_id, user_id, product_id, rating, title, comment, date, is_approved;
+        RETURNING review_id, user_id, product_id, rating, title, comment, date, status;
     `;
     
     const result = await pool.query(query, [rating, title, comment, reviewId]);
@@ -133,9 +148,9 @@ const deleteReview = async (reviewId) => {
 const approveReview = async (reviewId) => {
     const query = `
         UPDATE reviews
-        SET is_approved = true
+        SET status = 'APPROVED'
         WHERE review_id = $1
-        RETURNING review_id, user_id, product_id, rating, title, comment, date, is_approved;
+        RETURNING review_id, user_id, product_id, rating, title, comment, date, status;
     `;
     
     const result = await pool.query(query, [reviewId]);
@@ -143,14 +158,14 @@ const approveReview = async (reviewId) => {
 };
 
 /**
- * Disapprove a review
+ * Reject a review
  */
-const disapproveReview = async (reviewId) => {
+const rejectReview = async (reviewId) => {
     const query = `
         UPDATE reviews
-        SET is_approved = false
+        SET status = 'REJECTED'
         WHERE review_id = $1
-        RETURNING review_id, user_id, product_id, rating, title, comment, date, is_approved;
+        RETURNING review_id, user_id, product_id, rating, title, comment, date, status;
     `;
     
     const result = await pool.query(query, [reviewId]);
@@ -186,16 +201,32 @@ const checkUserCanReviewProduct = async (userId, productId) => {
     return parseInt(result.rows[0].delivered_count) > 0;
 };
 
+/**
+ * Calculate average rating for a product
+ */
+const calculateProductRating = async (productId) => {
+    const query = `
+        SELECT AVG(rating) as average_rating
+        FROM reviews
+        WHERE product_id = $1
+    `;
+    
+    const result = await pool.query(query, [productId]);
+    return parseFloat(result.rows[0].average_rating) || 0;
+};
+
 module.exports = {
     createReview,
     getAllReviews,
     getReviewsByProductId,
+    getAllReviewsForRating,
     getPendingReviews,
     getReviewById,
     updateReview,
     deleteReview,
     approveReview,
-    disapproveReview,
+    rejectReview,
     checkUserReviewedProduct,
-    checkUserCanReviewProduct
+    checkUserCanReviewProduct,
+    calculateProductRating
 };

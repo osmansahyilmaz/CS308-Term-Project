@@ -39,8 +39,8 @@ const getProductById = async (productId) => {
             p.category, 
             p.in_stock, 
             p.discount, 
-            COALESCE(AVG(r.rating) FILTER (WHERE r.is_approved = true), 0) AS rating,
-            COUNT(r.rating) FILTER (WHERE r.is_approved = true) AS review_count,
+            COALESCE(AVG(r.rating), 0) AS rating,
+            COUNT(r.rating) AS review_count,
             p.image, 
             p.images, 
             p.colors, 
@@ -58,7 +58,7 @@ const getProductById = async (productId) => {
                         'comment', r.comment,
                         'date', r.date
                     )
-                ) FILTER (WHERE r.review_id IS NOT NULL AND r.is_approved = true), 
+                ) FILTER (WHERE r.review_id IS NOT NULL AND r.status = 'APPROVED'), 
                 '[]'
             ) AS reviews
         FROM products p
