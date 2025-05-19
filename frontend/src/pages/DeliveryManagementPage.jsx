@@ -4,6 +4,24 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './DeliveryManagementPage.module.css';
 
+const statusLabels = {
+  1: 'Processing',
+  2: 'In-Transit',
+  3: 'Delivered'
+};
+const statusOptions = [
+  { value: 'processing', label: 'Processing' },
+  { value: 'in-transit', label: 'In-Transit' },
+  { value: 'delivered', label: 'Delivered' }
+];
+
+const getStatusValue = (order_status) => {
+  if (order_status === 1) return 'processing';
+  if (order_status === 2) return 'in-transit';
+  if (order_status === 3) return 'delivered';
+  return '';
+};
+
 const DeliveryManagementPage = () => {
   const [deliveries, setDeliveries] = useState([]);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
@@ -13,80 +31,45 @@ const DeliveryManagementPage = () => {
 
   useEffect(() => {
     fetchDeliveries();
+    // eslint-disable-next-line
   }, []);
 
   const fetchDeliveries = async () => {
     try {
-      const response = await axios.get('/api/deliveries');
-      setDeliveries(response.data);
+      const response = await axios.get('http://localhost:5000/api/orders/pending-deliveries', { withCredentials: true });
+      const deliveriesData = response.data.pendingDeliveries || [];
+      const deliveriesWithInvoices = await Promise.all(
+        deliveriesData.map(async (delivery) => {
+          let invoice = null;
+          try {
+            const invoiceRes = await axios.get(`http://localhost:5000/api/invoices/by-order/${delivery.delivery_id}`, { withCredentials: true });
+            invoice = invoiceRes.data;
+          } catch (err) {
+            invoice = null;
+          }
+          return { ...delivery, invoice };
+        })
+      );
+      setDeliveries(deliveriesWithInvoices);
+      setError(null);
     } catch (error) {
       console.error('Failed to fetch deliveries:', error);
       toast.error('Failed to fetch deliveries');
-      createSampleDeliveryData();
-      setError('Failed to load real data. Showing sample data for demonstration.');
+      setError('Failed to load delivery data.');
+      setDeliveries([]);
     }
   };
 
-  const createSampleDeliveryData = () => {
-    const sampleDeliveries = [
-      {
-        _id: 'del1000001',
-        customerId: 'customer123',
-        customerName: 'John Doe',
-        totalPrice: 567.99,
-        isCompleted: false,
-        deliveryAddress: '123 Main St, Apt 4B, New York, NY 10001',
-        items: [
-          { productId: 'prod101', productName: 'Smartphone X', quantity: 1, price: 499.99 },
-          { productId: 'prod105', productName: 'Phone Case', quantity: 2, price: 19.99 }
-        ],
-        createdAt: new Date(Date.now() - 86400000 * 2).toISOString() // 2 days ago
-      },
-      {
-        _id: 'del1000002',
-        customerId: 'customer456',
-        customerName: 'Jane Smith',
-        totalPrice: 249.99,
-        isCompleted: true,
-        deliveryAddress: '456 Oak Avenue, Chicago, IL 60001',
-        items: [
-          { productId: 'prod102', productName: 'Wireless Headphones', quantity: 1, price: 149.99 },
-          { productId: 'prod106', productName: 'Extended Warranty', quantity: 1, price: 49.99 },
-          { productId: 'prod108', productName: 'USB-C Cable', quantity: 2, price: 24.99 }
-        ],
-        createdAt: new Date(Date.now() - 86400000 * 5).toISOString() // 5 days ago
-      },
-      {
-        _id: 'del1000003',
-        customerId: 'customer789',
-        customerName: 'Robert Johnson',
-        totalPrice: 1299.99,
-        isCompleted: false,
-        deliveryAddress: '789 Pine Road, Austin, TX 73301',
-        items: [
-          { productId: 'prod103', productName: 'Laptop Pro', quantity: 1, price: 1299.99 }
-        ],
-        createdAt: new Date().toISOString() // today
-      }
-    ];
-    
-    setDeliveries(sampleDeliveries);
-  };
-
-  const updateDeliveryStatus = async (deliveryId, isCompleted) => {
+  const updateDeliveryStatus = async (orderId, status) => {
     try {
-      await axios.put(`/api/deliveries/${deliveryId}/status`, { isCompleted });
-      toast.success(`Delivery marked as ${isCompleted ? 'completed' : 'pending'}`);
+      await axios.patch(`http://localhost:5000/api/orders/${orderId}/status`, { status }, { withCredentials: true });
+      toast.success(`Order status updated to ${status}`);
       fetchDeliveries();
-      
-      if (selectedDelivery && selectedDelivery._id === deliveryId) {
-        setSelectedDelivery({
-          ...selectedDelivery,
-          isCompleted
-        });
+      if (selectedDelivery && selectedDelivery.delivery_id === orderId) {
+        setSelectedDelivery({ ...selectedDelivery, order_status: status });
       }
     } catch (error) {
-      toast.error('Failed to update delivery status');
+      toast.error('Failed to update order status');
       console.error(error);
     }
   };
@@ -101,9 +84,13 @@ const DeliveryManagementPage = () => {
     setSelectedDelivery(null);
   };
 
-  const filteredDeliveries = filterStatus === 'all' 
-    ? deliveries 
-    : deliveries.filter(d => d.isCompleted === (filterStatus === 'completed'));
+  const filteredDeliveries = filterStatus === 'all'
+    ? deliveries
+    : deliveries.filter(d => {
+        if (filterStatus === 'pending') return d.order_status !== 3;
+        if (filterStatus === 'completed') return d.order_status === 3;
+        return true;
+      });
 
   return (
     <div className={styles.container}>
@@ -114,70 +101,86 @@ const DeliveryManagementPage = () => {
         </div>
       )}
       <h1 className={styles.title}>Delivery Management</h1>
-      
       <div className={styles.filterSection}>
         <label>Filter by Status:</label>
-        <select 
-          value={filterStatus} 
+        <select
+          value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
           className={styles.filterSelect}
         >
           <option value="all">All Deliveries</option>
           <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
+          <option value="completed">Delivered</option>
         </select>
       </div>
-      
       <div className={styles.deliveryListContainer}>
         <table className={styles.deliveryTable}>
           <thead>
             <tr>
-              <th>Delivery ID</th>
+              <th>Order ID</th>
               <th>Customer</th>
               <th>Total Items</th>
               <th>Total Price</th>
               <th>Address</th>
               <th>Status</th>
+              <th>Invoice</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredDeliveries.length > 0 ? (
               filteredDeliveries.map(delivery => (
-                <tr key={delivery._id} className={delivery.isCompleted ? styles.completedDelivery : ''}>
-                  <td>{delivery._id.substring(0, 8)}...</td>
-                  <td>{delivery.customerId}</td>
-                  <td>{delivery.items?.length || 0}</td>
-                  <td>${delivery.totalPrice.toFixed(2)}</td>
+                <tr key={delivery.delivery_id} className={delivery.order_status === 3 ? styles.completedDelivery : ''}>
+                  <td>{delivery.delivery_id}</td>
+                  <td>{delivery.customer_name}</td>
+                  <td>{delivery.products?.length || 0}</td>
+                  <td>${Number(delivery.total_price).toFixed(2)}</td>
                   <td className={styles.addressCell}>
-                    {delivery.deliveryAddress.substring(0, 20)}...
+                    {delivery.address_title || 'N/A'}
                   </td>
                   <td>
-                    <span className={delivery.isCompleted ? styles.statusCompleted : styles.statusPending}>
-                      {delivery.isCompleted ? 'Completed' : 'Pending'}
+                    <span className={delivery.order_status === 3 ? styles.statusCompleted : styles.statusPending}>
+                      {statusLabels[delivery.order_status] || 'Unknown'}
                     </span>
                   </td>
                   <td>
+                    {delivery.invoice && delivery.invoice.invoice_pdf_url ? (
+                      <a
+                        href={`http://localhost:5000${delivery.invoice.invoice_pdf_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        View PDF
+                      </a>
+                    ) : (
+                      'No Invoice'
+                    )}
+                  </td>
+                  <td>
                     <div className={styles.actionButtons}>
-                      <button 
+                      <button
                         className={styles.viewButton}
                         onClick={() => viewDeliveryDetails(delivery)}
                       >
                         View
                       </button>
-                      <button 
-                        className={delivery.isCompleted ? styles.pendingButton : styles.completeButton}
-                        onClick={() => updateDeliveryStatus(delivery._id, !delivery.isCompleted)}
+                      <select
+                        value={getStatusValue(delivery.order_status)}
+                        onChange={e => updateDeliveryStatus(delivery.delivery_id, e.target.value)}
+                        className={styles.completeButton}
+                        disabled={delivery.order_status === 3}
                       >
-                        {delivery.isCompleted ? 'Mark Pending' : 'Mark Completed'}
-                      </button>
+                        {statusOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
                     </div>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="7" className={styles.noDeliveries}>
+                <td colSpan="8" className={styles.noDeliveries}>
                   No deliveries found
                 </td>
               </tr>
@@ -185,7 +188,6 @@ const DeliveryManagementPage = () => {
           </tbody>
         </table>
       </div>
-      
       {isDetailModalOpen && selectedDelivery && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>
@@ -196,52 +198,70 @@ const DeliveryManagementPage = () => {
             <div className={styles.modalBody}>
               <div className={styles.detailSection}>
                 <h3>Basic Information</h3>
-                <p><strong>Delivery ID:</strong> {selectedDelivery._id}</p>
-                <p><strong>Customer ID:</strong> {selectedDelivery.customerId}</p>
-                <p><strong>Total Price:</strong> ${selectedDelivery.totalPrice.toFixed(2)}</p>
-                <p><strong>Status:</strong> {selectedDelivery.isCompleted ? 'Completed' : 'Pending'}</p>
+                <p><strong>Order ID:</strong> {selectedDelivery.delivery_id}</p>
+                <p><strong>Customer:</strong> {selectedDelivery.customer_name}</p>
+                <p><strong>Total Price:</strong> ${Number(selectedDelivery.total_price).toFixed(2)}</p>
+                <p><strong>Status:</strong> {statusLabels[selectedDelivery.order_status] || 'Unknown'}</p>
               </div>
-              
               <div className={styles.detailSection}>
                 <h3>Address</h3>
-                <p>{selectedDelivery.deliveryAddress}</p>
+                <p>
+                  {selectedDelivery.address_title || 'N/A'}
+                </p>
               </div>
-              
               <div className={styles.detailSection}>
-                <h3>Items</h3>
-                {selectedDelivery.items && selectedDelivery.items.length > 0 ? (
+                <h3>Products</h3>
+                {selectedDelivery.products && selectedDelivery.products.length > 0 ? (
                   <table className={styles.itemsTable}>
                     <thead>
                       <tr>
                         <th>Product</th>
                         <th>Quantity</th>
                         <th>Price</th>
+                        <th>Discount</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedDelivery.items.map((item, index) => (
-                        <tr key={index}>
-                          <td>{item.productName}</td>
-                          <td>{item.quantity}</td>
-                          <td>${item.price.toFixed(2)}</td>
+                      {selectedDelivery.products.map((item, idx) => (
+                        <tr key={idx}>
+                          <td>{item.product_name || item.name}</td>
+                          <td>{item.quantity || item.product_order_count}</td>
+                          <td>${Number(item.price || item.price_when_buy).toFixed(2)}</td>
+                          <td>{item.discount || item.discount_when_buy || 0}%</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <p>No items in this delivery</p>
+                  <p>No products in this delivery</p>
+                )}
+              </div>
+              <div className={styles.detailSection}>
+                <h3>Invoice</h3>
+                {selectedDelivery.invoice && selectedDelivery.invoice.invoice_pdf_url ? (
+                  <a
+                    href={`http://localhost:5000${selectedDelivery.invoice.invoice_pdf_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View Invoice PDF
+                  </a>
+                ) : (
+                  <p>No invoice available</p>
                 )}
               </div>
             </div>
             <div className={styles.modalFooter}>
-              <button 
-                className={selectedDelivery.isCompleted ? styles.pendingButton : styles.completeButton}
-                onClick={() => {
-                  updateDeliveryStatus(selectedDelivery._id, !selectedDelivery.isCompleted);
-                }}
+              <select
+                value={getStatusValue(selectedDelivery.order_status)}
+                onChange={e => updateDeliveryStatus(selectedDelivery.delivery_id, e.target.value)}
+                className={styles.completeButton}
+                disabled={selectedDelivery.order_status === 3}
               >
-                {selectedDelivery.isCompleted ? 'Mark as Pending' : 'Mark as Completed'}
-              </button>
+                {statusOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
               <button className={styles.closeModalButton} onClick={closeDetailModal}>
                 Close
               </button>
@@ -253,4 +273,4 @@ const DeliveryManagementPage = () => {
   );
 };
 
-export default DeliveryManagementPage; 
+export default DeliveryManagementPage;
