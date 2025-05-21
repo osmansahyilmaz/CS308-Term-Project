@@ -64,15 +64,15 @@ const applyDiscount = async (req, res) => {
       `, [productId]);
 
       // 4) Hepsine mail at
-      const subject = `${name} şimdi %${discount} indirimde!`;
-      const text = `${name} ürününün fiyatı ${oldPrice} ₺ → ${newPrice} ₺ oldu. Stoklar bitmeden satın alın!`;
+      const subject = `${name} is now %${discount} off!`;
+      const text = `${name} was just reduced from ${oldPrice} ₺ to ${newPrice} ₺ .Grab yours before it’s gone!`;
 
       for (const { email } of users) {
         try {
             await sendMail({
                 to: email,
-                subject: `${name} şimdi %${discount} indirimde!`,
-                text: `${name} ürününün fiyatı ${oldPrice} ₺ → ${newPrice} ₺ oldu. Hemen incele!`
+                subject: `${name} is now %${discount} off!`,
+                text: `${name} was just reduced from ${oldPrice} ₺ to ${newPrice} ₺ .Grab yours before it’s gone!`
             });
         } catch (mailErr) {
           console.error(`❌ Mail failed for ${email}:`, mailErr);
@@ -272,7 +272,22 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+// controllers/productsController.js
+const getUnpricedProducts = async (req, res) => {
+  console.log('▶ getUnpricedProducts — entered');   // <-- EKLEDİM
+  try {
+    const products = await productsDb.getUnpricedProducts();
+    console.log('⏹ getUnpricedProducts — rows:', products.length);   // <-- EKLEDİM
+    res.status(200).json({ products });
+  } catch (err) {
+    console.error('❌ getUnpricedProducts error:', err);   // zaten vardı
+    res.status(500).json({ error: 'Failed to retrieve unpriced products' });
+  }
+};
+
+
 module.exports = {
+    getUnpricedProducts,
     getAllProducts,
     getProductDetails,
     applyDiscount,

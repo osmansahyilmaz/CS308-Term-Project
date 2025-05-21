@@ -45,35 +45,6 @@ function ProductPage() {
     const [userUsername, setUserUsername] = useState('');
 
 
-
-    
-    /*
-    useEffect(() => {
-        const fetchProductData = async () => {
-            try {
-                setLoading(true);
-                setTimeout(() => {
-                    const data = getProductById(productId);
-                    if (!data) {
-                        throw new Error("Product not found");
-                    }
-                    setProduct(data);
-                    setLoading(false);
-
-                    // Fetch related products
-                    const relatedData = getRelatedProducts(productId);
-                    setRelatedProducts(relatedData);
-                }, 800);
-            } catch (err) {
-                console.error("Error fetching product:", err);
-                setError(err.message);
-                setLoading(false);
-            }
-        };
-
-        fetchProductData();
-    }, [productId]);
-    */
     useEffect(() => {
         const fetchProductData = async () => {
           try {
@@ -118,45 +89,6 @@ function ProductPage() {
     setIsInWishlist(found);
     }, [product]);
 
-
-    /*
-    const handleWishlistToggle = async () => {
-        try {
-            let wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-            const exists = wishlist.some(p => p.product_id === product.product_id);
-
-            if (exists) {
-                wishlist = wishlist.filter(p => p.product_id !== product.product_id);
-                // Backend'den de kaldır
-                await axios.delete(`http://localhost:5000/api/wishlist/remove/${product.product_id}`, {
-                    withCredentials: true
-                });
-            } else {
-                wishlist.push(product);
-                // Backend'e de ekle
-                await axios.post(
-                    'http://localhost:5000/api/wishlist/add',
-                    { productId: product.product_id },
-                    { withCredentials: true }
-                );
-            }
-
-            localStorage.setItem("wishlist", JSON.stringify(wishlist));
-
-            // UI efektleri
-            setBounceClass('heartIconBounce');
-            setTimeout(() => setBounceClass(''), 500);
-
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 2000);
-
-            setIsInWishlist(!exists);
-        } catch (err) {
-            console.error("Wishlist toggle error:", err);
-            alert("Wishlist operation failed. Please login and try again.");
-        }
-    };  
-    */
 
     const handleWishlistToggle = async () => {
         if (!isLoggedIn) {

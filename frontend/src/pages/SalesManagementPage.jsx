@@ -4,6 +4,9 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './SalesManagementPage.module.css';
 
+const API_BASE = 'http://localhost:5000/api';
+
+
 const SalesManagementPage = () => {
   const [products, setProducts] = useState([]);
   const [unpricedProducts, setUnpricedProducts] = useState([]);
@@ -14,6 +17,12 @@ const SalesManagementPage = () => {
     startDate: '',
     endDate: ''
   });
+
+  const money = (val) =>
+  val !== null && val !== undefined && !isNaN(val)
+    ? Number(val).toFixed(2)
+    : 'N/A';
+
   const [invoices, setInvoices] = useState([]);
   const [error, setError] = useState(null);
 
@@ -24,8 +33,13 @@ const SalesManagementPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('/api/products?priced=true');
-      setProducts(response.data);
+      const { data } = await axios.get(`${API_BASE}/products`);
+      console.log("🔍 Products with discount info:", data.products.map(p => ({
+        name: p.name,
+        price: p.price,
+        discount: p.discount
+      })));
+      setProducts(data.products || []); 
     } catch (error) {
       console.error('Failed to fetch products:', error);
       toast.error('Failed to fetch products');
@@ -36,8 +50,8 @@ const SalesManagementPage = () => {
 
   const fetchUnpricedProducts = async () => {
     try {
-      const response = await axios.get('/api/products?priced=false');
-      setUnpricedProducts(response.data);
+      const { data } = await axios.get(`${API_BASE}/products/unpriced`);
+      setUnpricedProducts(data.products || data);
     } catch (error) {
       console.error('Failed to fetch unpriced products:', error);
       toast.error('Failed to fetch unpriced products');
@@ -65,43 +79,51 @@ const SalesManagementPage = () => {
     }
   };
 
-  const setProductPrice = async (productId, price) => {
+  const setProductPrice = async (productId, price, hasCurrentPrice) => {
+    const url = hasCurrentPrice
+      ? `${API_BASE}/products/${productId}/price`           // güncelleme
+      : `${API_BASE}/products/${productId}/initial-price`; // ilk fiyat
+
     try {
-      await axios.put(`/api/products/${productId}/price`, { price });
+      await axios.put(url, { price });
       toast.success('Product price updated successfully');
       fetchProducts();
       fetchUnpricedProducts();
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to update product price');
-      console.error(error);
     }
   };
+
 
   const applyDiscount = async () => {
     if (selectedProducts.length === 0) {
       toast.error('Please select at least one product');
       return;
     }
-    
+
     if (discountRate <= 0 || discountRate > 100) {
       toast.error('Discount rate must be between 1 and 100');
       return;
     }
-    
+
     try {
-      await axios.post('/api/discounts', {
+      await axios.post(`${API_BASE}/products/discount`, {
         productIds: selectedProducts,
-        discountRate
+        discount: discountRate
       });
       toast.success('Discount applied successfully');
+
       setSelectedProducts([]);
       setDiscountRate(0);
-      fetchProducts();
+
+      await fetchProducts(); // ❗️Beklemeden veri gelmeden render ediyordu
     } catch (error) {
       toast.error('Failed to apply discount');
       console.error(error);
     }
   };
+
 
   const handleProductSelection = (productId) => {
     if (selectedProducts.includes(productId)) {
@@ -248,11 +270,11 @@ const SalesManagementPage = () => {
           {unpricedProducts.length > 0 ? (
             <div className={styles.productGrid}>
               {unpricedProducts.map(product => (
-                <div key={product._id} className={styles.productCard}>
+                <div key={product.product_id || product.product_id} className={styles.productCard}>
                   <h3>{product.name}</h3>
                   <p><strong>Model:</strong> {product.model}</p>
-                  <p><strong>Cost Price:</strong> ${product.costPrice}</p>
                   <p><strong>Category:</strong> {product.category.name}</p>
+                  <p><strong>Cost Price:</strong> N/A</p>
                   <div className={styles.priceForm}>
                     <label>Set Sale Price ($):</label>
                     <input 
@@ -264,7 +286,7 @@ const SalesManagementPage = () => {
                         if (e.key === 'Enter') {
                           const price = parseFloat(e.target.value);
                           if (price > 0) {
-                            setProductPrice(product._id, price);
+                            setProductPrice(product.product_id, price, !!product.price);
                           } else {
                             toast.error('Price must be greater than 0');
                           }
@@ -275,7 +297,7 @@ const SalesManagementPage = () => {
                       onClick={(e) => {
                         const price = parseFloat(e.target.previousSibling.value);
                         if (price > 0) {
-                          setProductPrice(product._id, price);
+                          setProductPrice(product.product_id, price, !!product.price);
                         } else {
                           toast.error('Price must be greater than 0');
                         }
@@ -307,15 +329,21 @@ const SalesManagementPage = () => {
               </thead>
               <tbody>
                 {products.map(product => (
-                  <tr key={product._id}>
+                  <tr key={product.product_id}>
                     <td>{product.name}</td>
                     <td>{product.model}</td>
-                    <td>${product.costPrice.toFixed(2)}</td>
-                    <td>${product.price.toFixed(2)}</td>
-                    <td>{product.discountPercentage ? `${product.discountPercentage}%` : '-'}</td>
+                    <td>${money(product.costPrice ?? product.cost_price)}</td>
+                    <td>${money(product.price)}</td>
                     <td>
-                      ${(product.price * (1 - (product.discountPercentage || 0) / 100)).toFixed(2)}
+                      {product.discount && parseFloat(product.discount) > 0 
+                        ? `${parseFloat(product.discount)}%`
+                        : '-'}
                     </td>
+
+                    <td>
+                      ${(parseFloat(product.price) * (1 - (parseFloat(product.discount) || 0) / 100)).toFixed(2)}
+                    </td>
+
                     <td>
                       <div className={styles.actionButtons}>
                         <button 
@@ -323,7 +351,7 @@ const SalesManagementPage = () => {
                           onClick={() => {
                             const newPrice = prompt('Enter new price:', product.price);
                             if (newPrice !== null && !isNaN(newPrice) && parseFloat(newPrice) > 0) {
-                              setProductPrice(product._id, parseFloat(newPrice));
+                              setProductPrice(product.product_id, parseFloat(newPrice));
                             }
                           }}
                         >
@@ -366,25 +394,25 @@ const SalesManagementPage = () => {
           <div className={styles.productGrid}>
             {products.map(product => (
               <div 
-                key={product._id} 
-                className={`${styles.productCard} ${selectedProducts.includes(product._id) ? styles.selected : ''}`}
-                onClick={() => handleProductSelection(product._id)}
+                key={product.product_id}
+                className={`${styles.productCard} ${selectedProducts.includes(product.product_id) ? styles.selected : ''}`}
+                onClick={() => handleProductSelection(product.product_id)}
               >
                 <div className={styles.checkboxContainer}>
                   <input 
                     type="checkbox" 
-                    checked={selectedProducts.includes(product._id)}
-                    onChange={() => handleProductSelection(product._id)}
+                    checked={selectedProducts.includes(product.product_id)}
+                    onChange={() => handleProductSelection(product.product_id)}
                   />
                 </div>
                 <h3>{product.name}</h3>
                 <p><strong>Model:</strong> {product.model}</p>
-                <p><strong>Current Price:</strong> ${product.price.toFixed(2)}</p>
+                <p><strong>Current Price:</strong> ${money(product.price)}</p>
                 <p>
                   <strong>Current Discount:</strong> 
-                  {product.discountPercentage ? `${product.discountPercentage}%` : 'None'}
+                  { product.discountPercentage || product.discount ? `${product.discountPercentage ?? product.discount}%` : 'None' }
                 </p>
-                {selectedProducts.includes(product._id) && (
+                {selectedProducts.includes(product.product_id) && (
                   <p className={styles.newPrice}>
                     <strong>New Price After Discount:</strong> 
                     ${(product.price * (1 - discountRate / 100)).toFixed(2)}

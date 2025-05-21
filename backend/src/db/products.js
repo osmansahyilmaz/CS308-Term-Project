@@ -312,6 +312,36 @@ const deleteProduct = async (productId) => {
   }
 };
 
+const getUnpricedProducts = async () => {
+  const query = `
+    SELECT 
+      product_id,
+      name,
+      description,
+      price,
+      category,
+      in_stock,
+      discount,
+      image,
+      images,
+      colors,
+      features,
+      specifications,
+      created_at,
+      updated_at
+    FROM products
+    WHERE price IS NULL OR price <= 0
+    ORDER BY created_at DESC;
+  `;
+  try {
+    const { rows } = await pool.query(query);
+    return rows;
+  } catch (err) {
+    throw new Error('Error retrieving unpriced products: ' + err.message);
+  }
+};
+
+
 module.exports = {
     getAllProducts,
     getProductById,
@@ -321,4 +351,5 @@ module.exports = {
     setInitialPrice,
     updateProductPrice,
     deleteProduct, 
+    getUnpricedProducts,
 };
