@@ -68,7 +68,7 @@ const SalesManagementPage = () => {
       }
       
       const response = await axios.get(
-        `/api/invoices?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+        `http://localhost:5000/api/invoices?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
       );
       setInvoices(response.data);
     } catch (error) {
@@ -140,8 +140,13 @@ const SalesManagementPage = () => {
     });
   };
 
-  const downloadPdf = (invoiceId) => {
-    window.open(`/api/invoices/${invoiceId}/pdf`, '_blank');
+  const downloadPdf = (invoiceId, invoicePdfUrl) => {
+    // If invoicePdfUrl is provided, use it; otherwise, fallback to old endpoint
+    if (invoicePdfUrl) {
+      window.open(`http://localhost:5000${invoicePdfUrl}`, '_blank');
+    } else {
+      window.open(`http://localhost:5000/api/invoices/${invoiceId}/pdf`, '_blank');
+    }
   };
   
   const calculateTotalRevenue = () => {
@@ -231,6 +236,14 @@ const SalesManagementPage = () => {
     ];
     
     setInvoices(sampleInvoices);
+  };
+
+  // Add status label mapping for invoices
+  const invoiceStatusLabels = {
+    1: 'Processing',
+    2: 'In-Transit',
+    3: 'Delivered',
+    4: 'Canceled'
   };
 
   return (
@@ -483,24 +496,45 @@ const SalesManagementPage = () => {
                 </thead>
                 <tbody>
                   {invoices.map(invoice => (
-                    <tr key={invoice._id}>
-                      <td>{invoice._id.substring(0, 8)}...</td>
-                      <td>{invoice.customerName}</td>
-                      <td>{new Date(invoice.createdAt).toLocaleDateString()}</td>
-                      <td>${invoice.totalAmount.toFixed(2)}</td>
+                    <tr key={invoice.invoice_id}>
+                      <td>{String(invoice.invoice_id).substring(0, 8)}...</td>
+                      <td>{invoice.username || invoice.customer_name || 'N/A'}</td>
+                      <td>{invoice.generated_date ? new Date(invoice.generated_date).toLocaleDateString() : 'N/A'}</td>
+                      <td>${invoice.order_total_price ? Number(invoice.order_total_price).toFixed(2) : 'N/A'}</td>
                       <td>
-                        <span className={invoice.paid ? styles.statusPaid : styles.statusPending}>
-                          {invoice.paid ? 'Paid' : 'Pending'}
+                        <span className={
+                          invoice.order_status === 3
+                            ? styles.statusPaid
+                            : invoice.order_status === 4
+                              ? styles.statusCanceled
+                              : styles.statusPending
+                        }>
+                          {invoiceStatusLabels[invoice.order_status] || 'Unknown'}
                         </span>
                       </td>
                       <td>
                         <div className={styles.actionButtons}>
-                          <button 
-                            className={styles.downloadButton}
-                            onClick={() => downloadPdf(invoice._id)}
-                          >
-                            Download PDF
-                          </button>
+                          {/* View PDF button */}
+                          {invoice.invoice_pdf_url ? (
+                            <>
+                              <a
+                                href={`http://localhost:5000${invoice.invoice_pdf_url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.downloadButton}
+                              >
+                                View PDF
+                              </a>
+                              <button
+                                className={styles.downloadButton}
+                                onClick={() => downloadPdf(invoice.invoice_id, invoice.invoice_pdf_url)}
+                              >
+                                Download PDF
+                              </button>
+                            </>
+                          ) : (
+                            <span>No PDF</span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -517,4 +551,4 @@ const SalesManagementPage = () => {
   );
 };
 
-export default SalesManagementPage; 
+export default SalesManagementPage;

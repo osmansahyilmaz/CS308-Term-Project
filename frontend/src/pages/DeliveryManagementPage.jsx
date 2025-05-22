@@ -7,18 +7,21 @@ import styles from './DeliveryManagementPage.module.css';
 const statusLabels = {
   1: 'Processing',
   2: 'In-Transit',
-  3: 'Delivered'
+  3: 'Delivered',
+  4: 'Canceled', // Add Canceled label
 };
 const statusOptions = [
   { value: 'processing', label: 'Processing' },
   { value: 'in-transit', label: 'In-Transit' },
-  { value: 'delivered', label: 'Delivered' }
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'canceled', label: 'Canceled' }, // Add Canceled option
 ];
 
 const getStatusValue = (order_status) => {
   if (order_status === 1) return 'processing';
   if (order_status === 2) return 'in-transit';
   if (order_status === 3) return 'delivered';
+  if (order_status === 4) return 'canceled'; // Handle canceled
   return '';
 };
 
@@ -139,7 +142,13 @@ const DeliveryManagementPage = () => {
                     {delivery.address_title || 'N/A'}
                   </td>
                   <td>
-                    <span className={delivery.order_status === 3 ? styles.statusCompleted : styles.statusPending}>
+                    <span className={
+                      delivery.order_status === 3
+                        ? styles.statusCompleted
+                        : delivery.order_status === 4
+                          ? styles.statusCanceled // Add a style for canceled if you want
+                          : styles.statusPending
+                    }>
                       {statusLabels[delivery.order_status] || 'Unknown'}
                     </span>
                   </td>
@@ -168,7 +177,7 @@ const DeliveryManagementPage = () => {
                         value={getStatusValue(delivery.order_status)}
                         onChange={e => updateDeliveryStatus(delivery.delivery_id, e.target.value)}
                         className={styles.completeButton}
-                        disabled={delivery.order_status === 3}
+                        disabled={delivery.order_status === 3 || delivery.order_status === 4} // Disable if delivered or canceled
                       >
                         {statusOptions.map(opt => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -256,7 +265,7 @@ const DeliveryManagementPage = () => {
                 value={getStatusValue(selectedDelivery.order_status)}
                 onChange={e => updateDeliveryStatus(selectedDelivery.delivery_id, e.target.value)}
                 className={styles.completeButton}
-                disabled={selectedDelivery.order_status === 3}
+                disabled={selectedDelivery.order_status === 3 || selectedDelivery.order_status === 4}
               >
                 {statusOptions.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>

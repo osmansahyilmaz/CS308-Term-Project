@@ -307,29 +307,61 @@ const updateDeliveryStatus = async (req, res) => {
         processing:    { code: 1, dateField: 'order_processing_date' },
         'in-transit':  { code: 2, dateField: 'order_in_transit_date' },
         delivered:     { code: 3, dateField: 'order_delivered_date' },
+        canceled:      { code: 4, dateField: null }, // No date field for canceled
     };
     const mapping = statusMap[status];
     if (!mapping) {
-        return res.status(400).json({ error: 'Invalid status. Must be one of processing, in-transit, delivered' });
+        return res.status(400).json({ error: 'Invalid status. Must be one of processing, in-transit, delivered, canceled' });
     }
 
     try {
-        const query = `
-            UPDATE orders
-               SET order_status = $1,
-                   ${mapping.dateField} = CURRENT_TIMESTAMP
-             WHERE order_id = $2
-        RETURNING 
-            order_id, 
-            order_status, 
-            order_processing_date, 
-            order_in_transit_date, 
-            order_delivered_date;
-        `;
-        const { rows } = await pool.query(query, [mapping.code, orderId]);
+        let query, params;
+        if (mapping.code === 4) {
+            // Canceled: only update status, no date field
+            query = `
+                UPDATE orders
+                   SET order_status = $1
+                 WHERE order_id = $2
+            RETURNING 
+                order_id, 
+                order_status, 
+                order_processing_date, 
+                order_in_transit_date, 
+                order_delivered_date;
+            `;
+            params = [mapping.code, orderId];
+        } else {
+            // Other statuses: update status and date field
+            query = `
+                UPDATE orders
+                   SET order_status = $1,
+                       ${mapping.dateField} = CURRENT_TIMESTAMP
+                 WHERE order_id = $2
+            RETURNING 
+                order_id, 
+                order_status, 
+                order_processing_date, 
+                order_in_transit_date, 
+                order_delivered_date;
+            `;
+            params = [mapping.code, orderId];
+        }
+        const { rows } = await pool.query(query, params);
         if (rows.length === 0) {
             return res.status(404).json({ error: 'Order not found' });
         }
+
+        // If canceled, restore stock
+        if (mapping.code === 4) {
+            const restoreStockQuery = `
+                UPDATE products
+                SET in_stock = in_stock + po.product_order_count
+                FROM products_of_order po
+                WHERE po.product_id = products.product_id AND po.order_id = $1
+            `;
+            await pool.query(restoreStockQuery, [orderId]);
+        }
+
         return res.json({
             message: `Order status updated to '${status}'`,
             order: rows[0]
