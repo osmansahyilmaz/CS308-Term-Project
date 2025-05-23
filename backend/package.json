@@ -1,9 +1,19 @@
 {
   "name": "your-backend-app",
-  "version": "1.0.0",
-  "scripts": {
+  "version": "1.0.0",  "scripts": {
     "start": "node ./src/server.js",
-    "test": "jest"
+    "dev": "nodemon ./src/server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:auth": "jest auth",
+    "test:products": "jest products",
+    "test:orders": "jest orders",
+    "test:reviews": "jest reviews",
+    "test:cart": "jest cart",
+    "test:wishlist": "jest wishlist",
+    "test:analytics": "jest analytics",
+    "seed": "node seedMockData.js"
   },
   "dependencies": {
     "argon2": "^0.41.1",
