@@ -11,6 +11,7 @@ import ProfileInfo from '../components/profile/ProfileInfo';
 import AddressList from '../components/profile/AddressList';
 import PaymentMethods from '../components/profile/PaymentMethods';
 import OrderHistory from '../components/profile/OrderHistory';
+import RefundDashboard from './RefundDashboard';
 
 const ProfilePage = () => {
     const [activeTab, setActiveTab] = useState('profile');
@@ -84,6 +85,8 @@ const ProfilePage = () => {
                 return <PaymentMethods />;
             case 'orders':
                 return <OrderHistory />;
+            case 'refundDashboard':
+                return <RefundDashboard />;
             default:
                 return <ProfileInfo userData={userData} />;
         }
@@ -127,6 +130,14 @@ const ProfilePage = () => {
                     navigate('/sales-management');
                 } else {
                     toast.error("You don't have permission to access Sales Management.");
+                }
+                break;
+            case 'refundDashboard':
+                if (isSalesManager) {
+                    console.log('Navigating to refund dashboard');
+                    navigate('/refund-dashboard');
+                } else {
+                    toast.error("You don't have permission to access the Refund Dashboard.");
                 }
                 break;
             default:
@@ -199,6 +210,14 @@ const ProfilePage = () => {
                                     Sales Management
                                     {!isSalesManager && <span className={styles.noAccessIcon}>🔒</span>}
                                 </li>
+                                {isSalesManager && (
+                                    <li 
+                                        className={`${styles.navItem} ${activeTab === 'refundDashboard' ? styles.active : ''}`}
+                                        onClick={() => setActiveTab('refundDashboard')}
+                                    >
+                                        Refund Dashboard
+                                    </li>
+                                )}
                             </>
                         )}
                     </ul>

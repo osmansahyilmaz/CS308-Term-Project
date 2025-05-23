@@ -15,6 +15,7 @@ import ProductManagementPage from "./pages/ProductManagementPage"
 import DeliveryManagementPage from "./pages/DeliveryManagementPage"
 import SalesManagementPage from "./pages/SalesManagementPage"
 import CommentModerationPage from "./pages/CommentModerationPage"
+import RefundDashboard from "./pages/RefundDashboard"
 
 // Protected Route component that checks for authentication and role
 const ProtectedRoute = ({ element, allowedRoles }) => {
@@ -71,6 +72,10 @@ function AppRoutes() {
       <Route 
         path="/sales-management" 
         element={<ProtectedRoute element={<SalesManagementPage />} allowedRoles={['salesManager', 'admin']} />} 
+      />
+      <Route 
+        path="/refund-dashboard" 
+        element={<ProtectedRoute element={<RefundDashboard />} allowedRoles={['salesManager', 'admin']} />} 
       />
     </Routes>
   );

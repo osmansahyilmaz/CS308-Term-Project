@@ -1,0 +1,113 @@
+.card {
+    display: flex;
+    background-color: #f9f9f9; /* Light gray background */
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    gap: 20px; /* Space between image and content */
+}
+
+.imageContainer {
+    flex-shrink: 0; /* Prevent image container from shrinking */
+    width: 150px; /* Fixed width for image container */
+    height: 150px; /* Fixed height for image container */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.productImage {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+
+.cardContent {
+    flex-grow: 1; /* Allow content to take remaining space */
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Spacing between content items */
+}
+
+.productName {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.refundAmount {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #d9534f; /* Orange/red color */
+    margin: 0;
+}
+
+.detailItem {
+    font-size: 0.9em;
+    color: #555;
+    margin: 0;
+}
+
+.detailLabel {
+    font-weight: 500;
+    color: #333;
+}
+
+.actionButtons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.approveButton {
+    background-color: #5cb85c; /* Green */
+    color: white;
+}
+
+.approveButton:hover {
+    background-color: #4cae4c;
+}
+
+.rejectButton {
+    background-color: #d9534f; /* Red */
+    color: white;
+}
+
+.rejectButton:hover {
+    background-color: #c9302c;
+}
+
+.statusBadge {
+    padding: 8px 12px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
+    text-transform: uppercase;
+}
+
+.approved {
+    background-color: #5cb85c; /* Green */
+    color: white;
+}
+
+.rejected {
+    background-color: #d9534f; /* Red */
+    color: white;
+} 

@@ -2,6 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styles from './OrderHistory.module.css';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// Refund Modal Component (can be in a separate file too)
+const RefundModal = ({ item, onClose, onSubmit }) => {
+    const [reason, setReason] = useState('');
+
+    if (!item) return null;
+
+    const handleSubmit = () => {
+        if (!reason.trim()) {
+            toast.error('Please provide a reason for the refund.');
+            return;
+        }
+        onSubmit(item.id, reason); // Assuming item.id is product_of_order_id
+    };
+
+    return (
+        <div className={styles.modalOverlay}>
+            <div className={styles.modalContent}>
+                <h3>Request Refund for: {item.name}</h3>
+                <textarea
+                    className={styles.reasonTextarea}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Please describe the reason for your refund request..."
+                    rows={4}
+                />
+                <div className={styles.modalActions}>
+                    <button onClick={onClose} className={styles.modalButtonCancel}>Cancel</button>
+                    <button onClick={handleSubmit} className={styles.modalButtonSubmit}>Submit Request</button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const OrderHistory = () => {
     const [orders, setOrders] = useState([]);
@@ -9,6 +45,10 @@ const OrderHistory = () => {
     const [error, setError] = useState(null);
     const [selectedYear, setSelectedYear] = useState('all');
     const navigate = useNavigate();
+    
+    // State for refund modal
+    const [showRefundModal, setShowRefundModal] = useState(false);
+    const [selectedItemForRefund, setSelectedItemForRefund] = useState(null);
     
     const BASE_URL = 'http://localhost:5000/api';
     
@@ -20,11 +60,9 @@ const OrderHistory = () => {
         setIsLoading(true);
         setError(null);
         try {
-            // Attempt to fetch from backend
             const res = await axios.get(`${BASE_URL}/orders/history`, { withCredentials: true });
             const backendOrders = res.data.orders || [];
 
-            // Map status numbers (0-4) to string names for UI reuse
             const statusMap = {
                 0: 'verifying',
                 1: 'processing',
@@ -35,7 +73,21 @@ const OrderHistory = () => {
 
             const mappedOrders = backendOrders.map(o => ({
                 ...o,
-                order_status: statusMap[o.order_status] || 'processing'
+                order_status: statusMap[o.order_status] || 'processing',
+                products: o.products ? o.products.map(p => {
+                    // Backend should provide product_of_order_id for each item in an order.
+                    // This ID is crucial for linking to the refund_requests table.
+                    const productOfOrderId = p.product_of_order_id;
+                    if (productOfOrderId === undefined || productOfOrderId === null) {
+                        console.warn('Order item is missing product_of_order_id:', p, 'Order:', o.order_id);
+                    }
+                    return {
+                        ...p,
+                        // Use product_of_order_id as the primary identifier for refund purposes.
+                        // Fallback to product_id only if absolutely necessary and if backend refund logic can handle it (currently it cannot).
+                        id: productOfOrderId !== undefined && productOfOrderId !== null ? productOfOrderId : p.product_id 
+                    };
+                }) : [] 
             }));
 
             setOrders(mappedOrders);
@@ -143,15 +195,84 @@ const OrderHistory = () => {
 
         try {
             await axios.delete(`${BASE_URL}/orders/${orderId}/cancel`, { withCredentials: true });
+            toast.success('Order cancelled successfully.');
             fetchOrders(); // Refresh list after cancellation
         } catch (err) {
             console.error('Error cancelling order:', err);
+            toast.error(err.response?.data?.message || 'Failed to cancel order.');
             setError('Failed to cancel order.');
         }
     }
 
+    const handleOpenRefundModal = (item) => {
+        console.log('Requesting refund for item:', item);
+        setSelectedItemForRefund(item);
+        setShowRefundModal(true);
+    };
+
+    const handleCloseRefundModal = () => {
+        setShowRefundModal(false);
+        setSelectedItemForRefund(null);
+    };
+
+    const handleSubmitRefund = async (itemId, reason) => {
+        if (itemId === undefined || itemId === null) {
+            toast.error('Cannot submit refund: Item ID is missing. Please contact support.');
+            console.error('handleSubmitRefund: itemId is missing or invalid.', itemId);
+            return;
+        }
+
+        try {
+            const response = await axios.post(`${BASE_URL}/refund-request`, 
+                { item_id: itemId, reason }, 
+                { withCredentials: true }
+            );
+            toast.success(response.data.message || 'Refund request submitted successfully!');
+            handleCloseRefundModal();
+            fetchOrders(); // Refresh orders to reflect any potential UI changes (e.g., disable button)
+        } catch (err) {
+            console.error('Error submitting refund request. Full error object:', err);
+            if (err.response) {
+                console.error('Error response data:', err.response.data);
+                console.error('Error response status:', err.response.status);
+                console.error('Error response headers:', err.response.headers);
+                toast.error(err.response.data.message || `Error: ${err.response.status} - Failed to submit refund request.`);
+            } else if (err.request) {
+                console.error('Error request data:', err.request);
+                toast.error('Failed to submit refund request. No response from server.');
+            } else {
+                console.error('Error message:', err.message);
+                toast.error(`Failed to submit refund request: ${err.message}`);
+            }
+        }
+    };
+
+    const canRequestRefund = (orderDate, orderStatus, item) => { // Added item parameter
+        if (orderStatus !== 'delivered') return false;
+        
+        const orderPlacedDate = new Date(orderDate);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        if (orderPlacedDate < thirtyDaysAgo) return false; // Older than 30 days
+
+        // TODO: Check if item.id (product_of_order_id) has an existing refund request.
+        // This requires backend to provide this info or fetching refunds separately.
+        // For now, we assume no existing refund if conditions above are met.
+        // Example: if (item.refund_status && item.refund_status !== 'Rejected') return false;
+
+        return true; 
+    };
+
     return (
         <div className={styles.orderHistory}>
+            <ToastContainer position="top-right" autoClose={3000} />
+            {showRefundModal && selectedItemForRefund && (
+                <RefundModal 
+                    item={selectedItemForRefund} 
+                    onClose={handleCloseRefundModal} 
+                    onSubmit={handleSubmitRefund} 
+                />
+            )}
             <div className={styles.header}>
                 <h2>Order History</h2>
                 <div className={styles.filterContainer}>
@@ -214,7 +335,7 @@ const OrderHistory = () => {
                             
                             <div className={styles.orderItems}>
                                 {order.products && order.products.map(item => (
-                                    <div key={item.product_id} className={styles.orderItem}>
+                                    <div key={item.id} className={styles.orderItem}>
                                         <div className={styles.itemImage}>
                                             {item.image ? (
                                                 <img src={item.image} alt={item.name} />
@@ -234,6 +355,14 @@ const OrderHistory = () => {
                                                     Quantity: {item.product_order_count}
                                                 </span>
                                             </div>
+                                            {canRequestRefund(order.order_date, order.order_status, item) && (
+                                                <button 
+                                                    onClick={() => handleOpenRefundModal(item)}
+                                                    className={`${styles.actionButton} ${styles.requestRefundButton}`}
+                                                >
+                                                    Request Refund
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

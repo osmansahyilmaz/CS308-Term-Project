@@ -280,6 +280,35 @@ const createCategoriesTable = async () => {
     }
 };
 
+const createRefundRequestsTable = async () => {
+    const query = `
+    CREATE TABLE IF NOT EXISTS refund_requests (
+        refund_id SERIAL PRIMARY KEY,
+        item_id INT REFERENCES products_of_order(product_of_order_id) ON DELETE CASCADE,
+        customer_id INT REFERENCES users(id) ON DELETE CASCADE,
+        reason TEXT,
+        status VARCHAR(50) DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected')),
+        refund_amount DECIMAL(10, 2) NOT NULL,
+        reviewed_by INT REFERENCES users(id) ON DELETE SET NULL, -- Sales manager who reviewed
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        reviewed_at TIMESTAMP,
+        CONSTRAINT fk_item FOREIGN KEY (item_id) REFERENCES products_of_order(product_of_order_id) ON DELETE CASCADE,
+        CONSTRAINT fk_customer FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
+        CONSTRAINT fk_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_refund_requests_item_id ON refund_requests(item_id);
+    CREATE INDEX IF NOT EXISTS idx_refund_requests_customer_id ON refund_requests(customer_id);
+    CREATE INDEX IF NOT EXISTS idx_refund_requests_status ON refund_requests(status);
+    `;
+    try {
+        await pool.query(query);
+        console.log('✅ RefundRequests table created/updated.');
+    } catch (err) {
+        console.error('❌ Error creating refund_requests table:', err);
+    }
+};
+
 const createAllTables = async () => {
     await createUsersTable();
     await createAddressesTable();
@@ -295,7 +324,7 @@ const createAllTables = async () => {
     await createPaymentsTable();
     await createAdminUser();
     await createWishlistTable();
-
+    await createRefundRequestsTable();
 };
 
 module.exports = createAllTables;

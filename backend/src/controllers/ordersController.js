@@ -183,6 +183,7 @@ const getOrderHistory = async (req, res) => {
                 json_agg(
                     json_build_object(
                         'product_id', po.product_id,
+                        'product_of_order_id', po.product_of_order_id,
                         'price_when_buy', po.price_when_buy,
                         'product_order_count', po.product_order_count,
                         'name', p.name,
