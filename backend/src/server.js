@@ -17,6 +17,8 @@ const invoiceRoutes = require('./routes/invoiceRoutes'); // ✅ Import invoiceRo
 const wishlistRoutes = require('./routes/wishlistRoutes'); // ✅ Import wishlist routes
 const categoriesRoutes = require('./routes/categoriesRoutes'); // ✅ Add this import
 const analyticsRoutes = require('./routes/analyticsRoutes'); // ✅ Import analytics routes
+const refundRoutes = require('./routes/refundRoutes'); // ✅ Import refund routes
+const refundAdminRoutes = require('./routes/refundAdminRoutes'); // ✅ Import admin refund routes
 const runMigrations = require('./db/migrate');
 const cors = require('cors');
 const cartRoutes = require('./routes/cartRoutes');
@@ -58,6 +60,8 @@ app.use('/api', addressRoutes);
 app.use('/api', wishlistRoutes); // ✅ Add wishlist routes
 app.use('/api', analyticsRoutes); // ✅ Add analytics routes
 app.use('/api/categories', categoriesRoutes); // ✅ Add categories routes
+app.use('/api', refundRoutes); // ✅ Add refund routes
+app.use('/api', refundAdminRoutes); // ✅ Add admin refund routes
 
 
 // Export app for testing
